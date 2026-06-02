@@ -1,3 +1,4 @@
+// Layout para o grupo de rotas de autenticação
 export default function AuthLayout({
   children,
 }: {

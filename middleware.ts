@@ -1,32 +1,38 @@
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
 
 export async function middleware(request: NextRequest) {
-  const requestUrl = new URL(request.url)
-  const pathname = requestUrl.pathname
+  let supabaseResponse = NextResponse.next({ request })
 
-  // Rotas públicas
-  const isPublicRoute = pathname === '/login' ||
-    pathname.startsWith('/recuperar-senha') ||
-    pathname.startsWith('/styleguide')
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options))
+        },
+      },
+    }
+  )
 
-  // Criar client Supabase
-  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  // Verificar sessão
-  const { data: { session } } = await supabase.auth.getSession()
+  const isAuthPage = request.nextUrl.pathname.startsWith('/login')
+  const isPublicPage = request.nextUrl.pathname === '/'
 
-  // Não autenticado tentando acessar rota protegida
-  if (!session && !isPublicRoute) {
-    return NextResponse.redirect(new URL('/login', requestUrl))
+  if (!user && !isAuthPage && !isPublicPage) {
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Autenticado na página de login - redirecionar para dashboard padrão
-  if (session && pathname === '/login') {
-    return NextResponse.redirect(new URL('/controle-anual', requestUrl))
-  }
-
-  return NextResponse.next()
+  return supabaseResponse
 }
 
 export const config = {

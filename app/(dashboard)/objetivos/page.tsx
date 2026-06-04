@@ -30,16 +30,41 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { formatarMoeda } from "@/lib/calculations"
+import { toast } from "sonner"
+
+// Tipos vêm de @/types/financeiro
+import { type Objetivo, type StatusObjetivo } from "@/types/financeiro"
+
+// Funções de cálculo vêm de @/lib/calculations
 import {
+  formatarMoeda,
   calcularProgressoObjetivo,
   calcularNecessarioMensal,
-  calcularStatusObjetivo,
-  calcularMesesRestantes,
-  type Objetivo,
-  type StatusObjetivo,
-} from "@/types/financeiro"
-import { toast } from "sonner"
+} from "@/lib/calculations"
+
+// ─── Funções Locais ───────────────────────────────────────────────────────────────
+
+function calcularMesesRestantes(dataConclusao: string): number {
+  const hoje = new Date()
+  const prazo = new Date(dataConclusao)
+  return Math.max(0,
+    (prazo.getFullYear() - hoje.getFullYear()) * 12 +
+    (prazo.getMonth() - hoje.getMonth())
+  )
+}
+
+function calcularStatus(
+  acumulado: number,
+  alvo: number,
+  dataConclusao: string
+): StatusObjetivo {
+  const mesesRestantes = calcularMesesRestantes(dataConclusao)
+  const dataInicio = new Date()
+  dataInicio.setMonth(dataInicio.getMonth() - 3)
+  const mesesTotais = mesesRestantes + 3
+  const esperado = (alvo / mesesTotais) * 3
+  return acumulado >= esperado ? "no_prazo" : "atrasado"
+}
 
 // ─── Dados Mockados ─────────────────────────────────────────────────────────────
 
@@ -83,7 +108,7 @@ function ObjetivoCard({ objetivo }: { objetivo: Objetivo }) {
     objetivo.valorAcumulado,
     mesesRestantes
   )
-  const status = calcularStatusObjetivo(
+  const status = calcularStatus(
     objetivo.valorAcumulado,
     objetivo.valorAlvo,
     objetivo.dataConclusao

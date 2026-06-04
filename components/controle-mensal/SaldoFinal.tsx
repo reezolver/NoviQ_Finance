@@ -27,6 +27,9 @@ export interface SaldosData {
   realizado: TotaisData
 }
 
+// Alias para compatibilidade com Resumo503020
+export type ResumoData = SaldosData
+
 interface SaldoFinalProps {
   data: SaldosData
 }

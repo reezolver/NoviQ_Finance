@@ -63,3 +63,26 @@ export interface Cliente {
   ultimoAcesso: string
   status: "ativo" | "inativo"
 }
+
+/**
+ * Investimento financeiro.
+ */
+export interface Investimento {
+  id: string
+  tipo: string
+  instituicao: string
+  categoria: TipoInvestimento
+  valorAplicado: number
+  rentabilidade: number
+  finalidade: FinalidadeInvestimento
+}
+
+/**
+ * Tipo de investimento.
+ */
+export type TipoInvestimento = "Renda Fixa" | "Multimercado" | "Renda Variável"
+
+/**
+ * Finalidade do investimento.
+ */
+export type FinalidadeInvestimento = "Reserva" | "Patrimônio"

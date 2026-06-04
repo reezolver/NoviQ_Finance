@@ -105,3 +105,52 @@ export function calcularPercentual(categoria: number, rendaTotal: number): numbe
   if (rendaTotal === 0) return 0
   return (categoria / rendaTotal) * 100
 }
+
+// ─── Funções para Objetivos ───────────────────────────────────────────────────────
+
+/**
+ * Calcula o status do objetivo baseado no progresso esperado vs realizado.
+ * @param valorAcumulado - Valor já acumulado
+ * @param valorAlvo - Valor alvo do objetivo
+ * @param dataConclusao - Data de conclusão (formato YYYY-MM-DD)
+ * @returns "no_prazo" ou "atrasado"
+ */
+export function calcularStatusObjetivo(
+  valorAcumulado: number,
+  valorAlvo: number,
+  dataConclusao: string
+): "no_prazo" | "atrasado" {
+  const hoje = new Date()
+  const conclusao = new Date(dataConclusao)
+
+  // Se já passou da data de conclusão, considera atrasado
+  if (hoje > conclusao) {
+    return "atrasado"
+  }
+
+  // Calcular meses totais e passados
+  const mesesTotais = (conclusao.getFullYear() - hoje.getFullYear()) * 12 + (conclusao.getMonth() - hoje.getMonth())
+  const mesesPassados = 0 - mesesTotais // negativo porque estamos contando para trás
+
+  // Valor esperado até hoje
+  const esperadoAteHoje = (valorAlvo / Math.abs(mesesTotais)) * Math.abs(mesesPassados)
+
+  return valorAcumulado >= esperadoAteHoje ? "no_prazo" : "atrasado"
+}
+
+/**
+ * Calcula o número de meses restantes até a data de conclusão.
+ * @param dataConclusao - Data de conclusão (formato YYYY-MM-DD)
+ * @returns Número de meses restantes (0 se já passou)
+ */
+export function calcularMesesRestantes(dataConclusao: string): number {
+  const hoje = new Date()
+  const conclusao = new Date(dataConclusao)
+
+  const anos = conclusao.getFullYear() - hoje.getFullYear()
+  const meses = conclusao.getMonth() - hoje.getMonth()
+
+  const total = anos * 12 + meses
+
+  return Math.max(0, total)
+}

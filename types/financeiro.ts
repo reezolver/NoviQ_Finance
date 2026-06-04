@@ -35,3 +35,20 @@ export interface SaldosData {
  * Usado para consistência na nomenclatura entre componentes.
  */
 export type ResumoData = SaldosData
+
+/**
+ * Objetivo financeiro com metas de acumulação.
+ */
+export interface Objetivo {
+  id: string
+  nome: string
+  valorAlvo: number
+  dataConclusao: string
+  valorAcumulado: number
+  valorInicial?: number
+}
+
+/**
+ * Status do objetivo quanto ao prazo.
+ */
+export type StatusObjetivo = "no_prazo" | "atrasado"

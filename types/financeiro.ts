@@ -52,3 +52,14 @@ export interface Objetivo {
  * Status do objetivo quanto ao prazo.
  */
 export type StatusObjetivo = "no_prazo" | "atrasado"
+
+/**
+ * Cliente do educador financeiro.
+ */
+export interface Cliente {
+  id: string
+  nome: string
+  email: string
+  ultimoAcesso: string
+  status: "ativo" | "inativo"
+}

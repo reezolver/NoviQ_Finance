@@ -67,3 +67,41 @@ export function calcularNecessarioMensal(
   if (mesesRestantes <= 0) return 0
   return (valorAlvo - valorAcumulado) / mesesRestantes
 }
+
+// ─── Tipos para distribuição 50-30-20 ─────────────────────────────────────────────
+
+export interface Distribuicao503020 {
+  fixo: number
+  variavel: number
+  investimento: number
+}
+
+export interface Percentual503020 {
+  fixo: number
+  variavel: number
+  investimento: number
+}
+
+/**
+ * Calcula a distribuição ideal 50-30-20 sobre a renda.
+ * @param rendaTotal - Renda total calculada
+ * @returns Objeto com valores ideais (50% fixo, 30% variável, 20% investimento)
+ */
+export function calcularDistribuicao503020(rendaTotal: number): Distribuicao503020 {
+  return {
+    fixo: rendaTotal * 0.5,
+    variavel: rendaTotal * 0.3,
+    investimento: rendaTotal * 0.2,
+  }
+}
+
+/**
+ * Calcula o percentual que cada categoria representa sobre a renda.
+ * @param categoria - Valor da categoria (fixo, variável ou investimento)
+ * @param rendaTotal - Renda total
+ * @returns Percentual (0-100)
+ */
+export function calcularPercentual(categoria: number, rendaTotal: number): number {
+  if (rendaTotal === 0) return 0
+  return (categoria / rendaTotal) * 100
+}

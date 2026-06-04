@@ -13,8 +13,9 @@ import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { MonthHeader } from "@/components/controle-mensal/MonthHeader"
 import { BlocoFinanceiro, type BlocoData } from "@/components/controle-mensal/BlocoFinanceiro"
-import { SaldoFinal, type ResumoData } from "@/components/controle-mensal/SaldoFinal"
+import { SaldoFinal } from "@/components/controle-mensal/SaldoFinal"
 import { Resumo503020 } from "@/components/controle-mensal/Resumo503020"
+import { type ResumoData } from "@/types/financeiro"
 
 // ─── Dados Mockados ─────────────────────────────────────────────────────────────
 

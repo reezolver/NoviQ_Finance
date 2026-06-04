@@ -14,6 +14,7 @@ import {
   type Distribuicao503020,
 } from "@/lib/calculations"
 import { cn } from "@/lib/utils"
+import { type ResumoData, type TotaisData } from "@/types/financeiro"
 import {
   Card,
   CardContent,
@@ -28,20 +29,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
-// ─── Types ─────────────────────────────────────────────────────────────────────
-
-export interface TotaisData {
-  renda: number
-  fixas: number
-  variaveis: number
-  investimento: number
-}
-
-export interface ResumoData {
-  planejado: TotaisData
-  realizado: TotaisData
-}
 
 interface Resumo503020Props {
   data: ResumoData

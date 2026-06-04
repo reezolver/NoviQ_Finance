@@ -7,28 +7,13 @@
 
 import { calcularSaldoFinal, formatarMoeda } from "@/lib/calculations"
 import { cn } from "@/lib/utils"
+import { type SaldosData } from "@/types/financeiro"
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-
-// ─── Types ─────────────────────────────────────────────────────────────────────
-
-export interface TotaisData {
-  renda: number
-  fixas: number
-  variaveis: number
-}
-
-export interface SaldosData {
-  planejado: TotaisData
-  realizado: TotaisData
-}
-
-// Alias para compatibilidade com Resumo503020
-export type ResumoData = SaldosData
 
 interface SaldoFinalProps {
   data: SaldosData

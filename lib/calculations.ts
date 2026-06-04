@@ -154,3 +154,111 @@ export function calcularMesesRestantes(dataConclusao: string): number {
 
   return Math.max(0, total)
 }
+
+// ─── Funções para Renda Futura (Juros Compostos) ────────────────────────────────────
+
+/**
+ * Resultado da projeção de juros compostos.
+ */
+export interface ProjetoJurosCompostos {
+  patrimonioFinal: number
+  totalAportado: number
+  rendimentoTotal: number
+  rendaPassivaMensal: number
+  projecaoAnual: AnoProjetado[]
+}
+
+/**
+ * Dados de um ano na projeção.
+ */
+export interface AnoProjetado {
+  idade: number
+  ano: number
+  patrimonioAcumulado: number
+  aporteNoAno: number
+  rendimentoNoAno: number
+}
+
+/**
+ * Calcula juros compostos com aportes mensais.
+ * Fórmula: M = P × (1 + i)^n + PMT × ((1 + i)^n - 1) / i
+ * Onde:
+ * - P = capital inicial
+ * - i = taxa mensal (taxa anual / 12 / 100)
+ * - n = número de meses
+ * - PMT = aporte mensal
+ *
+ * @param capitalInicial - Valor inicial aplicado
+ * @param aporteMensal - Valor aportado mensalmente
+ * @param taxaAnual - Taxa de juros anual (em %)
+ * @param anos - Período em anos
+ * @param idadeInicial - Idade atual (para projeção)
+ */
+export function calcularJurosCompostos(
+  capitalInicial: number,
+  aporteMensal: number,
+  taxaAnual: number,
+  anos: number,
+  idadeInicial: number
+): ProjetoJurosCompostos {
+  const taxaMensal = taxaAnual / 12 / 100
+  const meses = anos * 12
+  const anoAtual = new Date().getFullYear()
+
+  // Calcular patrimônio final usando fórmula de juros compostos
+  const fatorFuturo = Math.pow(1 + taxaMensal, meses)
+  const patrimonioFinal =
+    capitalInicial * fatorFuturo +
+    aporteMensal * ((fatorFuturo - 1) / taxaMensal)
+
+  // Calcular totais
+  const totalAportado = capitalInicial + aporteMensal * meses
+  const rendimentoTotal = patrimonioFinal - totalAportado
+  const rendaPassivaMensal = (patrimonioFinal * (taxaAnual / 100)) / 12
+
+  // Calcular projeção ano a ano
+  const projecaoAnual: AnoProjetado[] = []
+  let patrimonioAcumulado = capitalInicial
+
+  for (let ano = 0; ano <= anos; ano++) {
+    const mesesNoAno = ano * 12
+    const idade = idadeInicial + ano
+
+    // Calcular patrimônio acumulado até este ano
+    if (ano === 0) {
+      patrimonioAcumulado = capitalInicial
+    } else {
+      const fator = Math.pow(1 + taxaMensal, mesesNoAno)
+      patrimonioAcumulado =
+        capitalInicial * fator +
+        aporteMensal * ((fator - 1) / taxaMensal)
+    }
+
+    // Calcular valores para este ano específico
+    const aporteNoAno = aporteMensal * 12
+
+    let rendimentoNoAno = 0
+    if (ano === 0) {
+      rendimentoNoAno = 0
+    } else {
+      const patrimonioAnoAnterior = projecaoAnual[ano - 1].patrimonioAcumulado
+      rendimentoNoAno = patrimonioAcumulado - patrimonioAnoAnterior - aporteNoAno
+    }
+
+    projecaoAnual.push({
+      idade,
+      ano: anoAtual + ano,
+      patrimonioAcumulado,
+      aporteNoAno,
+      rendimentoNoAno,
+    })
+  }
+
+  return {
+    patrimonioFinal,
+    totalAportado,
+    rendimentoTotal,
+    rendaPassivaMensal,
+    projecaoAnual,
+  }
+}

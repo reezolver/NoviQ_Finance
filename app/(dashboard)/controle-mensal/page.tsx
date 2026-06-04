@@ -7,7 +7,7 @@
 
 "use client"
 
-import { Suspense } from "react"
+import { Suspense, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ import { BlocoFinanceiro, type BlocoData } from "@/components/controle-mensal/Bl
 import { SaldoFinal } from "@/components/controle-mensal/SaldoFinal"
 import { Resumo503020 } from "@/components/controle-mensal/Resumo503020"
 import { type ResumoData } from "@/types/financeiro"
+import { ModalLancamento, type Lancamento } from "@/components/lancamento/ModalLancamento"
 
 // ─── Dados Mockados ─────────────────────────────────────────────────────────────
 
@@ -391,6 +392,17 @@ function ControleMensalContent() {
   const mes = parseInt(searchParams.get("mes") || "1")
   const ano = 2026
 
+  // Estado do modal de lançamento
+  const [modalAberto, setModalAberto] = useState(false)
+  const [lancamentos, setLancamentos] = useState<Lancamento[]>([])
+
+  // Callback para salvar lançamento
+  function handleSalvarLancamento(lancamento: Lancamento) {
+    setLancamentos((prev) => [...prev, lancamento])
+    console.log("Lançamento salvo:", lancamento)
+    // Futuro: atualizar os valores dos blocos baseado no lançamento
+  }
+
   // Obter dados do mês
   const dadosMes = mes === 1 ? DADOS_JANEIRO_2026 : DADOS_MESES[mes] || DADOS_JANEIRO_2026
 
@@ -437,9 +449,17 @@ function ControleMensalContent() {
         size="lg"
         className="fixed bottom-8 right-8 rounded-full w-14 h-14 shadow-lg z-50"
         aria-label="Adicionar lançamento"
+        onClick={() => setModalAberto(true)}
       >
         <Plus className="size-6" />
       </Button>
+
+      {/* Modal de Lançamento */}
+      <ModalLancamento
+        open={modalAberto}
+        onOpenChange={setModalAberto}
+        onSave={handleSalvarLancamento}
+      />
     </div>
   )
 }

@@ -7,6 +7,7 @@
 
 "use client"
 
+import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -48,30 +49,24 @@ const DADOS_JANEIRO_2026 = {
   },
 }
 
-// Dados para os outros meses (simplificado)
-const gerarDadosMes = (mes: number): {
-  renda: BlocoData
-  fixas: BlocoData
-  variaveis: BlocoData
-} => {
-  // Variação aleatória pequena para cada mês
-  const variacao = () => Math.random() * 200 - 100
-
-  return {
+// Dados fixos para os outros meses (sem Math.random)
+const DADOS_MESES: Record<number, { renda: BlocoData; fixas: BlocoData; variaveis: BlocoData }> = {
+  2: {
+    // Fevereiro
     renda: {
       titulo: "Renda",
       itens: [
-        { nome: "Salário", planejado: 7500, realizado: 7500 + variacao() },
-        { nome: "Investimentos (rendimento)", planejado: 0, realizado: Math.max(0, variacao()) },
-        { nome: "Outras fontes", planejado: 0, realizado: Math.max(0, variacao()) },
+        { nome: "Salário", planejado: 7500, realizado: 7500 },
+        { nome: "Investimentos (rendimento)", planejado: 0, realizado: 42 },
+        { nome: "Outras fontes", planejado: 0, realizado: 0 },
       ],
     },
     fixas: {
       titulo: "Despesas Fixas",
       itens: [
         { nome: "Aluguel", planejado: 1800, realizado: 1800 },
-        { nome: "Internet", planejado: 120, realizado: 120 + Math.floor(variacao() / 10) },
-        { nome: "Gás", planejado: 80, realizado: 80 + Math.floor(variacao() / 10) },
+        { nome: "Internet", planejado: 120, realizado: 118 },
+        { nome: "Gás", planejado: 80, realizado: 82 },
         { nome: "Seguro", planejado: 200, realizado: 200 },
         { nome: "Investimento (aporte)", planejado: 500, realizado: 500 },
       ],
@@ -79,43 +74,326 @@ const gerarDadosMes = (mes: number): {
     variaveis: {
       titulo: "Despesas Variáveis",
       itens: [
-        { nome: "Lazer", planejado: 400, realizado: 400 + variacao() },
-        { nome: "Transporte", planejado: 300, realizado: 300 + variacao() },
-        { nome: "Alimentação", planejado: 800, realizado: 800 + variacao() },
-        { nome: "Uber", planejado: 300, realizado: 300 + variacao() },
+        { nome: "Lazer", planejado: 400, realizado: 380 },
+        { nome: "Transporte", planejado: 300, realizado: 320 },
+        { nome: "Alimentação", planejado: 800, realizado: 750 },
+        { nome: "Uber", planejado: 300, realizado: 280 },
       ],
     },
-  }
+  },
+  3: {
+    // Março
+    renda: {
+      titulo: "Renda",
+      itens: [
+        { nome: "Salário", planejado: 7500, realizado: 8200 },
+        { nome: "Investimentos (rendimento)", planejado: 0, realizado: 55 },
+        { nome: "Outras fontes", planejado: 0, realizado: 200 },
+      ],
+    },
+    fixas: {
+      titulo: "Despesas Fixas",
+      itens: [
+        { nome: "Aluguel", planejado: 1800, realizado: 1800 },
+        { nome: "Internet", planejado: 120, realizado: 120 },
+        { nome: "Gás", planejado: 80, realizado: 78 },
+        { nome: "Seguro", planejado: 200, realizado: 200 },
+        { nome: "Investimento (aporte)", planejado: 500, realizado: 500 },
+      ],
+    },
+    variaveis: {
+      titulo: "Despesas Variáveis",
+      itens: [
+        { nome: "Lazer", planejado: 400, realizado: 520 },
+        { nome: "Transporte", planejado: 300, realizado: 290 },
+        { nome: "Alimentação", planejado: 800, realizado: 910 },
+        { nome: "Uber", planejado: 300, realizado: 350 },
+      ],
+    },
+  },
+  4: {
+    // Abril
+    renda: {
+      titulo: "Renda",
+      itens: [
+        { nome: "Salário", planejado: 7500, realizado: 7500 },
+        { nome: "Investimentos (rendimento)", planejado: 0, realizado: 48 },
+        { nome: "Outras fontes", planejado: 0, realizado: 0 },
+      ],
+    },
+    fixas: {
+      titulo: "Despesas Fixas",
+      itens: [
+        { nome: "Aluguel", planejado: 1800, realizado: 1800 },
+        { nome: "Internet", planejado: 120, realizado: 125 },
+        { nome: "Gás", planejado: 80, realizado: 80 },
+        { nome: "Seguro", planejado: 200, realizado: 200 },
+        { nome: "Investimento (aporte)", planejado: 500, realizado: 500 },
+      ],
+    },
+    variaveis: {
+      titulo: "Despesas Variáveis",
+      itens: [
+        { nome: "Lazer", planejado: 400, realizado: 350 },
+        { nome: "Transporte", planejado: 300, realizado: 310 },
+        { nome: "Alimentação", planejado: 800, realizado: 780 },
+        { nome: "Uber", planejado: 300, realizado: 290 },
+      ],
+    },
+  },
+  5: {
+    // Maio
+    renda: {
+      titulo: "Renda",
+      itens: [
+        { nome: "Salário", planejado: 7500, realizado: 7500 },
+        { nome: "Investimentos (rendimento)", planejado: 0, realizado: 52 },
+        { nome: "Outras fontes", planejado: 0, realizado: 0 },
+      ],
+    },
+    fixas: {
+      titulo: "Despesas Fixas",
+      itens: [
+        { nome: "Aluguel", planejado: 1800, realizado: 1800 },
+        { nome: "Internet", planejado: 120, realizado: 120 },
+        { nome: "Gás", planejado: 80, realizado: 85 },
+        { nome: "Seguro", planejado: 200, realizado: 200 },
+        { nome: "Investimento (aporte)", planejado: 500, realizado: 500 },
+      ],
+    },
+    variaveis: {
+      titulo: "Despesas Variáveis",
+      itens: [
+        { nome: "Lazer", planejado: 400, realizado: 450 },
+        { nome: "Transporte", planejado: 300, realizado: 280 },
+        { nome: "Alimentação", planejado: 800, realizado: 850 },
+        { nome: "Uber", planejado: 300, realizado: 320 },
+      ],
+    },
+  },
+  6: {
+    // Junho
+    renda: {
+      titulo: "Renda",
+      itens: [
+        { nome: "Salário", planejado: 7500, realizado: 7500 },
+        { nome: "Investimentos (rendimento)", planejado: 0, realizado: 60 },
+        { nome: "Outras fontes", planejado: 0, realizado: 0 },
+      ],
+    },
+    fixas: {
+      titulo: "Despesas Fixas",
+      itens: [
+        { nome: "Aluguel", planejado: 1800, realizado: 1800 },
+        { nome: "Internet", planejado: 120, realizado: 122 },
+        { nome: "Gás", planejado: 80, realizado: 79 },
+        { nome: "Seguro", planejado: 200, realizado: 200 },
+        { nome: "Investimento (aporte)", planejado: 500, realizado: 500 },
+      ],
+    },
+    variaveis: {
+      titulo: "Despesas Variáveis",
+      itens: [
+        { nome: "Lazer", planejado: 400, realizado: 420 },
+        { nome: "Transporte", planejado: 300, realizado: 290 },
+        { nome: "Alimentação", planejado: 800, realizado: 820 },
+        { nome: "Uber", planejado: 300, realizado: 310 },
+      ],
+    },
+  },
+  7: {
+    // Julho
+    renda: {
+      titulo: "Renda",
+      itens: [
+        { nome: "Salário", planejado: 7500, realizado: 7500 },
+        { nome: "Investimentos (rendimento)", planejado: 0, realizado: 65 },
+        { nome: "Outras fontes", planejado: 0, realizado: 0 },
+      ],
+    },
+    fixas: {
+      titulo: "Despesas Fixas",
+      itens: [
+        { nome: "Aluguel", planejado: 1800, realizado: 1800 },
+        { nome: "Internet", planejado: 120, realizado: 120 },
+        { nome: "Gás", planejado: 80, realizado: 83 },
+        { nome: "Seguro", planejado: 200, realizado: 200 },
+        { nome: "Investimento (aporte)", planejado: 500, realizado: 500 },
+      ],
+    },
+    variaveis: {
+      titulo: "Despesas Variáveis",
+      itens: [
+        { nome: "Lazer", planejado: 400, realizado: 480 },
+        { nome: "Transporte", planejado: 300, realizado: 300 },
+        { nome: "Alimentação", planejado: 800, realizado: 900 },
+        { nome: "Uber", planejado: 300, realizado: 330 },
+      ],
+    },
+  },
+  8: {
+    // Agosto
+    renda: {
+      titulo: "Renda",
+      itens: [
+        { nome: "Salário", planejado: 7500, realizado: 7500 },
+        { nome: "Investimentos (rendimento)", planejado: 0, realizado: 70 },
+        { nome: "Outras fontes", planejado: 0, realizado: 0 },
+      ],
+    },
+    fixas: {
+      titulo: "Despesas Fixas",
+      itens: [
+        { nome: "Aluguel", planejado: 1800, realizado: 1800 },
+        { nome: "Internet", planejado: 120, realizado: 118 },
+        { nome: "Gás", planejado: 80, realizado: 80 },
+        { nome: "Seguro", planejado: 200, realizado: 200 },
+        { nome: "Investimento (aporte)", planejado: 500, realizado: 500 },
+      ],
+    },
+    variaveis: {
+      titulo: "Despesas Variáveis",
+      itens: [
+        { nome: "Lazer", planejado: 400, realizado: 360 },
+        { nome: "Transporte", planejado: 300, realizado: 310 },
+        { nome: "Alimentação", planejado: 800, realizado: 790 },
+        { nome: "Uber", planejado: 300, realizado: 290 },
+      ],
+    },
+  },
+  9: {
+    // Setembro
+    renda: {
+      titulo: "Renda",
+      itens: [
+        { nome: "Salário", planejado: 7500, realizado: 7500 },
+        { nome: "Investimentos (rendimento)", planejado: 0, realizado: 75 },
+        { nome: "Outras fontes", planejado: 0, realizado: 0 },
+      ],
+    },
+    fixas: {
+      titulo: "Despesas Fixas",
+      itens: [
+        { nome: "Aluguel", planejado: 1800, realizado: 1800 },
+        { nome: "Internet", planejado: 120, realizado: 120 },
+        { nome: "Gás", planejado: 80, realizado: 82 },
+        { nome: "Seguro", planejado: 200, realizado: 200 },
+        { nome: "Investimento (aporte)", planejado: 500, realizado: 500 },
+      ],
+    },
+    variaveis: {
+      titulo: "Despesas Variáveis",
+      itens: [
+        { nome: "Lazer", planejado: 400, realizado: 440 },
+        { nome: "Transporte", planejado: 300, realizado: 320 },
+        { nome: "Alimentação", planejado: 800, realizado: 880 },
+        { nome: "Uber", planejado: 300, realizado: 350 },
+      ],
+    },
+  },
+  10: {
+    // Outubro
+    renda: {
+      titulo: "Renda",
+      itens: [
+        { nome: "Salário", planejado: 7500, realizado: 7500 },
+        { nome: "Investimentos (rendimento)", planejado: 0, realizado: 80 },
+        { nome: "Outras fontes", planejado: 0, realizado: 0 },
+      ],
+    },
+    fixas: {
+      titulo: "Despesas Fixas",
+      itens: [
+        { nome: "Aluguel", planejado: 1800, realizado: 1800 },
+        { nome: "Internet", planejado: 120, realizado: 125 },
+        { nome: "Gás", planejado: 80, realizado: 78 },
+        { nome: "Seguro", planejado: 200, realizado: 200 },
+        { nome: "Investimento (aporte)", planejado: 500, realizado: 500 },
+      ],
+    },
+    variaveis: {
+      titulo: "Despesas Variáveis",
+      itens: [
+        { nome: "Lazer", planejado: 400, realizado: 410 },
+        { nome: "Transporte", planejado: 300, realizado: 290 },
+        { nome: "Alimentação", planejado: 800, realizado: 840 },
+        { nome: "Uber", planejado: 300, realizado: 320 },
+      ],
+    },
+  },
+  11: {
+    // Novembro
+    renda: {
+      titulo: "Renda",
+      itens: [
+        { nome: "Salário", planejado: 7500, realizado: 7500 },
+        { nome: "Investimentos (rendimento)", planejado: 0, realizado: 85 },
+        { nome: "Outras fontes", planejado: 0, realizado: 0 },
+      ],
+    },
+    fixas: {
+      titulo: "Despesas Fixas",
+      itens: [
+        { nome: "Aluguel", planejado: 1800, realizado: 1800 },
+        { nome: "Internet", planejado: 120, realizado: 120 },
+        { nome: "Gás", planejado: 80, realizado: 85 },
+        { nome: "Seguro", planejado: 200, realizado: 200 },
+        { nome: "Investimento (aporte)", planejado: 500, realizado: 500 },
+      ],
+    },
+    variaveis: {
+      titulo: "Despesas Variáveis",
+      itens: [
+        { nome: "Lazer", planejado: 400, realizado: 520 },
+        { nome: "Transporte", planejado: 300, realizado: 330 },
+        { nome: "Alimentação", planejado: 800, realizado: 920 },
+        { nome: "Uber", planejado: 300, realizado: 380 },
+      ],
+    },
+  },
+  12: {
+    // Dezembro
+    renda: {
+      titulo: "Renda",
+      itens: [
+        { nome: "Salário", planejado: 7500, realizado: 8500 },
+        { nome: "Investimentos (rendimento)", planejado: 0, realizado: 120 },
+        { nome: "Outras fontes", planejado: 0, realizado: 500 },
+      ],
+    },
+    fixas: {
+      titulo: "Despesas Fixas",
+      itens: [
+        { nome: "Aluguel", planejado: 1800, realizado: 1800 },
+        { nome: "Internet", planejado: 120, realizado: 120 },
+        { nome: "Gás", planejado: 80, realizado: 90 },
+        { nome: "Seguro", planejado: 200, realizado: 200 },
+        { nome: "Investimento (aporte)", planejado: 500, realizado: 500 },
+      ],
+    },
+    variaveis: {
+      titulo: "Despesas Variáveis",
+      itens: [
+        { nome: "Lazer", planejado: 400, realizado: 800 },
+        { nome: "Transporte", planejado: 300, realizado: 400 },
+        { nome: "Alimentação", planejado: 800, realizado: 1200 },
+        { nome: "Uber", planejado: 300, realizado: 450 },
+      ],
+    },
+  },
 }
 
-// ─── Page ───────────────────────────────────────────────────────────────────────
+// ─── Componentes ─────────────────────────────────────────────────────────────────
 
-export default function ControleMensalPage() {
+function ControleMensalContent() {
   const searchParams = useSearchParams()
   const mes = parseInt(searchParams.get("mes") || "1")
   const ano = 2026
 
   // Obter dados do mês
-  const dadosMes = mes === 1 ? DADOS_JANEIRO_2026 : gerarDadosMes(mes)
+  const dadosMes = mes === 1 ? DADOS_JANEIRO_2026 : DADOS_MESES[mes] || DADOS_JANEIRO_2026
 
   // Calcular totais para SaldoFinal
-  const calcularTotais = (bloco: BlocoData) => {
-    return {
-      renda: bloco.titulo === "Renda"
-        ? bloco.itens.reduce((sum, item) => sum + item.planejado, 0)
-        : 0,
-      fixas: bloco.titulo === "Despesas Fixas"
-        ? bloco.itens.reduce((sum, item) => sum + item.planejado, 0)
-        : 0,
-      variaveis: bloco.titulo === "Despesas Variáveis"
-        ? bloco.itens.reduce((sum, item) => sum + item.planejado, 0)
-        : 0,
-      investimento: bloco.titulo === "Despesas Fixas"
-        ? bloco.itens.find((i) => i.nome === "Investimento (aporte)")?.planejado || 0
-        : 0,
-    }
-  }
-
   const totaisPlanejado = {
     renda: dadosMes.renda.itens.reduce((sum, item) => sum + item.planejado, 0),
     fixas: dadosMes.fixas.itens.reduce((sum, item) => sum + item.planejado, 0),
@@ -162,5 +440,15 @@ export default function ControleMensalPage() {
         <Plus className="size-6" />
       </Button>
     </div>
+  )
+}
+
+// ─── Page ───────────────────────────────────────────────────────────────────────
+
+export default function ControleMensalPage() {
+  return (
+    <Suspense fallback={<div className="p-8">Carregando...</div>}>
+      <ControleMensalContent />
+    </Suspense>
   )
 }

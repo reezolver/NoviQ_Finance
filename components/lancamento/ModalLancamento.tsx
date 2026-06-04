@@ -7,7 +7,7 @@
 
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -89,9 +89,6 @@ export function ModalLancamento({ open, onOpenChange, onSave }: ModalLancamentoP
     valor?: string
   }>({})
 
-  // Ref para auto-foco no campo Tipo
-  const tipoSelectRef = useRef<HTMLButtonElement>(null)
-
   // Resetar formulário ao abrir
   useEffect(() => {
     if (open) {
@@ -101,10 +98,6 @@ export function ModalLancamento({ open, onOpenChange, onSave }: ModalLancamentoP
       setData(getHoje())
       setDescricao("")
       setErros({})
-      // Foco automático no campo Tipo após renderização
-      setTimeout(() => {
-        tipoSelectRef.current?.click()
-      }, 100)
     }
   }, [open])
 
@@ -148,7 +141,7 @@ export function ModalLancamento({ open, onOpenChange, onSave }: ModalLancamentoP
     // Simular processamento
     setTimeout(() => {
       const lancamento: Lancamento = {
-        id: crypto.randomUUID(),
+        id: Date.now().toString() + Math.random().toString(36).slice(2),
         tipo: tipo as TipoLancamento,
         categoria,
         valor: parseFloat(valor),
@@ -198,7 +191,7 @@ export function ModalLancamento({ open, onOpenChange, onSave }: ModalLancamentoP
               value={tipo}
               onValueChange={(value) => setTipo(value as TipoLancamento | "")}
             >
-              <SelectTrigger ref={tipoSelectRef} id="tipo">
+              <SelectTrigger id="tipo">
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>

@@ -106,16 +106,27 @@ export function ModalLancamento({
 
       // Se o tipo for 'objetivo', atualizar o valor_acumulado
       if (tipo === 'objetivo') {
-        // Por enquanto, vamos atualizar todos os objetivos ativos
-        // Futuro: vincular a um objetivo específico
-        const { error: updateError } = await supabase
+        // Buscar valor atual
+        const { data: objetivo } = await supabase
           .from('objetivos')
-          .update({ valor_acumulado: supabase.raw('valor_acumulado + ?', [valor]) })
+          .select('valor_acumulado')
           .eq('cliente_id', user.id)
           .eq('ativo', true)
+          .single()
 
-        if (updateError) {
-          console.error('Erro ao atualizar objetivo:', updateError)
+        // Atualizar com novo valor
+        if (objetivo) {
+          const { error: updateError } = await supabase
+            .from('objetivos')
+            .update({
+              valor_acumulado: (objetivo.valor_acumulado || 0) + parseFloat(valor)
+            })
+            .eq('cliente_id', user.id)
+            .eq('ativo', true)
+
+          if (updateError) {
+            console.error('Erro ao atualizar objetivo:', updateError)
+          }
         }
       }
 

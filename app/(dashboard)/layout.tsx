@@ -12,7 +12,7 @@ import {
   Menu,
   X,
 } from "lucide-react"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { UserMenu } from "@/components/user-menu"
 import { useState } from "react"
 
 /**
@@ -110,9 +110,9 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        {/* Rodapé da sidebar com ThemeToggle */}
+        {/* Rodapé da sidebar com UserMenu */}
         <div className="border-t border-border p-4">
-          <ThemeToggle />
+          <UserMenu />
         </div>
       </aside>
 

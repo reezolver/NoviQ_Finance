@@ -26,9 +26,11 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/login')
+  const isRecuperarSenhaPage = request.nextUrl.pathname.startsWith('/recuperar-senha')
+  const isNovaSenhaPage = request.nextUrl.pathname.startsWith('/nova-senha')
   const isPublicPage = request.nextUrl.pathname === '/'
 
-  if (!user && !isAuthPage && !isPublicPage) {
+  if (!user && !isAuthPage && !isRecuperarSenhaPage && !isNovaSenhaPage && !isPublicPage) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 

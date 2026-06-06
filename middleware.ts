@@ -34,6 +34,32 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  // Proteção de rotas por tipo de perfil
+  if (user) {
+    // Buscar tipo_perfil do usuário
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('tipo_perfil')
+      .eq('id', user.id)
+      .single()
+
+    const pathname = request.nextUrl.pathname
+
+    // Cliente não pode acessar /painel ou /master
+    if (profile?.tipo_perfil === 'cliente') {
+      if (pathname.startsWith('/painel') || pathname.startsWith('/master')) {
+        return NextResponse.redirect(new URL('/controle-anual', request.url))
+      }
+    }
+
+    // Educador não pode acessar /master
+    if (profile?.tipo_perfil === 'educador') {
+      if (pathname.startsWith('/master')) {
+        return NextResponse.redirect(new URL('/painel', request.url))
+      }
+    }
+  }
+
   return supabaseResponse
 }
 

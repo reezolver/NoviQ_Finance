@@ -9,11 +9,13 @@ import {
   Target,
   TrendingUp,
   PiggyBank,
+  Shield,
   Menu,
   X,
 } from "lucide-react"
 import { UserMenu } from "@/components/user-menu"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { createClient } from "@/lib/supabase"
 
 /**
  * Layout do dashboard com sidebar de navegação.
@@ -26,10 +28,38 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [userType, setUserType] = useState<'cliente' | 'educador' | 'master' | null>(null)
 
   const closeSidebar = () => setSidebarOpen(false)
 
-  const navItems = [
+  // Carregar tipo de perfil do usuário
+  useEffect(() => {
+    async function loadUserProfile() {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('tipo_perfil')
+            .eq('id', user.id)
+            .single()
+
+          if (profile) {
+            setUserType(profile.tipo_perfil)
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar perfil:', error)
+      }
+    }
+
+    loadUserProfile()
+  }, [])
+
+  // Criar navItems baseado no tipo de perfil
+  const baseNavItems = [
     {
       href: "/controle-anual",
       label: "Controle Anual",
@@ -56,6 +86,16 @@ export default function DashboardLayout({
       icon: PiggyBank,
     },
   ]
+
+  const masterNavItem = {
+    href: "/master",
+    label: "Master",
+    icon: Shield,
+  }
+
+  const navItems = userType === 'master'
+    ? [...baseNavItems, masterNavItem]
+    : baseNavItems
 
   return (
     <div className="flex min-h-screen bg-background">

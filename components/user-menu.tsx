@@ -21,7 +21,7 @@ type ProfileType = 'cliente' | 'educador' | 'master'
 
 interface UserProfile {
   id: string
-  nome_completo: string
+  nome: string
   email: string
   tipo_perfil: ProfileType
 }
@@ -74,13 +74,13 @@ export function UserMenu() {
         if (user) {
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('nome_completo, tipo_perfil')
+            .select('nome, tipo_perfil')
             .eq('id', user.id)
             .single()
 
           setProfile({
             id: user.id,
-            nome_completo: profileData?.nome_completo || user.email?.split('@')[0] || 'Usuário',
+            nome: profileData?.nome || user.email?.split('@')[0] || 'Usuário',
             email: user.email || '',
             tipo_perfil: profileData?.tipo_perfil || 'cliente',
           })
@@ -122,7 +122,7 @@ export function UserMenu() {
 
   if (!profile) return null
 
-  const initials = getInitials(profile.nome_completo)
+  const initials = getInitials(profile.nome)
   const badgeVariant = getBadgeVariant(profile.tipo_perfil)
   const badgeLabel = getBadgeLabel(profile.tipo_perfil)
 
@@ -138,7 +138,7 @@ export function UserMenu() {
           {/* Nome e tipo de perfil */}
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium truncate">
-              {profile.nome_completo}
+              {profile.nome}
             </div>
             <div className="text-xs text-muted-foreground">
               {badgeLabel}
@@ -160,7 +160,7 @@ export function UserMenu() {
           <Avatar className="size-16 mb-2">
             <AvatarFallback className="text-lg">{initials}</AvatarFallback>
           </Avatar>
-          <p className="font-semibold text-sm">{profile.nome_completo}</p>
+          <p className="font-semibold text-sm">{profile.nome}</p>
           <p className="text-xs text-muted-foreground">{profile.email}</p>
         </div>
 

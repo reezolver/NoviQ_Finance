@@ -17,7 +17,7 @@ type ProfileType = 'cliente' | 'educador' | 'master'
 
 interface UserProfile {
   id: string
-  nome_completo: string
+  nome: string
   email: string
   tipo_perfil: ProfileType
   created_at: string
@@ -95,13 +95,13 @@ export default function PerfilPage() {
 
         setProfile({
           id: profileData.id,
-          nome_completo: profileData.nome_completo,
+          nome: profileData.nome,
           email: user.email || '',
           tipo_perfil: profileData.tipo_perfil,
           created_at: profileData.created_at,
         })
 
-        setNome(profileData.nome_completo)
+        setNome(profileData.nome)
       } catch (error) {
         console.error('Erro ao carregar perfil:', error)
       } finally {
@@ -121,7 +121,7 @@ export default function PerfilPage() {
       const supabase = createClient()
       const { error } = await supabase
         .from('profiles')
-        .update({ nome_completo: nome.trim() })
+        .update({ nome: nome.trim() })
         .eq('id', profile.id)
 
       if (error) {
@@ -129,7 +129,7 @@ export default function PerfilPage() {
         return
       }
 
-      setProfile({ ...profile, nome_completo: nome.trim() })
+      setProfile({ ...profile, nome: nome.trim() })
       toast.success('Nome atualizado com sucesso!')
     } catch (error) {
       toast.error('Erro ao atualizar nome. Tente novamente.')
@@ -171,7 +171,7 @@ export default function PerfilPage() {
     )
   }
 
-  const initials = getInitials(profile.nome_completo)
+  const initials = getInitials(profile.nome)
   const badgeVariant = getBadgeVariant(profile.tipo_perfil)
   const badgeLabel = getBadgeLabel(profile.tipo_perfil)
 

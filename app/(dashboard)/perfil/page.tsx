@@ -17,13 +17,14 @@ type ProfileType = 'cliente' | 'educador' | 'master'
 
 interface UserProfile {
   id: string
-  nome: string
+  nome: string | null
   email: string
   tipo_perfil: ProfileType
   created_at: string
 }
 
-function getInitials(name: string): string {
+function getInitials(name: string | null): string {
+  if (!name) return '?'
   return name
     .split(' ')
     .map((n) => n[0])
@@ -101,7 +102,7 @@ export default function PerfilPage() {
           created_at: profileData.created_at,
         })
 
-        setNome(profileData.nome)
+        setNome(profileData.nome || '')
       } catch (error) {
         console.error('Erro ao carregar perfil:', error)
       } finally {
@@ -215,7 +216,7 @@ export default function PerfilPage() {
                 id="nome"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
-                placeholder="Seu nome completo"
+                placeholder="Digite seu nome completo"
               />
             </div>
 

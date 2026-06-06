@@ -101,7 +101,7 @@ export default function RecuperarSenhaPage() {
                 {/* Alert de Sucesso */}
                 <Alert>
                   <AlertDescription>
-                    Enviamos um link para seu e-mail. Verifique sua caixa de entrada.
+                    Se esse e-mail estiver cadastrado na plataforma, você receberá um link de recuperação em instantes. Verifique também sua pasta de spam.
                   </AlertDescription>
                 </Alert>
 

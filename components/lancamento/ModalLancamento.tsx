@@ -93,7 +93,7 @@ export function ModalLancamento({
           categoria: categoria,
           valor: parseFloat(valor),
           data: data,
-          descricao: descricao || null,
+          descricao: descricao || undefined,
           mes: new Date(data).getMonth() + 1,
           ano: new Date(data).getFullYear(),
         })
@@ -137,7 +137,7 @@ export function ModalLancamento({
         categoria,
         valor: parseFloat(valor),
         data,
-        descricao: descricao || null,
+        descricao: descricao || undefined,
       })
 
       toast.success("Lançamento registrado!")

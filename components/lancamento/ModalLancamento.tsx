@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { createClient } from "@/lib/supabase"
 
 export interface Lancamento {
   id: string
@@ -72,18 +73,70 @@ export function ModalLancamento({
   async function handleSalvar() {
     if (!tipo || !categoria || !valor) return
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 500))
-    onSave({
-      id: Date.now().toString(),
-      tipo,
-      categoria,
-      valor: parseFloat(valor),
-      data,
-      descricao,
-    })
-    toast.success("Lançamento registrado!")
-    handleClose()
-    setLoading(false)
+
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        toast.error("Usuário não autenticado.")
+        setLoading(false)
+        return
+      }
+
+      // Inserir o lançamento na tabela
+      const { data: lancamento, error: insertError } = await supabase
+        .from('lancamentos')
+        .insert({
+          cliente_id: user.id,
+          tipo: tipo,
+          categoria: categoria,
+          valor: parseFloat(valor),
+          data: data,
+          descricao: descricao || null,
+          mes: new Date(data).getMonth() + 1,
+          ano: new Date(data).getFullYear(),
+        })
+        .select()
+        .single()
+
+      if (insertError) {
+        throw insertError
+      }
+
+      // Se o tipo for 'objetivo', atualizar o valor_acumulado
+      if (tipo === 'objetivo') {
+        // Por enquanto, vamos atualizar todos os objetivos ativos
+        // Futuro: vincular a um objetivo específico
+        const { error: updateError } = await supabase
+          .from('objetivos')
+          .update({ valor_acumulado: supabase.raw('valor_acumulado + ?', [valor]) })
+          .eq('cliente_id', user.id)
+          .eq('ativo', true)
+
+        if (updateError) {
+          console.error('Erro ao atualizar objetivo:', updateError)
+        }
+      }
+
+      // Chamar onSave para atualizar a tela
+      onSave({
+        id: lancamento.id,
+        tipo,
+        categoria,
+        valor: parseFloat(valor),
+        data,
+        descricao: descricao || null,
+      })
+
+      toast.success("Lançamento registrado!")
+      handleClose()
+    } catch (error) {
+      console.error('Erro ao salvar lançamento:', error)
+      toast.error("Erro ao salvar lançamento. Tente novamente.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const categorias = CATEGORIAS[tipo] || []

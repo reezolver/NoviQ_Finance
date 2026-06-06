@@ -10,6 +10,7 @@ import {
   TrendingUp,
   PiggyBank,
 } from "lucide-react"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 /**
  * Layout do dashboard com sidebar de navegação.
@@ -53,7 +54,7 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar fixa */}
-      <aside className="w-64 border-r border-border bg-card">
+      <aside className="flex w-64 flex-col border-r border-border bg-card">
         <div className="flex h-16 items-center border-b border-border px-6">
           <span className="text-xl font-bold text-primary">Noviq</span>
         </div>
@@ -80,6 +81,11 @@ export default function DashboardLayout({
             )
           })}
         </nav>
+
+        {/* Rodapé da sidebar com ThemeToggle */}
+        <div className="mt-auto border-t border-border p-4">
+          <ThemeToggle />
+        </div>
       </aside>
 
       {/* Área principal */}

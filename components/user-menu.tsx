@@ -135,15 +135,15 @@ export function UserMenu() {
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
 
-          {/* Nome do usuário */}
-          <span className="flex-1 text-sm font-medium truncate">
-            {profile.nome_completo}
-          </span>
-
-          {/* Badge com tipo de perfil */}
-          <Badge variant={badgeVariant} className="text-xs">
-            {badgeLabel}
-          </Badge>
+          {/* Nome e tipo de perfil */}
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium truncate">
+              {profile.nome_completo}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {badgeLabel}
+            </div>
+          </div>
 
           {/* Chevron */}
           {open ? (

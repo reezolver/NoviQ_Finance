@@ -156,7 +156,7 @@ export default function InvestimentosPage() {
   const totais = calcularTotais(INVESTIMENTOS_MOCKADOS)
 
   return (
-    <div className="flex flex-col gap-6 p-8">
+    <div className="flex flex-col gap-6 p-4 md:p-8">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Investimentos</h1>
@@ -182,26 +182,28 @@ export default function InvestimentosPage() {
       {/* Tabela de Investimentos */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Instituição</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Valor Aplicado</TableHead>
-                <TableHead>Rentabilidade</TableHead>
-                <TableHead>Finalidade</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {INVESTIMENTOS_MOCKADOS.map((investimento) => (
-                <InvestimentoRow
-                  key={investimento.id}
-                  investimento={investimento}
-                />
-              ))}
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Instituição</TableHead>
+                  <TableHead>Categoria</TableHead>
+                  <TableHead>Valor Aplicado</TableHead>
+                  <TableHead>Rentabilidade</TableHead>
+                  <TableHead>Finalidade</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {INVESTIMENTOS_MOCKADOS.map((investimento) => (
+                  <InvestimentoRow
+                    key={investimento.id}
+                    investimento={investimento}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

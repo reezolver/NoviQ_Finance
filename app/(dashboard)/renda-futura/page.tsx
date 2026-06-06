@@ -93,7 +93,7 @@ export default function RendaFuturaPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-8">
+    <div className="flex flex-col gap-6 p-4 md:p-8">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Renda Futura</h1>
@@ -101,7 +101,7 @@ export default function RendaFuturaPage() {
       </div>
 
       {/* Cards lado a lado: Inputs | Resultado */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Card de Inputs */}
         <Card>
           <CardHeader>
@@ -223,30 +223,32 @@ export default function RendaFuturaPage() {
             <CardTitle>Projeção ano a ano</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Idade</TableHead>
-                  <TableHead>Ano</TableHead>
-                  <TableHead>Patrimônio Acumulado</TableHead>
-                  <TableHead>Aporte no Ano</TableHead>
-                  <TableHead>Rendimento no Ano</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {projeto.projecaoAnual.map((linha) => (
-                  <TableRow key={`${linha.ano}-${linha.idade}`}>
-                    <TableCell className="font-medium">{linha.idade}</TableCell>
-                    <TableCell>{linha.ano}</TableCell>
-                    <TableCell>{formatarMoeda(linha.patrimonioAcumulado)}</TableCell>
-                    <TableCell>{formatarMoeda(linha.aporteNoAno)}</TableCell>
-                    <TableCell className="text-success">
-                      +{formatarMoeda(linha.rendimentoNoAno)}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Idade</TableHead>
+                    <TableHead>Ano</TableHead>
+                    <TableHead>Patrimônio Acumulado</TableHead>
+                    <TableHead>Aporte no Ano</TableHead>
+                    <TableHead>Rendimento no Ano</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {projeto.projecaoAnual.map((linha) => (
+                    <TableRow key={`${linha.ano}-${linha.idade}`}>
+                      <TableCell className="font-medium">{linha.idade}</TableCell>
+                      <TableCell>{linha.ano}</TableCell>
+                      <TableCell>{formatarMoeda(linha.patrimonioAcumulado)}</TableCell>
+                      <TableCell>{formatarMoeda(linha.aporteNoAno)}</TableCell>
+                      <TableCell className="text-success">
+                        +{formatarMoeda(linha.rendimentoNoAno)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -78,7 +78,7 @@ export default function PainelPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-8">
+    <div className="flex flex-col gap-6 p-4 md:p-8">
       {/* Header */}
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight">Painel do Educador</h1>
@@ -86,62 +86,64 @@ export default function PainelPage() {
       </div>
 
       {/* Barra de busca */}
-      <div className="flex items-center gap-2 max-w-sm">
-        <div className="relative flex-1">
+      <div className="flex items-center gap-2 w-full md:max-w-sm">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por nome..."
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            className="pl-9"
+            className="pl-9 w-full"
           />
         </div>
       </div>
 
       {/* Tabela de clientes */}
       <div className="rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>E-mail</TableHead>
-              <TableHead>Último acesso</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ação</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {clientesFiltrados.length === 0 ? (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                  Nenhum cliente encontrado.
-                </TableCell>
+                <TableHead>Nome</TableHead>
+                <TableHead>E-mail</TableHead>
+                <TableHead>Último acesso</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ação</TableHead>
               </TableRow>
-            ) : (
-              clientesFiltrados.map((cliente) => (
-                <TableRow key={cliente.id}>
-                  <TableCell className="font-medium">{cliente.nome}</TableCell>
-                  <TableCell className="text-muted-foreground">{cliente.email}</TableCell>
-                  <TableCell>{cliente.ultimoAcesso}</TableCell>
-                  <TableCell>
-                    <Badge variant={cliente.status === "ativo" ? "default" : "secondary"}>
-                      {cliente.status === "ativo" ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAcessar(cliente)}
-                    >
-                      Acessar
-                    </Button>
+            </TableHeader>
+            <TableBody>
+              {clientesFiltrados.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                    Nenhum cliente encontrado.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                clientesFiltrados.map((cliente) => (
+                  <TableRow key={cliente.id}>
+                    <TableCell className="font-medium">{cliente.nome}</TableCell>
+                    <TableCell className="text-muted-foreground">{cliente.email}</TableCell>
+                    <TableCell>{cliente.ultimoAcesso}</TableCell>
+                    <TableCell>
+                      <Badge variant={cliente.status === "ativo" ? "default" : "secondary"}>
+                        {cliente.status === "ativo" ? "Ativo" : "Inativo"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAcessar(cliente)}
+                      >
+                        Acessar
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   )

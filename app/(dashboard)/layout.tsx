@@ -9,8 +9,11 @@ import {
   Target,
   TrendingUp,
   PiggyBank,
+  Menu,
+  X,
 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useState } from "react"
 
 /**
  * Layout do dashboard com sidebar de navegação.
@@ -22,6 +25,9 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const closeSidebar = () => setSidebarOpen(false)
 
   const navItems = [
     {
@@ -53,10 +59,31 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-background">
+      {/* Overlay escuro no mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 md:hidden"
+          onClick={closeSidebar}
+        />
+      )}
+
       {/* Sidebar fixa */}
-      <aside className="fixed top-0 left-0 z-40 flex h-screen w-64 flex-col border-r border-border bg-sidebar overflow-y-auto">
-        <div className="flex h-16 items-center border-b border-border px-6">
+      <aside
+        className={cn(
+          "fixed top-0 left-0 z-40 flex h-screen w-64 flex-col border-r border-border bg-sidebar overflow-y-auto transition-transform duration-300 ease-in-out",
+          "md:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex h-16 items-center justify-between border-b border-border px-6">
           <span className="text-xl font-bold text-primary">Noviq</span>
+          {/* Botão fechar no mobile */}
+          <button
+            onClick={closeSidebar}
+            className="md:hidden text-muted-foreground hover:text-foreground"
+          >
+            <X className="size-6" />
+          </button>
         </div>
 
         <nav className="flex-1 space-y-1 p-4">
@@ -68,6 +95,7 @@ export default function DashboardLayout({
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={closeSidebar}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   isActive
@@ -89,7 +117,18 @@ export default function DashboardLayout({
       </aside>
 
       {/* Área principal */}
-      <main className="ml-64 flex-1 min-h-screen overflow-y-auto">
+      <main className="flex-1 md:ml-64 min-h-screen overflow-y-auto">
+        {/* Header mobile com hambúrguer */}
+        <header className="flex items-center h-16 border-b border-border bg-background px-4 md:hidden">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Menu className="size-6" />
+          </button>
+          <span className="ml-4 text-xl font-bold text-primary">Noviq</span>
+        </header>
+
         {children}
       </main>
     </div>

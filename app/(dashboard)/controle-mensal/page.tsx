@@ -427,12 +427,12 @@ function ControleMensalContent() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-8">
+    <div className="flex flex-col gap-6 p-4 md:p-8">
       {/* Header */}
       <MonthHeader ano={ano} />
 
       {/* 3 Blocos lado a lado */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <BlocoFinanceiro data={dadosMes.renda} />
         <BlocoFinanceiro data={dadosMes.fixas} />
         <BlocoFinanceiro data={dadosMes.variaveis} />
@@ -447,7 +447,7 @@ function ControleMensalContent() {
       {/* Botão flutuante */}
       <Button
         size="lg"
-        className="fixed bottom-8 right-8 rounded-full w-14 h-14 shadow-lg z-50"
+        className="fixed bottom-6 right-6 md:bottom-8 md:right-8 rounded-full w-14 h-14 shadow-lg z-50"
         aria-label="Adicionar lançamento"
         onClick={() => setModalAberto(true)}
       >

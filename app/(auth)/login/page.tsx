@@ -67,75 +67,77 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="w-full max-w-md">
-      {/* Logo */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-primary">Noviq Finance</h1>
-        <p className="text-muted-foreground mt-2">Controle financeiro inteligente</p>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-primary">Noviq Finance</h1>
+          <p className="text-muted-foreground mt-2">Controle financeiro inteligente</p>
+        </div>
+
+        {/* Card de Login */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Entrar</CardTitle>
+            <CardDescription>
+              Digite suas credenciais para acessar sua conta
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              {/* Campo E-mail */}
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Campo Senha */}
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Mensagem de Erro */}
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {/* Botão Entrar */}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Entrando...' : 'Entrar'}
+              </Button>
+
+              {/* Link Esqueci minha senha */}
+              <div className="text-center">
+                <a
+                  href="/recuperar-senha"
+                  className="text-sm text-primary hover:underline"
+                >
+                  Esqueci minha senha
+                </a>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Card de Login */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Entrar</CardTitle>
-          <CardDescription>
-            Digite suas credenciais para acessar sua conta
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            {/* Campo E-mail */}
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-
-            {/* Campo Senha */}
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-
-            {/* Mensagem de Erro */}
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {/* Botão Entrar */}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Entrando...' : 'Entrar'}
-            </Button>
-
-            {/* Link Esqueci minha senha */}
-            <div className="text-center">
-              <a
-                href="/recuperar-senha"
-                className="text-sm text-primary hover:underline"
-              >
-                Esqueci minha senha
-              </a>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
     </div>
   )
 }

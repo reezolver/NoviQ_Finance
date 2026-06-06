@@ -308,23 +308,23 @@ export default function ObjetivosPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-8">
+    <div className="flex flex-col gap-6 p-4 md:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Objetivos</h1>
           <p className="text-muted-foreground">
             Acompanhe suas metas financeiras
           </p>
         </div>
-        <Button onClick={() => setModalAberto(true)}>
+        <Button onClick={() => setModalAberto(true)} className="w-full md:w-auto">
           <Plus className="size-4 mr-2" />
           Novo Objetivo
         </Button>
       </div>
 
       {/* Grid de cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {objetivos.map((objetivo) => (
           <ObjetivoCard key={objetivo.id} objetivo={objetivo} />
         ))}

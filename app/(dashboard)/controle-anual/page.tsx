@@ -179,9 +179,9 @@ export default function ControleAnualPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-8">
+    <div className="flex flex-col gap-6 p-4 md:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Controle Anual</h1>
           <p className="text-muted-foreground">
@@ -189,7 +189,7 @@ export default function ControleAnualPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
           <UserName />
           <YearSelector />
           <Button
@@ -199,7 +199,7 @@ export default function ControleAnualPage() {
             className="gap-2"
           >
             <LogOut className="size-4" />
-            Sair
+            <span className="hidden sm:inline">Sair</span>
           </Button>
         </div>
       </div>
@@ -211,7 +211,7 @@ export default function ControleAnualPage() {
           <CardDescription>Comparativo entre planejado e realizado</CardDescription>
         </CardHeader>
         <CardContent>
-          <ChartContainer config={chartConfig} className="h-80 w-full">
+          <ChartContainer config={chartConfig} className="h-64 w-full md:h-80 lg:h-96">
             <BarChart data={DADOS_MOCKADOS_2026} barGap={4} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis
@@ -253,42 +253,44 @@ export default function ControleAnualPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Mês</TableHead>
-                <TableHead className="text-right">Planejado</TableHead>
-                <TableHead className="text-right">Realizado</TableHead>
-                <TableHead className="text-right">Diferença</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {DADOS_MOCKADOS_2026.map((row) => (
-                <TableRow
-                  key={row.mes}
-                  className="cursor-pointer"
-                  onClick={() => handleMonthClick(row.mesIndex)}
-                >
-                  <TableCell className="font-medium">{row.mes}</TableCell>
-                  <TableCell className="text-right font-mono tabular-nums">
-                    {formatarMoeda(row.planejado)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono tabular-nums">
-                    {formatarMoeda(row.realizado)}
-                  </TableCell>
-                  <TableCell
-                    className={cn(
-                      "text-right font-mono font-medium tabular-nums",
-                      row.diferenca >= 0 ? "text-success" : "text-destructive"
-                    )}
-                  >
-                    {row.diferenca >= 0 ? "+" : ""}
-                    {formatarMoeda(row.diferenca)}
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Mês</TableHead>
+                  <TableHead className="text-right">Planejado</TableHead>
+                  <TableHead className="text-right">Realizado</TableHead>
+                  <TableHead className="text-right">Diferença</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {DADOS_MOCKADOS_2026.map((row) => (
+                  <TableRow
+                    key={row.mes}
+                    className="cursor-pointer"
+                    onClick={() => handleMonthClick(row.mesIndex)}
+                  >
+                    <TableCell className="font-medium">{row.mes}</TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">
+                      {formatarMoeda(row.planejado)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">
+                      {formatarMoeda(row.realizado)}
+                    </TableCell>
+                    <TableCell
+                      className={cn(
+                        "text-right font-mono font-medium tabular-nums",
+                        row.diferenca >= 0 ? "text-success" : "text-destructive"
+                      )}
+                    >
+                      {row.diferenca >= 0 ? "+" : ""}
+                      {formatarMoeda(row.diferenca)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -54,12 +54,12 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar fixa */}
-      <aside className="flex w-64 flex-col border-r border-border bg-card">
+      <aside className="fixed top-0 left-0 z-40 flex h-screen w-64 flex-col border-r border-border bg-sidebar overflow-y-auto">
         <div className="flex h-16 items-center border-b border-border px-6">
           <span className="text-xl font-bold text-primary">Noviq</span>
         </div>
 
-        <nav className="space-y-1 p-4">
+        <nav className="flex-1 space-y-1 p-4">
           {navItems.map((item) => {
             const isActive = pathname === item.href
             const Icon = item.icon
@@ -83,13 +83,13 @@ export default function DashboardLayout({
         </nav>
 
         {/* Rodapé da sidebar com ThemeToggle */}
-        <div className="mt-auto border-t border-border p-4">
+        <div className="border-t border-border p-4">
           <ThemeToggle />
         </div>
       </aside>
 
       {/* Área principal */}
-      <main className="flex-1 overflow-auto">
+      <main className="ml-64 flex-1 min-h-screen overflow-y-auto">
         {children}
       </main>
     </div>

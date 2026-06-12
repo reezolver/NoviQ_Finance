@@ -83,6 +83,7 @@ export default function CadastroPage() {
           .upsert({
             id: data.user.id,
             nome: nome,
+            email: email,
             tipo_perfil: 'educador',
             status: 'pendente',
           })

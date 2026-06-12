@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Search, Check, X, AlertCircle } from 'lucide-react'
+import { Search, Check, X, AlertCircle, Mail, Copy } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { toast } from 'sonner'
 
@@ -42,6 +42,7 @@ export default function EducadoresPage() {
   const [dialogAberto, setDialogAberto] = useState(false)
   const [educadorSelecionado, setEducadorSelecionado] = useState<Educador | null>(null)
   const [acaoDialog, setAcaoDialog] = useState<'aprovar' | 'recusar' | 'desativar' | null>(null)
+  const [conviteDialogAberto, setConviteDialogAberto] = useState(false)
 
   // Buscar educadores
   useEffect(() => {
@@ -164,6 +165,13 @@ export default function EducadoresPage() {
     }
   }
 
+  // Copiar link de convite
+  function copiarLinkConvite() {
+    const link = 'https://novi-q-finance.vercel.app/cadastro'
+    navigator.clipboard.writeText(link)
+    toast.success('Link copiado!')
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -178,11 +186,17 @@ export default function EducadoresPage() {
   return (
     <div className="p-6 md:p-8 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Gerenciar Educadores</h1>
-        <p className="text-muted-foreground mt-2">
-          Aprove, recuse ou gerencie os educadores da plataforma
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Gerenciar Educadores</h1>
+          <p className="text-muted-foreground mt-2">
+            Aprove, recuse ou gerencie os educadores da plataforma
+          </p>
+        </div>
+        <Button onClick={() => setConviteDialogAberto(true)}>
+          <Mail className="h-4 w-4 mr-2" />
+          Convidar Educador
+        </Button>
       </div>
 
       {/* Card com Tabs */}
@@ -379,6 +393,37 @@ export default function EducadoresPage() {
               }
             >
               {acaoDialog === 'aprovar' ? 'Aprovar' : 'Confirmar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Convite */}
+      <Dialog open={conviteDialogAberto} onOpenChange={setConviteDialogAberto}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-primary" />
+              Convidar Educador
+            </DialogTitle>
+            <DialogDescription>
+              Compartilhe o link abaixo para o educador se cadastrar na plataforma:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              readOnly
+              value="https://novi-q-finance.vercel.app/cadastro"
+              className="bg-muted"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConviteDialogAberto(false)}>
+              Fechar
+            </Button>
+            <Button onClick={copiarLinkConvite}>
+              <Copy className="h-4 w-4 mr-2" />
+              Copiar link
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -12,8 +14,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Search } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Search, UserPlus, FileText } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import { toast } from 'sonner'
 
 interface Cliente {
   id: string
@@ -27,6 +38,12 @@ export default function ClientesPage() {
   const [loading, setLoading] = useState(true)
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [busca, setBusca] = useState('')
+  const [addClienteDialogAberto, setAddClienteDialogAberto] = useState(false)
+  const [novoCliente, setNovoCliente] = useState({
+    nome: '',
+    email: '',
+    senha: '',
+  })
 
   // Buscar clientes
   useEffect(() => {
@@ -83,6 +100,13 @@ export default function ClientesPage() {
     }
   }
 
+  // Adicionar novo cliente (placeholder)
+  function handleAdicionarCliente() {
+    toast.success('Funcionalidade em desenvolvimento')
+    setAddClienteDialogAberto(false)
+    setNovoCliente({ nome: '', email: '', senha: '' })
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -97,11 +121,23 @@ export default function ClientesPage() {
   return (
     <div className="p-6 md:p-8 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Meus Clientes</h1>
-        <p className="text-muted-foreground mt-2">
-          Visualize todos os clientes cadastrados na plataforma
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Meus Clientes</h1>
+          <p className="text-muted-foreground mt-2">
+            Visualize todos os clientes cadastrados na plataforma
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => setAddClienteDialogAberto(true)}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Adicionar Cliente
+          </Button>
+          <Button variant="outline" disabled title="Em breve">
+            <FileText className="h-4 w-4 mr-2" />
+            Enviar Anamnese
+          </Button>
+        </div>
       </div>
 
       {/* Card com Tabela */}
@@ -156,6 +192,63 @@ export default function ClientesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog de Adicionar Cliente */}
+      <Dialog open={addClienteDialogAberto} onOpenChange={setAddClienteDialogAberto}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-primary" />
+              Adicionar Cliente
+            </DialogTitle>
+            <DialogDescription>
+              Preencha os dados abaixo para adicionar um novo cliente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome completo</Label>
+              <Input
+                id="nome"
+                value={novoCliente.nome}
+                onChange={(e) => setNovoCliente({ ...novoCliente, nome: e.target.value })}
+                placeholder="Nome do cliente"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                value={novoCliente.email}
+                onChange={(e) => setNovoCliente({ ...novoCliente, email: e.target.value })}
+                placeholder="cliente@email.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="senha">Senha temporária</Label>
+              <Input
+                id="senha"
+                type="password"
+                value={novoCliente.senha}
+                onChange={(e) => setNovoCliente({ ...novoCliente, senha: e.target.value })}
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setAddClienteDialogAberto(false)
+              setNovoCliente({ nome: '', email: '', senha: '' })
+            }}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAdicionarCliente} disabled={!novoCliente.nome || !novoCliente.email || !novoCliente.senha}>
+              Adicionar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

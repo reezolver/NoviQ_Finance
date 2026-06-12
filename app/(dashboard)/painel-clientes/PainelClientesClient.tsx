@@ -84,7 +84,7 @@ export function PainelClientesClient({ clientes }: PainelClientesClientProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="primary">
+          <Button variant="default">
             Novo Cliente
           </Button>
           <TooltipProvider>

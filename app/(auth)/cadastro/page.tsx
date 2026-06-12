@@ -10,6 +10,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 
+function traduzirErro(erro: string): string {
+  if (erro.includes('email rate limit'))
+    return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.'
+  if (erro.includes('User already registered') || erro.includes('already been registered'))
+    return 'Este e-mail já está cadastrado. Tente fazer login.'
+  if (erro.includes('Invalid email'))
+    return 'E-mail inválido. Verifique e tente novamente.'
+  if (erro.includes('Password should be'))
+    return 'A senha deve ter pelo menos 6 caracteres.'
+  return 'Erro ao criar conta. Tente novamente.'
+}
+
 export default function CadastroPage() {
   const router = useRouter()
   const [nome, setNome] = useState('')
@@ -58,12 +70,7 @@ export default function CadastroPage() {
       })
 
       if (signUpError) {
-        // Verificar se é erro de e-mail já cadastrado
-        if (signUpError.message.includes('already')) {
-          setError('Este e-mail já está cadastrado. Faça login ou use outro e-mail.')
-        } else {
-          setError(signUpError.message)
-        }
+        setError(traduzirErro(signUpError.message))
         return
       }
 
@@ -99,7 +106,7 @@ export default function CadastroPage() {
       }
     } catch (err) {
       console.error('Cadastro error:', err)
-      setError('Erro ao criar conta. Tente novamente.')
+      setError(traduzirErro(err instanceof Error ? err.message : String(err)))
     } finally {
       setLoading(false)
     }

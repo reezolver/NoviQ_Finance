@@ -29,7 +29,6 @@ import { toast } from 'sonner'
 interface Educador {
   id: string
   nome: string
-  email: string
   status: 'ativo' | 'pendente' | 'inativo'
   created_at: string
 }
@@ -73,10 +72,7 @@ export default function EducadoresPage() {
   // Filtrar educadores por busca
   const educadoresFiltrados = educadores.filter((edu) => {
     const buscaLower = busca.toLowerCase()
-    return (
-      edu.nome.toLowerCase().includes(buscaLower) ||
-      edu.email.toLowerCase().includes(buscaLower)
-    )
+    return edu.nome.toLowerCase().includes(buscaLower)
   })
 
   // Separar por status
@@ -210,7 +206,7 @@ export default function EducadoresPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nome ou e-mail..."
+                placeholder="Buscar por nome..."
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
                 className="pl-10"
@@ -243,7 +239,6 @@ export default function EducadoresPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nome</TableHead>
-                      <TableHead>E-mail</TableHead>
                       <TableHead>Data Cadastro</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
@@ -252,7 +247,6 @@ export default function EducadoresPage() {
                     {pendentes.map((edu) => (
                       <TableRow key={edu.id}>
                         <TableCell className="font-medium">{edu.nome}</TableCell>
-                        <TableCell>{edu.email}</TableCell>
                         <TableCell>{formatarData(edu.created_at)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -294,7 +288,6 @@ export default function EducadoresPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nome</TableHead>
-                      <TableHead>E-mail</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Data Cadastro</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
@@ -304,7 +297,6 @@ export default function EducadoresPage() {
                     {ativos.map((edu) => (
                       <TableRow key={edu.id}>
                         <TableCell className="font-medium">{edu.nome}</TableCell>
-                        <TableCell>{edu.email}</TableCell>
                         <TableCell>
                           <BadgeStatus status={edu.status} />
                         </TableCell>
@@ -336,7 +328,6 @@ export default function EducadoresPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nome</TableHead>
-                      <TableHead>E-mail</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Data Cadastro</TableHead>
                     </TableRow>
@@ -345,7 +336,6 @@ export default function EducadoresPage() {
                     {inativos.map((edu) => (
                       <TableRow key={edu.id}>
                         <TableCell className="font-medium">{edu.nome}</TableCell>
-                        <TableCell>{edu.email}</TableCell>
                         <TableCell>
                           <BadgeStatus status={edu.status} />
                         </TableCell>

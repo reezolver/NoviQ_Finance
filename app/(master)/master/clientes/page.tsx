@@ -29,7 +29,6 @@ import { toast } from 'sonner'
 interface Cliente {
   id: string
   nome: string
-  email: string
   status: string
   created_at: string
 }
@@ -73,10 +72,7 @@ export default function ClientesPage() {
   // Filtrar clientes por busca
   const clientesFiltrados = clientes.filter((cli) => {
     const buscaLower = busca.toLowerCase()
-    return (
-      cli.nome.toLowerCase().includes(buscaLower) ||
-      cli.email.toLowerCase().includes(buscaLower)
-    )
+    return cli.nome.toLowerCase().includes(buscaLower)
   })
 
   // Formatar data
@@ -151,7 +147,7 @@ export default function ClientesPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nome ou e-mail..."
+                placeholder="Buscar por nome..."
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
                 className="pl-10"
@@ -171,7 +167,6 @@ export default function ClientesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
-                  <TableHead>E-mail</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Data Cadastro</TableHead>
                 </TableRow>
@@ -180,7 +175,6 @@ export default function ClientesPage() {
                 {clientesFiltrados.map((cliente) => (
                   <TableRow key={cliente.id}>
                     <TableCell className="font-medium">{cliente.nome}</TableCell>
-                    <TableCell>{cliente.email}</TableCell>
                     <TableCell>
                       <BadgeStatus status={cliente.status} />
                     </TableCell>

@@ -72,7 +72,7 @@ export default function ClientesPage() {
   // Filtrar clientes por busca
   const clientesFiltrados = clientes.filter((cli) => {
     const buscaLower = busca.toLowerCase()
-    return cli.nome.toLowerCase().includes(buscaLower)
+    return (cli.nome || '').toLowerCase().includes(buscaLower)
   })
 
   // Formatar data
@@ -174,7 +174,7 @@ export default function ClientesPage() {
               <TableBody>
                 {clientesFiltrados.map((cliente) => (
                   <TableRow key={cliente.id}>
-                    <TableCell className="font-medium">{cliente.nome}</TableCell>
+                    <TableCell className="font-medium">{cliente.nome || 'Sem nome'}</TableCell>
                     <TableCell>
                       <BadgeStatus status={cliente.status} />
                     </TableCell>

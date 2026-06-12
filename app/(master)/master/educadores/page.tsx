@@ -72,7 +72,7 @@ export default function EducadoresPage() {
   // Filtrar educadores por busca
   const educadoresFiltrados = educadores.filter((edu) => {
     const buscaLower = busca.toLowerCase()
-    return edu.nome.toLowerCase().includes(buscaLower)
+    return (edu.nome || '').toLowerCase().includes(buscaLower)
   })
 
   // Separar por status
@@ -246,7 +246,7 @@ export default function EducadoresPage() {
                   <TableBody>
                     {pendentes.map((edu) => (
                       <TableRow key={edu.id}>
-                        <TableCell className="font-medium">{edu.nome}</TableCell>
+                        <TableCell className="font-medium">{edu.nome || 'Sem nome'}</TableCell>
                         <TableCell>{formatarData(edu.created_at)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -296,7 +296,7 @@ export default function EducadoresPage() {
                   <TableBody>
                     {ativos.map((edu) => (
                       <TableRow key={edu.id}>
-                        <TableCell className="font-medium">{edu.nome}</TableCell>
+                        <TableCell className="font-medium">{edu.nome || 'Sem nome'}</TableCell>
                         <TableCell>
                           <BadgeStatus status={edu.status} />
                         </TableCell>
@@ -335,7 +335,7 @@ export default function EducadoresPage() {
                   <TableBody>
                     {inativos.map((edu) => (
                       <TableRow key={edu.id}>
-                        <TableCell className="font-medium">{edu.nome}</TableCell>
+                        <TableCell className="font-medium">{edu.nome || 'Sem nome'}</TableCell>
                         <TableCell>
                           <BadgeStatus status={edu.status} />
                         </TableCell>

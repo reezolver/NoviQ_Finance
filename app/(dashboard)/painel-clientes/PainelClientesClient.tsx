@@ -112,7 +112,7 @@ export function PainelClientesClient({ clientes }: PainelClientesClientProps) {
           <p className="text-muted-foreground text-center mb-6">
             Clique em &quot;Novo Cliente&quot; para adicionar seu primeiro cliente
           </p>
-          <Button variant="primary">
+          <Button variant="default">
             Adicionar primeiro cliente
           </Button>
         </div>

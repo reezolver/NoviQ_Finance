@@ -1,17 +1,17 @@
 /**
  * Painel do Educador (Server Component)
  *
- * Busca os dados dos clientes no Supabase e passa para o Client Component.
- * Tela exclusiva para educadores financeiros gerenciarem seus clientes.
+ * Busca os dados das subcontas no Supabase e passa para o Client Component.
+ * Visual estilo Google Tag Manager com containers por subconta.
  */
 
 import { createSupabaseServerClient } from '@/lib/supabase-server'
-import { PainelClient } from './PainelClient'
+import { PainelContainer } from './PainelContainer'
 
 /**
  * Interface para subconta de cliente
  */
-interface SubcontaCliente {
+interface Subconta {
   id: string
   nome: string | null
   email: string | null
@@ -30,8 +30,8 @@ export default async function PainelPage() {
     return null
   }
 
-  // Buscar clientes do educador
-  const { data: clientes } = await supabase
+  // Buscar subcontas do educador
+  const { data: subcontas } = await supabase
     .from('profiles')
     .select('id, nome, email, status, created_at, subconta_tipo')
     .eq('educador_id', user.id)
@@ -39,8 +39,8 @@ export default async function PainelPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <PainelClient
-      clientes={(clientes as SubcontaCliente[]) || null}
+    <PainelContainer
+      subcontas={(subcontas as Subconta[]) ?? []}
     />
   )
 }

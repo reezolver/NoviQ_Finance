@@ -12,14 +12,19 @@ import {
   Shield,
   Menu,
   X,
+  Users2,
+  UserPlus,
+  ClipboardList,
+  FileText,
+  ChevronLeft,
 } from "lucide-react"
 import { UserMenu } from "@/components/user-menu"
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase"
 
 /**
- * Layout do dashboard com sidebar de navegação.
- * Envolve todas as páginas do grupo de rota (dashboard).
+ * Layout do dashboard com sidebar de navegação contextual.
+ * Menu muda conforme o tipo de perfil e a rota atual.
  */
 export default function DashboardLayout({
   children,
@@ -58,8 +63,11 @@ export default function DashboardLayout({
     loadUserProfile()
   }, [])
 
-  // Criar navItems baseado no tipo de perfil
-  const baseNavItems = [
+  // Verificar se está no painel do educador
+  const isEducadorHome = pathname === '/painel'
+
+  // Itens do menu financeiro (cliente)
+  const financeiroNavItems = [
     {
       href: "/controle-anual",
       label: "Controle Anual",
@@ -87,15 +95,44 @@ export default function DashboardLayout({
     },
   ]
 
+  // Itens do menu do educador (no painel)
+  const educadorNavItems = [
+    {
+      href: "/painel",
+      label: "Todas as subcontas",
+      icon: Users2,
+      active: true,
+    },
+    {
+      label: "Adicionar subconta",
+      icon: UserPlus,
+      disabled: true,
+      tooltip: "Em breve",
+    },
+  ]
+
+  // Itens de anamnese (educador)
+  const anamneseItems = [
+    {
+      label: "Enviar ficha",
+      icon: ClipboardList,
+      disabled: true,
+      badge: "Em breve",
+    },
+    {
+      label: "Fichas enviadas",
+      icon: FileText,
+      disabled: true,
+      badge: "Em breve",
+    },
+  ]
+
+  // Item do master
   const masterNavItem = {
     href: "/master",
     label: "Master",
     icon: Shield,
   }
-
-  const navItems = userType === 'master'
-    ? [...baseNavItems, masterNavItem]
-    : baseNavItems
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -127,27 +164,134 @@ export default function DashboardLayout({
         </div>
 
         <nav className="flex-1 space-y-1 p-4">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href
-            const Icon = item.icon
+          {/* Link "Voltar ao painel" para educador fora do painel */}
+          {!isEducadorHome && (userType === 'educador' || userType === 'master') && (
+            <Link
+              href="/painel"
+              onClick={closeSidebar}
+              className="flex items-center gap-2 text-xs text-muted-foreground
+                hover:text-foreground mb-3 pb-3 border-b"
+            >
+              <ChevronLeft className="h-3 w-3" />
+              Voltar ao painel
+            </Link>
+          )}
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={closeSidebar}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <Icon className="size-5" />
-                {item.label}
-              </Link>
-            )
-          })}
+          {/* Menu do educador (no painel) */}
+          {isEducadorHome && (userType === 'educador' || userType === 'master') ? (
+            <>
+              {/* Seção Subcontas */}
+              <div className="space-y-1 mb-4">
+                <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Subcontas
+                </p>
+                {educadorNavItems.map((item, index) => {
+                  const Icon = item.icon
+
+                  if (item.disabled) {
+                    return (
+                      <div
+                        key={index}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
+                          text-muted-foreground opacity-50 cursor-not-allowed"
+                        title={item.tooltip}
+                      >
+                        <Icon className="size-5" />
+                        {item.label}
+                      </div>
+                    )
+                  }
+
+                  if (item.href) {
+                    return (
+                      <Link
+                        key={index}
+                        href={item.href}
+                        onClick={closeSidebar}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                          item.active
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                      >
+                        <Icon className="size-5" />
+                        {item.label}
+                      </Link>
+                    )
+                  }
+
+                  return null
+                })}
+              </div>
+
+              {/* Seção Anamnese */}
+              <div className="space-y-1">
+                <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Anamnese
+                </p>
+                {anamneseItems.map((item, index) => {
+                  const Icon = item.icon
+
+                  return (
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
+                        text-muted-foreground opacity-50 cursor-not-allowed"
+                    >
+                      <Icon className="size-5" />
+                      {item.label}
+                      <span className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">
+                        {item.badge}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Menu financeiro (cliente ou educador fora do painel) */}
+              {financeiroNavItems.map((item) => {
+                const isActive = pathname === item.href
+                const Icon = item.icon
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={closeSidebar}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <Icon className="size-5" />
+                    {item.label}
+                  </Link>
+                )
+              })}
+
+              {/* Item Master (apenas para master) */}
+              {userType === 'master' && (
+                <Link
+                  href={masterNavItem.href}
+                  onClick={closeSidebar}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    pathname === masterNavItem.href
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <masterNavItem.icon className="size-5" />
+                  {masterNavItem.label}
+                </Link>
+              )}
+            </>
+          )}
         </nav>
 
         {/* Rodapé da sidebar com UserMenu */}

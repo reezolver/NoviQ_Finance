@@ -47,7 +47,7 @@ export default function CadastroPage() {
       const supabase = createClient()
 
       // Criar usuário no Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password: senha,
         options: {
@@ -57,32 +57,44 @@ export default function CadastroPage() {
         },
       })
 
-      if (authError) {
+      if (signUpError) {
         // Verificar se é erro de e-mail já cadastrado
-        if (authError.message.includes('already')) {
+        if (signUpError.message.includes('already')) {
           setError('Este e-mail já está cadastrado. Faça login ou use outro e-mail.')
         } else {
-          setError(authError.message)
+          setError(signUpError.message)
         }
         return
       }
 
-      if (authData.user) {
-        // Criar perfil na tabela profiles
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: authData.user.id,
-          nome: nome,
-          tipo_perfil: 'educador',
-          status: 'pendente',
-        })
+      // O usuário pode precisar confirmar o e-mail
+      // Inserir o perfil usando o id retornado
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            nome: nome,
+            tipo_perfil: 'educador',
+            status: 'pendente',
+          })
 
         if (profileError) {
-          setError('Erro ao criar perfil. Tente novamente.')
           console.error('Profile error:', profileError)
-          return
+          // Se o perfil já existe (upsert)
+          await supabase
+            .from('profiles')
+            .upsert({
+              id: data.user.id,
+              nome: nome,
+              tipo_perfil: 'educador',
+              status: 'pendente',
+            })
         }
 
-        // Redirecionar para página de aguardando aprovação
+        router.push('/aguardando-aprovacao')
+      } else {
+        // E-mail de confirmação enviado
         router.push('/aguardando-aprovacao')
       }
     } catch (err) {

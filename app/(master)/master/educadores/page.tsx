@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Search, Check, X, AlertCircle, Mail, Copy } from 'lucide-react'
+import { Search, Check, X, AlertCircle, Mail, Copy, Eye, RefreshCw } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { toast } from 'sonner'
 
@@ -40,8 +40,10 @@ export default function EducadoresPage() {
   const [tabAtiva, setTabAtiva] = useState('pendentes')
   const [dialogAberto, setDialogAberto] = useState(false)
   const [educadorSelecionado, setEducadorSelecionado] = useState<Educador | null>(null)
-  const [acaoDialog, setAcaoDialog] = useState<'aprovar' | 'recusar' | 'desativar' | null>(null)
+  const [acaoDialog, setAcaoDialog] = useState<'aprovar' | 'recusar' | 'desativar' | 'reativar' | null>(null)
   const [conviteDialogAberto, setConviteDialogAberto] = useState(false)
+  const [detalhesDialogAberto, setDetalhesDialogAberto] = useState(false)
+  const [clientesCount, setClientesCount] = useState<number>(0)
 
   // Buscar educadores
   useEffect(() => {
@@ -87,6 +89,27 @@ export default function EducadoresPage() {
     setDialogAberto(true)
   }
 
+  // Abrir modal de detalhes
+  async function abrirDetalhes(educador: Educador) {
+    setEducadorSelecionado(educador)
+    setDetalhesDialogAberto(true)
+
+    // Buscar número de clientes vinculados
+    try {
+      const supabase = createClient()
+      const { count } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('tipo_perfil', 'cliente')
+        .eq('educador_id', educador.id)
+
+      setClientesCount(count || 0)
+    } catch (error) {
+      console.error('Erro ao buscar clientes:', error)
+      setClientesCount(0)
+    }
+  }
+
   // Executar ação
   async function executarAcao() {
     if (!educadorSelecionado || !acaoDialog) return
@@ -109,6 +132,10 @@ export default function EducadoresPage() {
         case 'desativar':
           novoStatus = 'inativo'
           mensagemSucesso = 'Educador desativado.'
+          break
+        case 'reativar':
+          novoStatus = 'ativo'
+          mensagemSucesso = 'Educador reativado com sucesso!'
           break
         default:
           return
@@ -246,7 +273,14 @@ export default function EducadoresPage() {
                   <TableBody>
                     {pendentes.map((edu) => (
                       <TableRow key={edu.id}>
-                        <TableCell className="font-medium">{edu.nome || 'Sem nome'}</TableCell>
+                        <TableCell className="font-medium">
+                          <button
+                            onClick={() => abrirDetalhes(edu)}
+                            className="hover:text-primary hover:underline text-left"
+                          >
+                            {edu.nome || 'Sem nome'}
+                          </button>
+                        </TableCell>
                         <TableCell>{formatarData(edu.created_at)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -296,7 +330,14 @@ export default function EducadoresPage() {
                   <TableBody>
                     {ativos.map((edu) => (
                       <TableRow key={edu.id}>
-                        <TableCell className="font-medium">{edu.nome || 'Sem nome'}</TableCell>
+                        <TableCell className="font-medium">
+                          <button
+                            onClick={() => abrirDetalhes(edu)}
+                            className="hover:text-primary hover:underline text-left"
+                          >
+                            {edu.nome || 'Sem nome'}
+                          </button>
+                        </TableCell>
                         <TableCell>
                           <BadgeStatus status={edu.status} />
                         </TableCell>
@@ -335,7 +376,14 @@ export default function EducadoresPage() {
                   <TableBody>
                     {inativos.map((edu) => (
                       <TableRow key={edu.id}>
-                        <TableCell className="font-medium">{edu.nome || 'Sem nome'}</TableCell>
+                        <TableCell className="font-medium">
+                          <button
+                            onClick={() => abrirDetalhes(edu)}
+                            className="hover:text-primary hover:underline text-left"
+                          >
+                            {edu.nome || 'Sem nome'}
+                          </button>
+                        </TableCell>
                         <TableCell>
                           <BadgeStatus status={edu.status} />
                         </TableCell>
@@ -415,6 +463,99 @@ export default function EducadoresPage() {
               <Copy className="h-4 w-4 mr-2" />
               Copiar link
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Detalhes do Educador */}
+      <Dialog open={detalhesDialogAberto} onOpenChange={setDetalhesDialogAberto}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-primary" />
+              Detalhes do Educador
+            </DialogTitle>
+            <DialogDescription>
+              Informações completas do educador
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-muted-foreground text-sm">Nome</Label>
+              <p className="font-medium">{educadorSelecionado?.nome || 'Sem nome'}</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground text-sm">E-mail</Label>
+              <p className="text-muted-foreground">Não disponível</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground text-sm">Status</Label>
+              {educadorSelecionado && <BadgeStatus status={educadorSelecionado.status} />}
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground text-sm">Data de Cadastro</Label>
+              <p className="text-muted-foreground">
+                {educadorSelecionado && formatarData(educadorSelecionado.created_at)}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground text-sm">Clientes Vinculados</Label>
+              <p className="font-medium text-2xl">{clientesCount}</p>
+            </div>
+          </div>
+          <DialogFooter className="flex justify-between">
+            <Button variant="outline" onClick={() => setDetalhesDialogAberto(false)}>
+              Fechar
+            </Button>
+            <div className="flex gap-2">
+              {educadorSelecionado?.status === 'pendente' && (
+                <>
+                  <Button
+                    onClick={() => {
+                      setDetalhesDialogAberto(false)
+                      abrirConfirmacao(educadorSelecionado, 'aprovar')
+                    }}
+                    className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    Aprovar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setDetalhesDialogAberto(false)
+                      abrirConfirmacao(educadorSelecionado, 'recusar')
+                    }}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Recusar
+                  </Button>
+                </>
+              )}
+              {educadorSelecionado?.status === 'ativo' && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDetalhesDialogAberto(false)
+                    abrirConfirmacao(educadorSelecionado, 'desativar')
+                  }}
+                >
+                  Desativar
+                </Button>
+              )}
+              {educadorSelecionado?.status === 'inativo' && (
+                <Button
+                  onClick={() => {
+                    setDetalhesDialogAberto(false)
+                    abrirConfirmacao(educadorSelecionado, 'reativar')
+                  }}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Reativar
+                </Button>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

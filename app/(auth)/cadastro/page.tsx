@@ -49,7 +49,7 @@ export default function CadastroPage() {
       // Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
-        password,
+        password: senha,
         options: {
           data: {
             nome: nome,

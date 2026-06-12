@@ -1,8 +1,7 @@
 /**
- * Painel do Educador - GTM Style (Client Component)
+ * Painel do Educador - Lista de Clientes (Client Component)
  *
- * Visual estilo Google Tag Manager com containers por subconta.
- * Cards organizados em duas seções: Pessoal e Clientes.
+ * Visual estilo Google Tag Manager com containers por cliente.
  */
 
 "use client"
@@ -16,37 +15,32 @@ import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
 
 /**
- * Interface para subconta de cliente
+ * Interface para cliente
  */
-interface Subconta {
+interface Cliente {
   id: string
   nome: string | null
   email: string | null
   status: 'ativo' | 'pendente' | 'inativo' | null
   created_at: string | null
-  subconta_tipo: 'pessoal' | 'cliente' | null
 }
 
 /**
  * Props do componente
  */
 interface PainelContainerProps {
-  subcontas: Subconta[]
+  clientes: Cliente[]
 }
 
-export function PainelContainer({ subcontas }: PainelContainerProps) {
+export function PainelContainer({ clientes }: PainelContainerProps) {
   const router = useRouter()
   const [busca, setBusca] = useState("")
 
-  // Filtrar subcontas por nome E email
-  const filtradas = subcontas.filter(s =>
+  // Filtrar clientes por nome E email
+  const filtrados = clientes.filter(s =>
     (s.nome || '').toLowerCase().includes(busca.toLowerCase()) ||
     (s.email || '').toLowerCase().includes(busca.toLowerCase())
   )
-
-  // Separar em pessoais e clientes
-  const pessoais = filtradas.filter(s => s.subconta_tipo === 'pessoal')
-  const clientes = filtradas.filter(s => s.subconta_tipo !== 'pessoal')
 
   // Calcular iniciais do nome
   const getIniciais = (nome: string | null) => {
@@ -74,7 +68,7 @@ export function PainelContainer({ subcontas }: PainelContainerProps) {
     inativo: { label: 'Inativo', className: 'text-muted-foreground bg-muted' },
   }
 
-  const getStatusConfig = (status: Subconta['status']) => {
+  const getStatusConfig = (status: Cliente['status']) => {
     return statusConfig[status ?? 'ativo'] ?? statusConfig.ativo
   }
 
@@ -83,12 +77,13 @@ export function PainelContainer({ subcontas }: PainelContainerProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Suas subcontas</h1>
-          <p className="text-muted-foreground">Selecione uma subconta para acessar o dashboard</p>
+          <h1 className="text-2xl font-bold tracking-tight">Seus clientes</h1>
+          <p className="text-muted-foreground">Gerencie e acesse as contas dos seus clientes</p>
         </div>
 
         <Button variant="default">
-          Nova subconta
+          <UserPlus className="mr-2 h-4 w-4" />
+          Novo cliente
         </Button>
       </div>
 
@@ -105,107 +100,72 @@ export function PainelContainer({ subcontas }: PainelContainerProps) {
         </div>
       </div>
 
-      {/* Seção Pessoal */}
+      {/* Lista de Clientes */}
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold">Pessoal</h2>
+        <h2 className="text-lg font-semibold">Clientes — {filtrados.length}</h2>
 
-        {pessoais.length === 0 ? (
+        {filtrados.length === 0 && busca.length === 0 ? (
           <Card>
             <CardContent className="p-6">
               <div className="text-center text-muted-foreground">
-                <p className="mb-4">Você ainda não criou sua subconta pessoal</p>
+                <Users2 className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                <p className="mb-4">Nenhum cliente cadastrado ainda</p>
                 <Button variant="outline">
-                  Criar minha subconta pessoal
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Cadastrar primeiro cliente
                 </Button>
               </div>
             </CardContent>
           </Card>
+        ) : filtrados.length === 0 && busca.length > 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Nenhum cliente encontrado com &quot;{busca}&quot;
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {pessoais.map((subconta) => (
-              <SubcontaCard
-                key={subconta.id}
-                subconta={subconta}
-                iniciais={getIniciais(subconta.nome)}
-                dataCadastro={formatarData(subconta.created_at)}
-                statusConfig={getStatusConfig(subconta.status)}
+            {filtrados.map((cliente) => (
+              <ClienteCard
+                key={cliente.id}
+                cliente={cliente}
+                iniciais={getIniciais(cliente.nome)}
+                dataCadastro={formatarData(cliente.created_at)}
+                statusConfig={getStatusConfig(cliente.status)}
                 onEnter={() => router.push('/controle-anual')}
               />
             ))}
           </div>
         )}
       </div>
-
-      {/* Seção Clientes */}
-      <div className="space-y-3">
-        <h2 className="text-lg font-semibold">Clientes — {clientes.length}</h2>
-
-        {clientes.length === 0 ? (
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center text-muted-foreground">
-                <p>Nenhum cliente cadastrado ainda</p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {clientes.map((subconta) => (
-              <SubcontaCard
-                key={subconta.id}
-                subconta={subconta}
-                iniciais={getIniciais(subconta.nome)}
-                dataCadastro={formatarData(subconta.created_at)}
-                statusConfig={getStatusConfig(subconta.status)}
-                onEnter={() => router.push('/controle-anual')}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Estado vazio total */}
-      {filtradas.length === 0 && busca.length > 0 && (
-        <div className="text-center py-8 text-muted-foreground">
-          Nenhuma subconta encontrada com &quot;{busca}&quot;
-        </div>
-      )}
     </div>
   )
 }
 
 /**
- * Card de subconta
+ * Card de cliente
  */
-interface SubcontaCardProps {
-  subconta: Subconta
+interface ClienteCardProps {
+  cliente: Cliente
   iniciais: string
   dataCadastro: string
   statusConfig: { label: string; className: string }
   onEnter: () => void
 }
 
-function SubcontaCard({ subconta, iniciais, dataCadastro, statusConfig, onEnter }: SubcontaCardProps) {
+function ClienteCard({ cliente, iniciais, dataCadastro, statusConfig, onEnter }: ClienteCardProps) {
   return (
     <Card className="hover:border-primary/50 transition-colors cursor-default">
       <CardContent className="p-4 space-y-3">
-        {/* Linha 1: Avatar + Nome + Badge tipo */}
+        {/* Linha 1: Avatar + Nome + Badge */}
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center
-            text-sm font-medium flex-shrink-0
-            ${subconta.subconta_tipo === 'pessoal'
-              ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-              : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-            }`}>
+          <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 flex items-center justify-center text-sm font-medium flex-shrink-0">
             {iniciais}
           </div>
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">
-              {subconta.nome || 'Sem nome'}
+              {cliente.nome || 'Sem nome'}
             </p>
-            <span className="text-xs text-muted-foreground bg-muted
-              px-1.5 py-0.5 rounded">
-              {subconta.subconta_tipo === 'pessoal' ? 'Pessoal' : 'Cliente'}
+            <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+              Cliente
             </span>
           </div>
         </div>

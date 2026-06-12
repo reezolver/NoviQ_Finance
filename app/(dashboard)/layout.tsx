@@ -64,7 +64,7 @@ export default function DashboardLayout({
   }, [])
 
   // Verificar se está no painel do educador
-  const isEducadorHome = pathname === '/painel'
+  const isEducadorHome = pathname === '/painel-clientes'
 
   // Itens do menu financeiro (cliente)
   const financeiroNavItems = [
@@ -98,8 +98,8 @@ export default function DashboardLayout({
   // Itens do menu do educador (no painel)
   const educadorNavItems = [
     {
-      href: "/painel",
-      label: "Todas as subcontas",
+      href: "/painel-clientes",
+      label: "Todos os clientes",
       icon: Users2,
       active: true,
     },
@@ -167,7 +167,7 @@ export default function DashboardLayout({
           {/* Link "Voltar ao painel" para educador fora do painel */}
           {!isEducadorHome && (userType === 'educador' || userType === 'master') && (
             <Link
-              href="/painel"
+              href="/painel-clientes"
               onClick={closeSidebar}
               className="flex items-center gap-2 text-xs text-muted-foreground
                 hover:text-foreground mb-3 pb-3 border-b"

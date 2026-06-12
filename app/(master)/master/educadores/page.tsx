@@ -84,7 +84,7 @@ export default function EducadoresPage() {
   const inativos = educadoresFiltrados.filter((e) => e.status === 'inativo')
 
   // Abrir dialog de confirmação
-  function abrirConfirmacao(educador: Educador, acao: 'aprovar' | 'recusar' | 'desativar') {
+  function abrirConfirmacao(educador: Educador, acao: 'aprovar' | 'recusar' | 'desativar' | 'reativar') {
     setEducadorSelecionado(educador)
     setAcaoDialog(acao)
     setDialogAberto(true)

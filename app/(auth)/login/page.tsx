@@ -125,13 +125,19 @@ export default function LoginPage() {
                 {loading ? 'Entrando...' : 'Entrar'}
               </Button>
 
-              {/* Link Esqueci minha senha */}
-              <div className="text-center">
+              {/* Links */}
+              <div className="space-y-2 text-center">
                 <a
                   href="/recuperar-senha"
-                  className="text-sm text-primary hover:underline"
+                  className="block text-sm text-primary hover:underline"
                 >
                   Esqueci minha senha
+                </a>
+                <a
+                  href="/cadastro"
+                  className="block text-sm text-primary hover:underline"
+                >
+                  Não tem conta? Criar conta gratuita
                 </a>
               </div>
             </form>

@@ -28,20 +28,27 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname.startsWith('/login')
   const isRecuperarSenhaPage = request.nextUrl.pathname.startsWith('/recuperar-senha')
   const isNovaSenhaPage = request.nextUrl.pathname.startsWith('/nova-senha')
+  const isCadastroPage = request.nextUrl.pathname.startsWith('/cadastro')
+  const isAguardandoAprovacaoPage = request.nextUrl.pathname.startsWith('/aguardando-aprovacao')
   const isPublicPage = request.nextUrl.pathname === '/'
 
-  if (!user && !isAuthPage && !isRecuperarSenhaPage && !isNovaSenhaPage && !isPublicPage) {
+  if (!user && !isAuthPage && !isRecuperarSenhaPage && !isNovaSenhaPage && !isCadastroPage && !isAguardandoAprovacaoPage && !isPublicPage) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   // Proteção de rotas por tipo de perfil
   if (user) {
-    // Buscar tipo_perfil do usuário
+    // Buscar tipo_perfil e status do usuário
     const { data: profile } = await supabase
       .from('profiles')
-      .select('tipo_perfil')
+      .select('tipo_perfil, status')
       .eq('id', user.id)
       .single()
+
+    // Verificar se usuário está pendente de aprovação
+    if (profile?.status === 'pendente' && !isAguardandoAprovacaoPage) {
+      return NextResponse.redirect(new URL('/aguardando-aprovacao', request.url))
+    }
 
     const pathname = request.nextUrl.pathname
 

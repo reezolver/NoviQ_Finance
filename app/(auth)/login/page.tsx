@@ -51,7 +51,7 @@ export default function LoginPage() {
           router.push('/controle-anual')
           break
         case 'educador':
-          router.push('/painel')
+          router.push('/painel-clientes')
           break
         case 'master':
           router.push('/master')

@@ -62,7 +62,7 @@ export async function middleware(request: NextRequest) {
     // Educador não pode acessar /master
     if (profile?.tipo_perfil === 'educador') {
       if (pathname.startsWith('/master')) {
-        return NextResponse.redirect(new URL('/painel', request.url))
+        return NextResponse.redirect(new URL('/painel-clientes', request.url))
       }
     }
   }

@@ -65,6 +65,7 @@ export default function CadastroPage() {
         options: {
           data: {
             nome: nome,
+            tipo_perfil: 'educador',
           },
         },
       })
@@ -75,29 +76,16 @@ export default function CadastroPage() {
       }
 
       // O usuário pode precisar confirmar o e-mail
-      // Inserir o perfil usando o id retornado
+      // Upsert no profile (trigger já cria, então usamos upsert para update se existir)
       if (data.user) {
-        const { error: profileError } = await supabase
+        await supabase
           .from('profiles')
-          .insert({
+          .upsert({
             id: data.user.id,
             nome: nome,
             tipo_perfil: 'educador',
             status: 'pendente',
           })
-
-        if (profileError) {
-          console.error('Profile error:', profileError)
-          // Se o perfil já existe (upsert)
-          await supabase
-            .from('profiles')
-            .upsert({
-              id: data.user.id,
-              nome: nome,
-              tipo_perfil: 'educador',
-              status: 'pendente',
-            })
-        }
 
         router.push('/aguardando-aprovacao')
       } else {

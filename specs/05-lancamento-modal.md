@@ -39,9 +39,9 @@ do Upify é cansativo). Abas **Despesa / Receita / Objetivo**; campos mínimos; 
 ## 6. Critérios de aceite
 
 ### Automáticos
-- [ ] `npm run build` e `npm run lint` passam.
-- [ ] Schema `zod` cobre os 3 tipos; sem `any`.
-- [ ] `grep` confirma **nenhum** campo de cartão/conta no form nem na action.
+- [x] `npm run build` e `npm run lint` passam.
+- [x] Schema `zod` cobre os 3 tipos; sem `any`.
+- [x] `grep` confirma **nenhum** campo de cartão/conta no form nem na action.
 
 ### Manuais
 - [ ] Modal abre em **1 toque**; data já vem com hoje; valor aceita decimal no mobile (`inputMode`).

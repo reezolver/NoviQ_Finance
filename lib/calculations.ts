@@ -4,7 +4,7 @@
  * Nunca escrever cálculos inline nos componentes.
  */
 
-import type { TotaisData } from "@/types/financeiro"
+import type { SaldosData, TotaisData } from "@/types/financeiro"
 
 /**
  * Calcula a diferença entre valor realizado e planejado.
@@ -157,6 +157,92 @@ export function agregarPlanejadoPorMes(
   return meses
 }
 
+// ─── Agregação por categoria de um mês (blocos + detalhamento) ──────────────────
+
+/** Referência mínima de uma categoria (universo canônico da subconta). */
+export interface CategoriaRef {
+  /** Id da categoria. */
+  id: string
+  /** Grupo da categoria. */
+  grupo: GrupoCategoria
+}
+
+/** Planejado × Realizado já resolvidos para uma categoria num mês. */
+export interface CategoriaAgregada {
+  /** Id da categoria agregada. */
+  categoriaId: string
+  /** Grupo da categoria. */
+  grupo: GrupoCategoria
+  /** Planejado do mês (override do mês ou recorrente da categoria). */
+  planejado: number
+  /** Realizado do mês (soma dos lançamentos da categoria). */
+  realizado: number
+}
+
+/**
+ * Agrega **Planejado × Realizado por categoria** para um único mês.
+ * - **Realizado** = soma dos `lancamentos` da categoria (já filtrados ao mês por
+ *   quem chama).
+ * - **Planejado** = override do mês (se houver) ou o valor recorrente da
+ *   categoria (`mes = null`).
+ *
+ * Percorre o universo canônico `categorias`, então categorias sem movimento
+ * saem zeradas (a page decide se as oculta). Lançamentos/orçamentos cujo
+ * `categoriaId` não está no universo são ignorados graciosamente.
+ * @returns Uma `CategoriaAgregada` por categoria, na ordem de `categorias`.
+ */
+export function agregarCategoriasDoMes({
+  mes,
+  categorias,
+  lancamentos,
+  orcamentos,
+}: {
+  mes: number
+  categorias: ReadonlyArray<CategoriaRef>
+  lancamentos: ReadonlyArray<{ categoriaId: string; valor: number }>
+  orcamentos: ReadonlyArray<OrcamentoAgregavel>
+}): CategoriaAgregada[] {
+  const realizado = new Map<string, number>()
+  for (const l of lancamentos) {
+    realizado.set(l.categoriaId, (realizado.get(l.categoriaId) ?? 0) + l.valor)
+  }
+
+  const recorrente = new Map<string, number>()
+  const override = new Map<string, number>()
+  for (const o of orcamentos) {
+    if (o.mes === null) {
+      recorrente.set(o.categoriaId, o.valorPlanejado)
+    } else if (o.mes === mes) {
+      override.set(o.categoriaId, o.valorPlanejado)
+    }
+  }
+
+  return categorias.map((c) => ({
+    categoriaId: c.id,
+    grupo: c.grupo,
+    planejado: override.get(c.id) ?? recorrente.get(c.id) ?? 0,
+    realizado: realizado.get(c.id) ?? 0,
+  }))
+}
+
+/**
+ * Totaliza as categorias agregadas em `SaldosData` (planejado + realizado por
+ * grupo). Base dos 3 blocos e do resumo 50‑30‑20 — sem cálculo inline na page.
+ * @param categorias - Categorias já agregadas (ver `agregarCategoriasDoMes`)
+ * @returns Totais planejado e realizado por grupo
+ */
+export function totalizarPorGrupo(
+  categorias: ReadonlyArray<CategoriaAgregada>
+): SaldosData {
+  const planejado = totaisZerados()
+  const realizado = totaisZerados()
+  for (const c of categorias) {
+    planejado[GRUPO_PARA_CAMPO[c.grupo]] += c.planejado
+    realizado[GRUPO_PARA_CAMPO[c.grupo]] += c.realizado
+  }
+  return { planejado, realizado }
+}
+
 /**
  * Calcula o progresso percentual de um objetivo.
  * @param valorAcumulado - Valor já acumulado
@@ -199,15 +285,26 @@ export interface Percentual503020 {
 }
 
 /**
- * Calcula a distribuição ideal 50-30-20 sobre a renda.
- * @param rendaTotal - Renda total calculada
+ * Regra **50‑30‑20** (decisão de produto travada em 2026-06-20): proporção ideal
+ * da renda por grupo — 50% despesa fixa, 30% despesa variável, 20% investimento
+ * (aporte). Fonte única dos percentuais — nunca repetir `0.5 / 0.3 / 0.2` inline.
+ */
+export const REGRA_503020 = {
+  fixa: 0.5,
+  variavel: 0.3,
+  investimento: 0.2,
+} as const
+
+/**
+ * Calcula a distribuição ideal 50-30-20 sobre a renda, usando `REGRA_503020`.
+ * @param rendaTotal - Renda base (planejada) sobre a qual os ideais são calculados
  * @returns Objeto com valores ideais (50% fixo, 30% variável, 20% investimento)
  */
 export function calcularDistribuicao503020(rendaTotal: number): Distribuicao503020 {
   return {
-    fixo: rendaTotal * 0.5,
-    variavel: rendaTotal * 0.3,
-    investimento: rendaTotal * 0.2,
+    fixo: rendaTotal * REGRA_503020.fixa,
+    variavel: rendaTotal * REGRA_503020.variavel,
+    investimento: rendaTotal * REGRA_503020.investimento,
   }
 }
 

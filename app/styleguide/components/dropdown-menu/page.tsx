@@ -36,28 +36,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function Demo({
-  title,
-  description,
-  children,
-}: {
-  title: string
-  description?: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="rounded-lg border bg-card p-5">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-        {title}
-      </p>
-      {description && (
-        <p className="text-xs text-muted-foreground mb-4">{description}</p>
-      )}
-      {children}
-    </div>
-  )
-}
-
 function CodeBlock({ code }: { code: string }) {
   return (
     <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto text-muted-foreground mt-3 leading-relaxed">
@@ -588,8 +566,8 @@ export default function DropdownMenuShowcasePage() {
       <Section title="Accessibility">
         <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
           <li>
-            Radix renders <code className="text-xs bg-muted px-1 rounded">role="menu"</code> on the content and
-            <code className="text-xs bg-muted px-1 rounded"> role="menuitem"</code> (or <code className="text-xs bg-muted px-1 rounded">menuitemcheckbox</code> /{" "}
+            Radix renders <code className="text-xs bg-muted px-1 rounded">role=&quot;menu&quot;</code> on the content and
+            <code className="text-xs bg-muted px-1 rounded"> role=&quot;menuitem&quot;</code> (or <code className="text-xs bg-muted px-1 rounded">menuitemcheckbox</code> /{" "}
             <code className="text-xs bg-muted px-1 rounded">menuitemradio</code>) on each item automatically.
           </li>
           <li>
@@ -612,7 +590,7 @@ export default function DropdownMenuShowcasePage() {
           </li>
           <li>
             For icon-only triggers (e.g., ··· button on a table row), add{" "}
-            <code className="text-xs bg-muted px-1 rounded">aria-label="Ações"</code> so screen readers announce its purpose.
+            <code className="text-xs bg-muted px-1 rounded">aria-label=&quot;Ações&quot;</code> so screen readers announce its purpose.
           </li>
           <li>
             <code className="text-xs bg-muted px-1 rounded">DropdownMenuShortcut</code> is visually decorative — the

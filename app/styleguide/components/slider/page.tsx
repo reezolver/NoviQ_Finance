@@ -53,6 +53,38 @@ function CodeBlock({ code }: { code: string }) {
 const brl = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })
 
+// Cada linha do orçamento mantém seu próprio estado — extraída em componente
+// para que `useState` rode no topo de um componente (não dentro de um `.map`).
+function BudgetRow({
+  label,
+  defaultVal,
+  max,
+  color,
+}: {
+  label: string
+  defaultVal: number
+  max: number
+  color: string
+}) {
+  const [val, setVal] = useState([defaultVal])
+  return (
+    <div className="grid grid-cols-[120px_1fr_80px] items-center gap-4">
+      <Label className="text-sm">{label}</Label>
+      <Slider
+        value={val}
+        onValueChange={setVal}
+        min={0}
+        max={max}
+        step={50}
+        className={color}
+      />
+      <span className="text-right text-xs font-mono tabular-nums text-muted-foreground">
+        {brl(val[0])}
+      </span>
+    </div>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SliderShowcasePage() {
@@ -352,25 +384,9 @@ export default function SliderShowcasePage() {
                 { label: "Alimentação",defaultVal: 600,  max: 1500, color: "[&_[data-slot=slider-range]]:bg-chart-2" },
                 { label: "Transporte", defaultVal: 300,  max: 800,  color: "[&_[data-slot=slider-range]]:bg-chart-3" },
                 { label: "Lazer",      defaultVal: 200,  max: 600,  color: "[&_[data-slot=slider-range]]:bg-chart-4" },
-              ].map((item) => {
-                const [val, setVal] = useState([item.defaultVal])
-                return (
-                  <div key={item.label} className="grid grid-cols-[120px_1fr_80px] items-center gap-4">
-                    <Label className="text-sm">{item.label}</Label>
-                    <Slider
-                      value={val}
-                      onValueChange={setVal}
-                      min={0}
-                      max={item.max}
-                      step={50}
-                      className={item.color}
-                    />
-                    <span className="text-right text-xs font-mono tabular-nums text-muted-foreground">
-                      {brl(val[0])}
-                    </span>
-                  </div>
-                )
-              })}
+              ].map((item) => (
+                <BudgetRow key={item.label} {...item} />
+              ))}
             </div>
           </Demo>
 
@@ -502,7 +518,7 @@ export default function SliderShowcasePage() {
       <Section title="Accessibility">
         <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
           <li>
-            Radix renders each thumb as <code className="text-xs bg-muted px-1 rounded">role="slider"</code> with{" "}
+            Radix renders each thumb as <code className="text-xs bg-muted px-1 rounded">role=&quot;slider&quot;</code> with{" "}
             <code className="text-xs bg-muted px-1 rounded">aria-valuemin</code>,{" "}
             <code className="text-xs bg-muted px-1 rounded">aria-valuemax</code>, and{" "}
             <code className="text-xs bg-muted px-1 rounded">aria-valuenow</code> automatically.

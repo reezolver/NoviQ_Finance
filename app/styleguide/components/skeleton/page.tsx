@@ -80,7 +80,7 @@ export default function SkeletonShowcasePage() {
           </div>
           <p className="text-muted-foreground">
             A pulsing placeholder that mirrors your real layout while content loads.
-            It's a single <code className="text-xs bg-muted px-1 rounded">div</code> with{" "}
+            It&apos;s a single <code className="text-xs bg-muted px-1 rounded">div</code> with{" "}
             <code className="text-xs bg-muted px-1 rounded">animate-pulse bg-muted</code> — shape it
             entirely with <code className="text-xs bg-muted px-1 rounded">className</code>.
           </p>
@@ -537,13 +537,13 @@ export default function SkeletonShowcasePage() {
         <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
           <li>
             Skeleton has no implicit ARIA role — screen readers skip it by default if it contains no text.
-            Add <code className="text-xs bg-muted px-1 rounded">aria-hidden="true"</code> explicitly to ensure
+            Add <code className="text-xs bg-muted px-1 rounded">aria-hidden=&quot;true&quot;</code> explicitly to ensure
             it is completely invisible to assistive technology.
           </li>
           <li>
             Wrap the skeleton region in a container with{" "}
-            <code className="text-xs bg-muted px-1 rounded">aria-busy="true"</code> and{" "}
-            <code className="text-xs bg-muted px-1 rounded">aria-label="Carregando..."</code> so screen readers
+            <code className="text-xs bg-muted px-1 rounded">aria-busy=&quot;true&quot;</code> and{" "}
+            <code className="text-xs bg-muted px-1 rounded">aria-label=&quot;Carregando...&quot;</code> so screen readers
             announce loading state.
           </li>
           <li>
@@ -554,7 +554,7 @@ export default function SkeletonShowcasePage() {
             Respect <code className="text-xs bg-muted px-1 rounded">prefers-reduced-motion</code> — Tailwind
             applies <code className="text-xs bg-muted px-1 rounded">motion-safe:animate-pulse</code> by default in
             some setups. If your users have reduced motion enabled, consider{" "}
-            <code className="text-xs bg-muted px-1 rounded">className="motion-safe:animate-pulse"</code> instead.
+            <code className="text-xs bg-muted px-1 rounded">className=&quot;motion-safe:animate-pulse&quot;</code> instead.
           </li>
         </ul>
       </Section>

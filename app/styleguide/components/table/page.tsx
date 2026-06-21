@@ -102,7 +102,11 @@ export default function TableShowcasePage() {
   const toggleRow = (id: string) =>
     setSelected((prev) => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
       return next
     })
 
@@ -503,15 +507,15 @@ export default function TableShowcasePage() {
           </li>
           <li>
             For sortable columns, add{" "}
-            <code className="text-xs bg-muted px-1 rounded">aria-sort="ascending"</code> /{" "}
-            <code className="text-xs bg-muted px-1 rounded">"descending"</code> /{" "}
-            <code className="text-xs bg-muted px-1 rounded">"none"</code> to the{" "}
+            <code className="text-xs bg-muted px-1 rounded">aria-sort=&quot;ascending&quot;</code> /{" "}
+            <code className="text-xs bg-muted px-1 rounded">&quot;descending&quot;</code> /{" "}
+            <code className="text-xs bg-muted px-1 rounded">&quot;none&quot;</code> to the{" "}
             <code className="text-xs bg-muted px-1 rounded">TableHead</code> element.
           </li>
           <li>
             Row selection checkboxes should have{" "}
             <code className="text-xs bg-muted px-1 rounded">aria-label</code> describing what is selected.
-            The "select all" checkbox should also describe its action.
+            The &quot;select all&quot; checkbox should also describe its action.
           </li>
           <li>
             <code className="text-xs bg-muted px-1 rounded">TableCaption</code> renders as{" "}
@@ -519,7 +523,7 @@ export default function TableShowcasePage() {
           </li>
           <li>
             For data-only tables with no interactive elements, add{" "}
-            <code className="text-xs bg-muted px-1 rounded">role="table"</code> explicitly if you need ARIA landmark semantics in non-table HTML structures.
+            <code className="text-xs bg-muted px-1 rounded">role=&quot;table&quot;</code> explicitly if you need ARIA landmark semantics in non-table HTML structures.
           </li>
         </ul>
       </Section>

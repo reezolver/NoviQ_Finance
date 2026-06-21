@@ -302,7 +302,7 @@ export default function SeparatorShowcasePage() {
           </div>
 
           <div>
-            <p className="text-sm font-semibold mb-1">Labeled "OU" divider — reusable pattern</p>
+            <p className="text-sm font-semibold mb-1">Labeled &quot;OU&quot; divider — reusable pattern</p>
             <CodeBlock
               code={`function LabeledSeparator({ children }: { children: React.ReactNode }) {
   return (
@@ -375,18 +375,18 @@ export default function SeparatorShowcasePage() {
         <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
           <li>
             By default, <code className="text-xs bg-muted px-1 rounded">decorative=true</code> renders
-            with <code className="text-xs bg-muted px-1 rounded">role="none"</code> — the element is invisible
+            with <code className="text-xs bg-muted px-1 rounded">role=&quot;none&quot;</code> — the element is invisible
             to screen readers (appropriate for purely visual chrome).
           </li>
           <li>
             Set <code className="text-xs bg-muted px-1 rounded">decorative={"{false}"}</code> when the separator
             carries structural meaning (e.g., separating two distinct sections of a document).
-            Radix will then render <code className="text-xs bg-muted px-1 rounded">role="separator"</code>,
+            Radix will then render <code className="text-xs bg-muted px-1 rounded">role=&quot;separator&quot;</code>,
             which screen readers announce as a thematic break.
           </li>
           <li>
             For vertical separators used semantically, also add{" "}
-            <code className="text-xs bg-muted px-1 rounded">aria-orientation="vertical"</code> so
+            <code className="text-xs bg-muted px-1 rounded">aria-orientation=&quot;vertical&quot;</code> so
             assistive technology correctly identifies the direction.
           </li>
           <li>

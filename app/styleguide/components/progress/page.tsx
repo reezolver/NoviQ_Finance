@@ -437,8 +437,8 @@ useEffect(() => {
       <Section title="Accessibility">
         <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
           <li>
-            Radix renders <code className="text-xs bg-muted px-1 rounded">role="progressbar"</code>,{" "}
-            <code className="text-xs bg-muted px-1 rounded">aria-valuemin="0"</code>,{" "}
+            Radix renders <code className="text-xs bg-muted px-1 rounded">role=&quot;progressbar&quot;</code>,{" "}
+            <code className="text-xs bg-muted px-1 rounded">aria-valuemin=&quot;0&quot;</code>,{" "}
             <code className="text-xs bg-muted px-1 rounded">aria-valuemax</code>, and{" "}
             <code className="text-xs bg-muted px-1 rounded">aria-valuenow</code> automatically from the{" "}
             <code className="text-xs bg-muted px-1 rounded">value</code> prop.
@@ -446,12 +446,12 @@ useEffect(() => {
           <li>
             Always provide an <code className="text-xs bg-muted px-1 rounded">aria-label</code> or{" "}
             <code className="text-xs bg-muted px-1 rounded">aria-labelledby</code> so screen readers announce
-            what the bar represents (e.g. "Progresso de preenchimento do perfil").
+            what the bar represents (e.g. &quot;Progresso de preenchimento do perfil&quot;).
           </li>
           <li>
             When <code className="text-xs bg-muted px-1 rounded">value</code> is{" "}
             <code className="text-xs bg-muted px-1 rounded">null</code> / undefined, Radix sets{" "}
-            <code className="text-xs bg-muted px-1 rounded">aria-valuetext="indeterminate"</code> and removes{" "}
+            <code className="text-xs bg-muted px-1 rounded">aria-valuetext=&quot;indeterminate&quot;</code> and removes{" "}
             <code className="text-xs bg-muted px-1 rounded">aria-valuenow</code>.
           </li>
           <li>

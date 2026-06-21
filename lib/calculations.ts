@@ -4,6 +4,8 @@
  * Nunca escrever cálculos inline nos componentes.
  */
 
+import type { TotaisData } from "@/types/financeiro"
+
 /**
  * Calcula a diferença entre valor realizado e planejado.
  * @param realizado - Valor efetivamente realizado
@@ -39,6 +41,120 @@ export function calcularSaldoFinal(
   despesasVariaveis: number
 ): number {
   return renda - despesasFixas - despesasVariaveis
+}
+
+// ─── Saldo mensal (4 grupos) ────────────────────────────────────────────────────
+
+/**
+ * Grupos da taxonomia de categorias (espelha o enum `grupo_categoria` do banco).
+ */
+export type GrupoCategoria = "renda" | "fixa" | "variavel" | "investimento"
+
+/** Mapeia cada grupo do banco para o campo correspondente em `TotaisData`. */
+const GRUPO_PARA_CAMPO: Record<GrupoCategoria, keyof TotaisData> = {
+  renda: "renda",
+  fixa: "fixas",
+  variavel: "variaveis",
+  investimento: "investimento",
+}
+
+const MESES_NO_ANO = 12
+
+/** Retorna um `TotaisData` zerado (estado vazio = nunca erro). */
+function totaisZerados(): TotaisData {
+  return { renda: 0, fixas: 0, variaveis: 0, investimento: 0 }
+}
+
+/**
+ * Calcula o saldo do mês a partir dos 4 grupos separados.
+ * **Saldo = Σrenda − Σfixa − Σvariavel − Σinvestimento** (o aporte/investimento
+ * é subtraído do saldo). Evolução de `calcularSaldoFinal`, que não separa o
+ * investimento.
+ * @param totais - Totais por grupo (planejado ou realizado)
+ * @returns Saldo do mês
+ */
+export function calcularSaldoMes(totais: TotaisData): number {
+  return totais.renda - totais.fixas - totais.variaveis - totais.investimento
+}
+
+/** Um lançamento já reduzido ao essencial para agregação por mês/grupo. */
+export interface LancamentoAgregavel {
+  /** Mês do lançamento (1–12). */
+  mes: number
+  /** Grupo da categoria do lançamento. */
+  grupo: GrupoCategoria
+  /** Valor do lançamento. */
+  valor: number
+}
+
+/**
+ * Agrega os lançamentos **realizados** de um ano em 12 baldes de `TotaisData`
+ * (índice 0 = Janeiro … 11 = Dezembro). Lançamentos fora do intervalo 1–12 são
+ * ignorados graciosamente.
+ * @param lancamentos - Lançamentos do ano (mês, grupo, valor)
+ * @returns Array de 12 `TotaisData` (um por mês)
+ */
+export function agregarRealizadoPorMes(
+  lancamentos: ReadonlyArray<LancamentoAgregavel>
+): TotaisData[] {
+  const meses = Array.from({ length: MESES_NO_ANO }, totaisZerados)
+  for (const { mes, grupo, valor } of lancamentos) {
+    if (!Number.isInteger(mes) || mes < 1 || mes > MESES_NO_ANO) continue
+    meses[mes - 1][GRUPO_PARA_CAMPO[grupo]] += valor
+  }
+  return meses
+}
+
+/** Uma linha de orçamento já reduzida ao essencial para agregação. */
+export interface OrcamentoAgregavel {
+  /** Categoria a que o valor pertence (chave para resolver override × recorrente). */
+  categoriaId: string
+  /** Grupo da categoria. */
+  grupo: GrupoCategoria
+  /** Valor planejado. */
+  valorPlanejado: number
+  /** `null` = recorrente (vale todo mês); 1–12 = override pontual daquele mês. */
+  mes: number | null
+}
+
+/**
+ * Agrega o **planejado** de um ano em 12 baldes de `TotaisData`.
+ * Para cada categoria e cada mês, o valor efetivo é o **override do mês** (se
+ * existir) ou, na sua ausência, o **valor recorrente** da categoria.
+ *
+ * Espera receber apenas linhas do ano-alvo: os recorrentes (`mes = null`) e os
+ * overrides daquele ano. A filtragem por ano fica a cargo de quem chama.
+ * @param orcamentos - Linhas de orçamento (recorrentes + overrides do ano)
+ * @returns Array de 12 `TotaisData` (um por mês)
+ */
+export function agregarPlanejadoPorMes(
+  orcamentos: ReadonlyArray<OrcamentoAgregavel>
+): TotaisData[] {
+  const recorrentes = new Map<string, { grupo: GrupoCategoria; valor: number }>()
+  const overrides = new Map<string, { grupo: GrupoCategoria; valor: number }>()
+  const categoriaIds = new Set<string>()
+
+  for (const o of orcamentos) {
+    categoriaIds.add(o.categoriaId)
+    if (o.mes === null) {
+      recorrentes.set(o.categoriaId, { grupo: o.grupo, valor: o.valorPlanejado })
+    } else if (Number.isInteger(o.mes) && o.mes >= 1 && o.mes <= MESES_NO_ANO) {
+      overrides.set(`${o.categoriaId}-${o.mes}`, {
+        grupo: o.grupo,
+        valor: o.valorPlanejado,
+      })
+    }
+  }
+
+  const meses = Array.from({ length: MESES_NO_ANO }, totaisZerados)
+  for (let mes = 1; mes <= MESES_NO_ANO; mes++) {
+    for (const categoriaId of categoriaIds) {
+      const efetivo = overrides.get(`${categoriaId}-${mes}`) ?? recorrentes.get(categoriaId)
+      if (!efetivo) continue
+      meses[mes - 1][GRUPO_PARA_CAMPO[efetivo.grupo]] += efetivo.valor
+    }
+  }
+  return meses
 }
 
 /**

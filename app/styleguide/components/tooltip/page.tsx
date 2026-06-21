@@ -584,7 +584,7 @@ export default function RootLayout({ children }) {
       <Section title="Accessibility">
         <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
           <li>
-            Radix renders the tooltip with <code className="text-xs bg-muted px-1 rounded">role="tooltip"</code> and
+            Radix renders the tooltip with <code className="text-xs bg-muted px-1 rounded">role=&quot;tooltip&quot;</code> and
             connects it to the trigger via <code className="text-xs bg-muted px-1 rounded">aria-describedby</code> automatically.
           </li>
           <li>
@@ -605,7 +605,7 @@ export default function RootLayout({ children }) {
             (it depends on AT settings).
           </li>
           <li>
-            Disabled buttons don't fire pointer events — wrap in a{" "}
+            Disabled buttons don&apos;t fire pointer events — wrap in a{" "}
             <code className="text-xs bg-muted px-1 rounded">{"<span>"}</code> and add{" "}
             <code className="text-xs bg-muted px-1 rounded">pointer-events-none</code> to the button.
           </li>

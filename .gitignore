@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# v1 arquivada (código morto mantido só localmente)
+/_arquivo-v1/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

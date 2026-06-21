@@ -146,7 +146,7 @@ export default function AvatarShowcasePage() {
       {/* ── FALLBACK COLORS ── */}
       <Section title="Fallback Color Variants">
         <p className="text-sm text-muted-foreground mb-4">
-          Override <code className="text-xs bg-muted px-1 rounded">AvatarFallback</code>'s
+          Override <code className="text-xs bg-muted px-1 rounded">AvatarFallback</code>&apos;s
           default <code className="text-xs bg-muted px-1 rounded">bg-muted</code> via className.
         </p>
         <div className="flex flex-wrap gap-3 items-center">
@@ -516,8 +516,8 @@ export default function AvatarShowcasePage() {
         <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
           <li>
             Always provide <code className="text-xs bg-muted px-1 rounded">alt</code> text on{" "}
-            <code className="text-xs bg-muted px-1 rounded">AvatarImage</code>. Use the person's name,
-            e.g. <code className="text-xs bg-muted px-1 rounded">alt="João Silva"</code>.
+            <code className="text-xs bg-muted px-1 rounded">AvatarImage</code>. Use the person&apos;s name,
+            e.g. <code className="text-xs bg-muted px-1 rounded">alt=&quot;João Silva&quot;</code>.
           </li>
           <li>
             <code className="text-xs bg-muted px-1 rounded">AvatarFallback</code> shows only after the image
@@ -532,7 +532,7 @@ export default function AvatarShowcasePage() {
           <li>
             <code className="text-xs bg-muted px-1 rounded">AvatarGroup</code> has no built-in label; wrap it
             with an <code className="text-xs bg-muted px-1 rounded">aria-label</code> on the parent element
-            (e.g. "5 team members").
+            (e.g. &quot;5 team members&quot;).
           </li>
           <li>
             Initials in <code className="text-xs bg-muted px-1 rounded">AvatarFallback</code> are read aloud

@@ -489,7 +489,7 @@ export default function SelectShowcasePage() {
             Type-ahead: pressing letter keys jumps to matching items.
           </li>
           <li>
-            Add <code className="text-xs bg-muted px-1 rounded">aria-invalid="true"</code> to{" "}
+            Add <code className="text-xs bg-muted px-1 rounded">aria-invalid=&quot;true&quot;</code> to{" "}
             <code className="text-xs bg-muted px-1 rounded">SelectTrigger</code> to signal a validation error to screen readers.
           </li>
           <li>

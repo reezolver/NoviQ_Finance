@@ -155,7 +155,7 @@ export default function DialogShowcasePage() {
                 <DialogTitle>Dica financeira do dia</DialogTitle>
                 <DialogDescription>
                   Separe ao menos 10% da sua renda mensalmente antes de pagar qualquer conta.
-                  Essa estratégia, chamada de "pagar a si mesmo primeiro", é o fundamento de
+                  Essa estratégia, chamada de &quot;pagar a si mesmo primeiro&quot;, é o fundamento de
                   qualquer plano financeiro sólido.
                 </DialogDescription>
               </DialogHeader>
@@ -500,14 +500,14 @@ export default function DialogShowcasePage() {
           <li>
             <code className="text-xs bg-muted px-1 rounded">DialogDescription</code> sets{" "}
             <code className="text-xs bg-muted px-1 rounded">aria-describedby</code>. If you hide it visually,
-            use <code className="text-xs bg-muted px-1 rounded">className="sr-only"</code> to keep it for screen readers.
+            use <code className="text-xs bg-muted px-1 rounded">className=&quot;sr-only&quot;</code> to keep it for screen readers.
           </li>
           <li>
             <strong className="text-foreground">Clicking the overlay</strong> closes the dialog.
             Prevent it with <code className="text-xs bg-muted px-1 rounded">onPointerDownOutside={"{(e) => e.preventDefault()}"}</code>.
           </li>
           <li>
-            For destructive actions: remove the X close button and require explicit "Cancel" / "Confirm"
+            For destructive actions: remove the X close button and require explicit &quot;Cancel&quot; / &quot;Confirm&quot;
             choices to prevent accidental dismissal.
           </li>
         </ul>

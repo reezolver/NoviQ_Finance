@@ -385,7 +385,7 @@ peer-data-checked:border-primary peer-data-checked:text-primary"
           <li>
             For required fields, add <code className="text-xs bg-muted px-1 rounded">{"aria-hidden=\"true\""}</code> to the
             asterisk <code className="text-xs bg-muted px-1 rounded">*</code> span, and add
-            <code className="text-xs bg-muted px-1 rounded"> required</code> or <code className="text-xs bg-muted px-1 rounded">aria-required="true"</code> to the input.
+            <code className="text-xs bg-muted px-1 rounded"> required</code> or <code className="text-xs bg-muted px-1 rounded">aria-required=&quot;true&quot;</code> to the input.
           </li>
           <li>
             The label automatically dims (<code className="text-xs bg-muted px-1 rounded">opacity-50</code>) when its peer input is

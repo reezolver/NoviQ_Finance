@@ -583,7 +583,7 @@ import {
         <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
           <li>
             Recharts wraps charts in an <code className="text-xs bg-muted px-1 rounded">{"<svg>"}</code> with{" "}
-            <code className="text-xs bg-muted px-1 rounded">role="img"</code>. Add{" "}
+            <code className="text-xs bg-muted px-1 rounded">role=&quot;img&quot;</code>. Add{" "}
             <code className="text-xs bg-muted px-1 rounded">{"<title>"}</code> and{" "}
             <code className="text-xs bg-muted px-1 rounded">{"<desc>"}</code> inside the chart for screen reader summaries.
           </li>

@@ -557,7 +557,7 @@ export default function TabsShowcasePage() {
             <kbd className="text-xs bg-muted px-1 rounded">End</kbd> jump to first/last.
           </li>
           <li>
-            Active tab has <code className="text-xs bg-muted px-1 rounded">aria-selected="true"</code>;
+            Active tab has <code className="text-xs bg-muted px-1 rounded">aria-selected=&quot;true&quot;</code>;
             inactive panels have <code className="text-xs bg-muted px-1 rounded">hidden</code> by default
             (use <code className="text-xs bg-muted px-1 rounded">forceMount</code> to keep them in DOM).
           </li>
@@ -566,7 +566,7 @@ export default function TabsShowcasePage() {
             when using keyboard navigation (automatic activation mode by default).
           </li>
           <li>
-            Disabled tabs announce as <code className="text-xs bg-muted px-1 rounded">aria-disabled="true"</code>{" "}
+            Disabled tabs announce as <code className="text-xs bg-muted px-1 rounded">aria-disabled=&quot;true&quot;</code>{" "}
             and are skipped by arrow key navigation.
           </li>
         </ul>

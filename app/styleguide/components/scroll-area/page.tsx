@@ -480,7 +480,7 @@ export default function ScrollAreaShowcasePage() {
             <kbd className="text-xs bg-muted px-1 rounded">Home/End</kbd> to scroll.
           </li>
           <li>
-            For long lists, add <code className="text-xs bg-muted px-1 rounded">role="region"</code> and{" "}
+            For long lists, add <code className="text-xs bg-muted px-1 rounded">role=&quot;region&quot;</code> and{" "}
             <code className="text-xs bg-muted px-1 rounded">aria-label</code> on the{" "}
             <code className="text-xs bg-muted px-1 rounded">ScrollArea</code> so screen readers announce
             the scrollable region.
@@ -494,11 +494,11 @@ export default function ScrollAreaShowcasePage() {
             are preserved on the viewport element.
           </li>
           <li>
-            Avoid setting <code className="text-xs bg-muted px-1 rounded">type="scroll"</code> or{" "}
-            <code className="text-xs bg-muted px-1 rounded">"hover"</code> for content where visibility
+            Avoid setting <code className="text-xs bg-muted px-1 rounded">type=&quot;scroll&quot;</code> or{" "}
+            <code className="text-xs bg-muted px-1 rounded">&quot;hover&quot;</code> for content where visibility
             of the scrollbar is important for discoverability — use{" "}
-            <code className="text-xs bg-muted px-1 rounded">"auto"</code> or{" "}
-            <code className="text-xs bg-muted px-1 rounded">"always"</code> instead.
+            <code className="text-xs bg-muted px-1 rounded">&quot;auto&quot;</code> or{" "}
+            <code className="text-xs bg-muted px-1 rounded">&quot;always&quot;</code> instead.
           </li>
         </ul>
       </Section>

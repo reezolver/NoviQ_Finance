@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Código da v1 arquivado (também excluído do tsconfig) — inerte, não lintar.
+    "_arquivo-v1/**",
   ]),
 ]);
 

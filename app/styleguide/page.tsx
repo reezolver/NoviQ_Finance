@@ -414,7 +414,7 @@ export default function StyleguidePage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Use <code className="text-primary font-mono text-xs">size="sm"</code> para uma versão mais compacta.
+                Use <code className="text-primary font-mono text-xs">size=&quot;sm&quot;</code> para uma versão mais compacta.
               </p>
             </CardContent>
           </Card>

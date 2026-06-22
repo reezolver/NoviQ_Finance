@@ -12,6 +12,15 @@ versionamento segue o [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 - (nada ainda — as próximas mudanças entram aqui antes de virarem uma versão)
 
+## [0.2.0] - 2026-06-22
+
+### Adicionado
+
+- **Navegação por abas no workspace:** barra com as 5 seções (Anual, Mensal,
+  Investimentos, Objetivos, Renda Futura) fixa abaixo do cabeçalho, preservando
+  a subconta ativa ao trocar de seção e com destaque da seção atual. Antes,
+  Investimentos, Objetivos e Renda Futura só eram alcançáveis pela URL.
+
 ## [0.1.0] - 2026-06-22
 
 Primeiro MVP da Noviq Finance — fundação completa e telas principais do cliente e do educador.
@@ -31,5 +40,6 @@ Primeiro MVP da Noviq Finance — fundação completa e telas principais do clie
 - **Exportar PDF:** extrato do mês / diagnóstico em PDF.
 - **Design system** completo em `app/styleguide/` (tema claro e escuro, cor primária `#008CFF`).
 
-[Não lançado]: https://github.com/reezolver/NoviQ_Finance/compare/v0.1.0...HEAD
+[Não lançado]: https://github.com/reezolver/NoviQ_Finance/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/reezolver/NoviQ_Finance/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/reezolver/NoviQ_Finance/releases/tag/v0.1.0

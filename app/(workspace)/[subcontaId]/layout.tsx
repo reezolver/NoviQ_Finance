@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { WorkspaceHeader } from '@/components/workspace/WorkspaceHeader'
+import { WorkspaceNav } from '@/components/workspace/WorkspaceNav'
 
 /**
  * Layout do route group de workspace — escopa e **valida o acesso** à subconta
@@ -40,6 +41,7 @@ export default async function WorkspaceLayout({
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <WorkspaceHeader subcontas={acessiveis} subcontaAtivaId={subcontaId} />
+      <WorkspaceNav subcontaId={subcontaId} />
       <main className="flex-1">{children}</main>
     </div>
   )

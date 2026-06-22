@@ -1,9 +1,9 @@
 # Contexto base — specs Noviq Finance
 
 > **Leia este arquivo antes de QUALQUER spec da pasta `specs/`.** Cada spec assume este
-> contexto. Você (agente) começa frio: leia também `meu-projeto/CLAUDE.md` e a fonte de
-> verdade `meu-projeto/prompts/spec-mvp-noviq-2026-06-20.md` (spec-mestre) +
-> `meu-projeto/prompts/pesquisa-arquitetura-mvp-2026-06-20.md` (pesquisa, para o "porquê").
+> contexto. Você (agente) começa frio: leia também `noviq-app/CLAUDE.md` e a fonte de
+> verdade `noviq-app/prompts/spec-mvp-noviq-2026-06-20.md` (spec-mestre) +
+> `noviq-app/prompts/pesquisa-arquitetura-mvp-2026-06-20.md` (pesquisa, para o "porquê").
 
 ---
 

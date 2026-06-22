@@ -3,8 +3,8 @@
 > Cole este arquivo inteiro no Claude Code (VS Code) para construir esta feature.
 
 ## 0. Leitura obrigatória antes de codar
-- `meu-projeto/specs/_contexto-base.md`
-- `meu-projeto/prompts/spec-mvp-noviq-2026-06-20.md` §10.4 e §8
+- `noviq-app/specs/_contexto-base.md`
+- `noviq-app/prompts/spec-mvp-noviq-2026-06-20.md` §10.4 e §8
 - `lib/calculations.ts` (`calcularProgressoObjetivo`, `calcularNecessarioMensal`, `calcularMesesRestantes`, `calcularStatusObjetivo`)
 - `types/financeiro.ts` (`Objetivo`) · `components/ProgressBar.tsx` · `app/styleguide/components/progress`
 

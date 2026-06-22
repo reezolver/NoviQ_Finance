@@ -3,8 +3,8 @@
 > Cole este arquivo inteiro no Claude Code (VS Code) para construir esta feature.
 
 ## 0. Leitura obrigatória antes de codar
-- `meu-projeto/specs/_contexto-base.md` (§5 Login×Subconta — a regra de acesso é o coração desta tela)
-- `meu-projeto/prompts/spec-mvp-noviq-2026-06-20.md` §10.5 e §9
+- `noviq-app/specs/_contexto-base.md` (§5 Login×Subconta — a regra de acesso é o coração desta tela)
+- `noviq-app/prompts/spec-mvp-noviq-2026-06-20.md` §10.5 e §9
 - `app/actions/subcontas.ts` (Spec 01 — `criarSubconta`, `criarLoginCliente`, `moverCliente`)
 - `app/styleguide/components/dropdown-menu`, `table`, `dialog`
 

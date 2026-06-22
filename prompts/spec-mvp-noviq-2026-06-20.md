@@ -381,7 +381,7 @@ Visão padrão **mínima**; toggle **"avançado"** (estilo Photoshop Essencial/A
 
 - **Mapeamento anamnese → grupos da planilha** — as perguntas precisam ser mapeadas para os mesmos `grupos`/categorias (ex.: Transporte/Alimentação/Lazer → `variavel`). Definir antes do M5.
 - **Protótipo da tela de Análise/Diagnóstico** mencionado no briefing — confirmar onde está (possivelmente em `_arquivo-v1/`).
-- **Versionar a planilha** — guardar uma cópia/export de `Controle Financeiro Pessoa Física.xlsx` dentro de `meu-projeto/` (fonte de verdade fora do repo hoje).
+- **Versionar a planilha** — guardar uma cópia/export de `Controle Financeiro Pessoa Física.xlsx` dentro de `noviq-app/` (fonte de verdade fora do repo hoje).
 - **Reconciliar `middleware.ts` e `types/financeiro.ts`** da v1 (evoluir, não recriar) — incluído no M2.
 
 ---

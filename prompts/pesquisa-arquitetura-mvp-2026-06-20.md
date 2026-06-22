@@ -45,7 +45,7 @@ Tudo de permissão vive no Postgres (RLS, default-deny) + Server Actions/Route H
 ## Estado atual da fundação (fatos verificados)
 
 ### Frontend / app
-- **Stack** (`meu-projeto/package.json`): Next.js **16.2.6**, React **19.2.4**, `@supabase/ssr` **0.10.3**, `@supabase/supabase-js` **2.106.2**, Tailwind 4, Radix/shadcn, `react-hook-form` **7.76** + `zod` **4.4**, `recharts` **3.8**, `next-themes`, `sonner`.
+- **Stack** (`noviq-app/package.json`): Next.js **16.2.6**, React **19.2.4**, `@supabase/ssr` **0.10.3**, `@supabase/supabase-js` **2.106.2**, Tailwind 4, Radix/shadcn, `react-hook-form` **7.76** + `zod` **4.4**, `recharts` **3.8**, `next-themes`, `sonner`.
 - **Design system pronto** em `app/styleguide/` + `components/ui/*` (alert, avatar, badge, button, card, chart, checkbox, dialog, dropdown-menu, form, input, label, popover, progress, radio-group, scroll-area, select, separator, skeleton, slider, sonner, switch, table, tabs, textarea, tooltip). `CLAUDE.md` impõe: **nunca criar componente do zero sem checar o styleguide**; cor primária `#008CFF`; **dark + light obrigatórios**.
 - **Clients Supabase** já no padrão correto do App Router:
   - `lib/supabase.ts` → `createBrowserClient` (client components).
@@ -239,14 +239,14 @@ Todas as tabelas com `subconta_id` → policy `can_access_subconta(subconta_id)`
 ---
 
 ## Code References (fundação atual)
-- `meu-projeto/middleware.ts:42-67` — roteamento por `profiles.tipo_perfil`/`status` (lógica da v1; tabela ainda inexistente).
-- `meu-projeto/lib/supabase.ts:5-10` — browser client (`createBrowserClient`).
-- `meu-projeto/lib/supabase-server.ts:4-27` — server client com `cookies()`.
-- `meu-projeto/lib/calculations.ts:90-96` — `calcularDistribuicao503020` com `0.2` hardcoded (ponto do 50‑30‑20 vs 10).
-- `meu-projeto/lib/calculations.ts:36-42` — `calcularSaldoFinal` (Saldo = Renda − Despesas).
-- `meu-projeto/types/financeiro.ts:59-65` — `interface Cliente` (modelo flat da v1).
-- `meu-projeto/CLAUDE.md` — regras absolutas de design system, Supabase via MCP, dark+light.
-- `meu-projeto/prompts/contexto-produto-noviq.md` — contexto de produto (versão curta, perfis, telas, fora-de-escopo).
+- `noviq-app/middleware.ts:42-67` — roteamento por `profiles.tipo_perfil`/`status` (lógica da v1; tabela ainda inexistente).
+- `noviq-app/lib/supabase.ts:5-10` — browser client (`createBrowserClient`).
+- `noviq-app/lib/supabase-server.ts:4-27` — server client com `cookies()`.
+- `noviq-app/lib/calculations.ts:90-96` — `calcularDistribuicao503020` com `0.2` hardcoded (ponto do 50‑30‑20 vs 10).
+- `noviq-app/lib/calculations.ts:36-42` — `calcularSaldoFinal` (Saldo = Renda − Despesas).
+- `noviq-app/types/financeiro.ts:59-65` — `interface Cliente` (modelo flat da v1).
+- `noviq-app/CLAUDE.md` — regras absolutas de design system, Supabase via MCP, dark+light.
+- `noviq-app/prompts/contexto-produto-noviq.md` — contexto de produto (versão curta, perfis, telas, fora-de-escopo).
 
 ## Documentação de arquitetura (padrões observados / propostos)
 - App Router + `@supabase/ssr` com 3 clients (browser/server/middleware) — **já no padrão atual do Supabase**.
@@ -264,7 +264,7 @@ Todas as tabelas com `subconta_id` → policy `can_access_subconta(subconta_id)`
 8. ✅ **Subconta ativa = route segment `[subcontaId]`** (decisão técnica; RLS valida o acesso, sem troca de sessão).
 
 ## Open Questions (precisam de material externo, fora do código)
-- ✅ **RESOLVIDO (2026-06-20) — planilha recebida e analisada** (`D:\DOWNLOADS\Controle Financeiro Pessoa Física.xlsx`). Modelo, taxonomia e fórmulas extraídos na seção **"Modelo extraído da planilha"**. (A planilha em si está fora do repositório — vale guardar uma cópia/export em `meu-projeto/` para versionar a fonte de verdade.)
+- ✅ **RESOLVIDO (2026-06-20) — planilha recebida e analisada** (`D:\DOWNLOADS\Controle Financeiro Pessoa Física.xlsx`). Modelo, taxonomia e fórmulas extraídos na seção **"Modelo extraído da planilha"**. (A planilha em si está fora do repositório — vale guardar uma cópia/export em `noviq-app/` para versionar a fonte de verdade.)
 - **Protótipo da tela de Análise/Diagnóstico** mencionado no briefing ("já existe um protótipo") — confirmar onde está (pode estar em `_arquivo-v1/`).
 - **Anamnese × planilha:** as perguntas da anamnese precisam ser mapeadas para os mesmos `grupos`/categorias da planilha (ex.: o que a anamnese chama de "Transporte/Alimentação/Lazer" deve cair em `grupo='variavel'`).
 

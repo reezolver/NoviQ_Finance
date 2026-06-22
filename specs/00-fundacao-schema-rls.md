@@ -3,9 +3,9 @@
 > Cole este arquivo inteiro no Claude Code (VS Code) para construir esta feature.
 
 ## 0. Leitura obrigatória antes de codar
-- `meu-projeto/CLAUDE.md`
-- `meu-projeto/specs/_contexto-base.md` (conceito Login×Subconta, convenções, MCP Supabase)
-- `meu-projeto/prompts/spec-mvp-noviq-2026-06-20.md` §6 (modelo de dados) e §7 (RLS) — fonte de verdade
+- `noviq-app/CLAUDE.md`
+- `noviq-app/specs/_contexto-base.md` (conceito Login×Subconta, convenções, MCP Supabase)
+- `noviq-app/prompts/spec-mvp-noviq-2026-06-20.md` §6 (modelo de dados) e §7 (RLS) — fonte de verdade
 
 ## 1. Pré-requisitos
 - Nenhum. O banco está **zerado** (`public` com 0 tabelas, 0 migrations; `auth` sem usuários). Confirme via MCP `list_tables` / `list_migrations` antes de começar.

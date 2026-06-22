@@ -3,12 +3,12 @@
 > Cole este arquivo inteiro no Claude Code (VS Code) para implantar/auditar o processo desta feature.
 
 ## 0. Leitura obrigatória antes de codar
-- `meu-projeto/docs/organizacao-versionamento-commits.md` — **fonte de verdade** deste processo.
-- `meu-projeto/CHANGELOG.md` e `meu-projeto/package.json` (estado atual do versionamento).
+- `noviq-app/docs/organizacao-versionamento-commits.md` — **fonte de verdade** deste processo.
+- `noviq-app/CHANGELOG.md` e `noviq-app/package.json` (estado atual do versionamento).
 - `CLAUDE.md` §6 (Commits e versionamento).
 
 ## 1. Pré-requisitos
-- [ ] Repositório `meu-projeto` é um repo Git válido, conectado a `reezolver/NoviQ_Finance`.
+- [ ] Repositório `noviq-app` é um repo Git válido, conectado a `reezolver/NoviQ_Finance`.
 - [ ] `CHANGELOG.md` existe no formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) (já existe).
 - [ ] `package.json` tem o campo `"version"` (já está em `0.1.0`).
 
@@ -24,7 +24,7 @@ commitlint nem qualquer automação que bloqueie commits.
 ## 3. Tarefa
 
 ### 3.1 Template de mensagem de commit (`.gitmessage`) — NOVO
-Crie `meu-projeto/.gitmessage` com um lembrete dos tipos Conventional Commits (em português),
+Crie `noviq-app/.gitmessage` com um lembrete dos tipos Conventional Commits (em português),
 para servir de guia ao redigir mensagens:
 
 ```
@@ -74,9 +74,9 @@ release canônico está nesta spec (`specs/12-versionamento-release.md`). **Não
 apenas adicionar o ponteiro.
 
 ## 4. Arquivos a criar / tocar
-- `meu-projeto/.gitmessage` (NOVO)
-- `meu-projeto/docs/organizacao-versionamento-commits.md` (ponteiro p/ esta spec + nota do template)
-- `meu-projeto/specs/README.md` (linha no índice e no checklist de conclusão)
+- `noviq-app/.gitmessage` (NOVO)
+- `noviq-app/docs/organizacao-versionamento-commits.md` (ponteiro p/ esta spec + nota do template)
+- `noviq-app/specs/README.md` (linha no índice e no checklist de conclusão)
 - (sem mudanças em código de aplicação; sem novas dependências em `package.json`)
 
 ## 5. Contratos relevantes
@@ -88,7 +88,7 @@ apenas adicionar o ponteiro.
 ## 6. Critérios de aceite
 
 ### Automáticos
-- [ ] `meu-projeto/.gitmessage` existe e `git config --get commit.template` retorna `.gitmessage`.
+- [ ] `noviq-app/.gitmessage` existe e `git config --get commit.template` retorna `.gitmessage`.
 - [ ] `git tag -l v0.1.0` retorna `v0.1.0` (tag existe local e no remoto: `git ls-remote --tags origin v0.1.0`).
 - [ ] `node -p "require('./package.json').version"` é igual à versão mais recente do topo de `CHANGELOG.md`.
 - [ ] `npm run build` continua passando (esta spec não toca código de app).

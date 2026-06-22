@@ -3,9 +3,9 @@
 > Cole este arquivo inteiro no Claude Code (VS Code) para construir esta feature.
 
 ## 0. Leitura obrigatória antes de codar
-- `meu-projeto/specs/_contexto-base.md` (§5 Login×Subconta, §6 roteamento)
-- `meu-projeto/middleware.ts` (estado atual da v1 — vai evoluir)
-- `meu-projeto/prompts/spec-mvp-noviq-2026-06-20.md` §3 e §5
+- `noviq-app/specs/_contexto-base.md` (§5 Login×Subconta, §6 roteamento)
+- `noviq-app/middleware.ts` (estado atual da v1 — vai evoluir)
+- `noviq-app/prompts/spec-mvp-noviq-2026-06-20.md` §3 e §5
 
 ## 1. Pré-requisitos
 - [x] **Spec 00** (existe a tabela `profiles` + `subcontas`).

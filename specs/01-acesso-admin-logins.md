@@ -3,8 +3,8 @@
 > Cole este arquivo inteiro no Claude Code (VS Code) para construir esta feature.
 
 ## 0. Leitura obrigatória antes de codar
-- `meu-projeto/specs/_contexto-base.md`
-- `meu-projeto/prompts/spec-mvp-noviq-2026-06-20.md` §7 (segurança) e §9 (server actions)
+- `noviq-app/specs/_contexto-base.md`
+- `noviq-app/prompts/spec-mvp-noviq-2026-06-20.md` §7 (segurança) e §9 (server actions)
 - `lib/supabase-server.ts` (padrão do server client)
 
 ## 1. Pré-requisitos

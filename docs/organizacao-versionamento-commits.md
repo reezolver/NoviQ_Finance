@@ -30,8 +30,11 @@ supabase/migrations/ Mudanças no banco de dados
 specs/               O "o quê fazer" de cada feature
 prompts/             Contexto de produto para colar no Claude
 docs/                Documentação (este arquivo mora aqui)
-_arquivo-v1/         Versão antiga arquivada (fica só local, fora do GitHub)
 ```
+
+A pasta do repositório se chama **`noviq-app/`** e vive dentro da pasta-mãe
+`Projeto Saas NOVIQ/`. Ao lado dela (fora do repo, só local) fica `_arquivo/` com a
+**v1 arquivada** e backups de SQL — material de referência que **não** entra no Git nem no deploy.
 
 **Regra de ouro:** arquivo novo entra na pasta do assunto dele. Tela → `app/`. Peça de
 tela → `components/`. Cálculo/conexão → `lib/`. Documento → `docs/`.

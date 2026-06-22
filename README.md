@@ -50,8 +50,10 @@ supabase/migrations/ Migrations do banco
 specs/               Specs do MVP (uma por feature) — ver specs/README.md
 prompts/             Contexto de produto e prompts reutilizáveis
 docs/                Documentação do projeto (organização, versionamento, commits)
-_arquivo-v1/         Versão 1 arquivada (mantida só localmente, fora do Git)
 ```
+
+> A **v1 arquivada** vive **fora deste repositório**, na pasta-mãe `../_arquivo/v1/`
+> (só local, fora do Git e do deploy) — o repositório guarda apenas código vivo.
 
 ---
 

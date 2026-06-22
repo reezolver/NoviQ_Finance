@@ -3,8 +3,8 @@
 > Cole este arquivo inteiro no Claude Code (VS Code) para construir esta feature.
 
 ## 0. Leitura obrigatória antes de codar
-- `meu-projeto/specs/_contexto-base.md`
-- `meu-projeto/prompts/spec-mvp-noviq-2026-06-20.md` §12 e §10.9
+- `noviq-app/specs/_contexto-base.md`
+- `noviq-app/prompts/spec-mvp-noviq-2026-06-20.md` §12 e §10.9
 
 ## 1. Pré-requisitos
 - [x] **Spec 04** (Controle Mensal — fonte do extrato). Para o diagnóstico, **Spec 08** (anamnese).

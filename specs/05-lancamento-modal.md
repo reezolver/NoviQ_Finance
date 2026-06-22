@@ -3,8 +3,8 @@
 > Cole este arquivo inteiro no Claude Code (VS Code) para construir esta feature.
 
 ## 0. Leitura obrigatória antes de codar
-- `meu-projeto/specs/_contexto-base.md`
-- `meu-projeto/prompts/spec-mvp-noviq-2026-06-20.md` §10.3 e §9
+- `noviq-app/specs/_contexto-base.md`
+- `noviq-app/prompts/spec-mvp-noviq-2026-06-20.md` §10.3 e §9
 - `app/styleguide/components/dialog`, `form`, `tabs`, `select` (ver antes de montar)
 - `lib/supabase-server.ts` (server client p/ a action)
 

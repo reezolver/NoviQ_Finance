@@ -84,8 +84,9 @@ Arquivo novo entra **na pasta do assunto dele**. Não criar arquivos soltos na r
 - Documentação → `docs/`
 - Specs de feature → `specs/` · contexto de produto → `prompts/`
 
-O **design system** (`app/styleguide/`) e a **v1 arquivada** (`_arquivo-v1/`, só local)
-são **preservados** — não recriar nem apagar.
+O **design system** (`app/styleguide/`) é **preservado** — não recriar nem apagar.
+A **v1 arquivada** foi movida para **fora do repositório**, na pasta-mãe `../_arquivo/v1/`
+(só local, fora do Git e do deploy); preservar como referência, não recriar dentro do repo.
 
 ---
 

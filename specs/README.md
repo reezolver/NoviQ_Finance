@@ -4,13 +4,13 @@ Specs **por feature**, escritas como **prompts executáveis de handoff**: você 
 inteiro no Claude Code (VS Code) e ele constrói aquela feature, do schema à tela, com critérios
 de aceite. Derivam da fonte de verdade:
 
-- `meu-projeto/prompts/spec-mvp-noviq-2026-06-20.md` — spec-mestre (visão geral, referência)
-- `meu-projeto/prompts/pesquisa-arquitetura-mvp-2026-06-20.md` — pesquisa (o "porquê")
-- `meu-projeto/specs/_contexto-base.md` — **leia antes de qualquer spec abaixo**
+- `noviq-app/prompts/spec-mvp-noviq-2026-06-20.md` — spec-mestre (visão geral, referência)
+- `noviq-app/prompts/pesquisa-arquitetura-mvp-2026-06-20.md` — pesquisa (o "porquê")
+- `noviq-app/specs/_contexto-base.md` — **leia antes de qualquer spec abaixo**
 
 ## Como usar
 
-1. Abra o Claude Code no repositório `meu-projeto`.
+1. Abra o Claude Code no repositório `noviq-app`.
 2. Escolha a próxima feature na ordem de dependência (tabela abaixo).
 3. Cole o conteúdo do `.md` correspondente como mensagem inicial.
 4. Ao terminar, confira os **critérios de aceite** (automáticos + manuais) antes de seguir.

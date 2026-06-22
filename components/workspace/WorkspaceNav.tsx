@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
+import Link, { useLinkStatus } from "next/link"
 import { usePathname } from "next/navigation"
 import {
   CalendarRange,
@@ -41,6 +41,25 @@ const SECOES: readonly Secao[] = [
   { chave: "objetivos", rotulo: "Objetivos", icone: Target },
   { chave: "renda-futura", rotulo: "Renda Futura", icone: TrendingUp },
 ] as const
+
+/**
+ * Indicador de transição da aba clicada. Lê `useLinkStatus()` (só funciona como
+ * descendente de um `<Link>`) e, enquanto a navegação está `pending`, mostra um
+ * ponto pulsante. Ocupa espaço fixo (toggla `opacity`, não a presença) para não
+ * causar layout shift. `bg-current` herda a cor da aba (ativa ou não).
+ */
+function PendingDot() {
+  const { pending } = useLinkStatus()
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "size-1.5 shrink-0 rounded-full bg-current transition-opacity",
+        pending ? "animate-pulse opacity-100" : "opacity-0"
+      )}
+    />
+  )
+}
 
 export function WorkspaceNav({ subcontaId }: { subcontaId: string }) {
   const pathname = usePathname()
@@ -83,6 +102,7 @@ export function WorkspaceNav({ subcontaId }: { subcontaId: string }) {
             >
               <Icone className="size-4 shrink-0" aria-hidden />
               {secao.rotulo}
+              <PendingDot />
             </Link>
           )
         })}

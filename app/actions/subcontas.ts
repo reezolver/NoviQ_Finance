@@ -84,7 +84,7 @@ export async function criarSubconta(
     throw new Error(`Erro ao semear categorias: ${erroCategorias.message}`)
   }
 
-  revalidatePath('/painel-clientes')
+  revalidatePath('/painel')
   return { subconta, ownerEmail: dados.ownerEmail ?? null }
 }
 
@@ -145,22 +145,66 @@ export async function criarLoginCliente(
     throw new Error(`Login criado, mas falhou ao vincular à subconta: ${erroVinculo.message}`)
   }
 
-  revalidatePath('/painel-clientes')
+  revalidatePath('/painel')
   return { userId: criado.user.id, email: dados.email }
 }
 
+const moverClienteSchema = z.object({
+  subcontaId: z.string().uuid(),
+  novoGestorId: z.string().uuid(),
+})
+
 /**
- * Move um cliente entre gestores — **só master**.
+ * Move um cliente entre gestores — **só master** (Spec 07).
  *
- * Stub: a implementação completa (validar que `novoGestorId` é educador,
- * UI de gestão, revalidação dos painéis) entra no **Spec 07**. Aqui apenas
- * fixamos a superfície e a checagem de papel.
+ * Atualiza `subcontas.gestor_id`. A RLS de `subcontas` (UPDATE: `gestor_id =
+ * auth.uid() OR is_master()`) já autoriza o master; o `assertMaster()` é
+ * defesa em profundidade na camada de aplicação.
+ *
+ * Garante que o **cliente nunca fica órfão**: valida que a subconta é do tipo
+ * `cliente` e que `novoGestorId` corresponde a um gestor real (educador ou
+ * master). Master lê `profiles` de qualquer um via RLS (`is_master()`).
  */
 export async function moverCliente(subcontaId: string, novoGestorId: string) {
-  z.object({
-    subcontaId: z.string().uuid(),
-    novoGestorId: z.string().uuid(),
-  }).parse({ subcontaId, novoGestorId })
+  const dados = moverClienteSchema.parse({ subcontaId, novoGestorId })
   await assertMaster()
-  throw new Error('moverCliente: implementação completa no Spec 07.')
+  const supabase = await createSupabaseServerClient()
+
+  const { data: subconta } = await supabase
+    .from('subcontas')
+    .select('id, tipo, gestor_id')
+    .eq('id', dados.subcontaId)
+    .maybeSingle()
+
+  if (!subconta) {
+    throw new Error('Subconta não encontrada ou sem acesso.')
+  }
+  if (subconta.tipo !== 'cliente') {
+    throw new Error('Apenas subcontas de cliente podem ser movidas entre gestores.')
+  }
+
+  const { data: novoGestor } = await supabase
+    .from('profiles')
+    .select('id, tipo_perfil')
+    .eq('id', dados.novoGestorId)
+    .maybeSingle()
+
+  if (!novoGestor) {
+    throw new Error('Novo gestor não encontrado.')
+  }
+  if (novoGestor.tipo_perfil !== 'educador' && novoGestor.tipo_perfil !== 'master') {
+    throw new Error('O novo gestor deve ser um educador ou master.')
+  }
+
+  const { error } = await supabase
+    .from('subcontas')
+    .update({ gestor_id: dados.novoGestorId })
+    .eq('id', dados.subcontaId)
+
+  if (error) {
+    throw new Error(`Erro ao mover cliente: ${error.message}`)
+  }
+
+  revalidatePath('/painel')
+  return { ok: true as const }
 }

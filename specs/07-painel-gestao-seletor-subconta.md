@@ -41,8 +41,8 @@ gestores; educador vê só a própria carteira; **ninguém vê a subconta `pesso
 ## 6. Critérios de aceite
 
 ### Automáticos
-- [ ] `npm run build` e `npm run lint` passam.
-- [ ] `moverCliente` valida papel master no servidor; sem `any`.
+- [x] `npm run build` e `npm run lint` passam.
+- [x] `moverCliente` valida papel master no servidor; sem `any`.
 
 ### Manuais
 - [ ] Educador vê só a própria carteira; abrir `/[subcontaId]` de cliente alheio → negado.

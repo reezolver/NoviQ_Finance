@@ -8,9 +8,9 @@
 - `lib/supabase-admin.ts` (Spec 01 — service-role) · `app/actions/subcontas.ts`
 
 ## 1. Pré-requisitos
-- [ ] **Specs 00–02** (tabela `anamneses` com RLS `gestor_id = auth.uid()`; `subcontas`/`categorias`).
-- [ ] **Spec 07** (painel onde o gestor gerencia as anamneses).
-- [ ] Antes do M5: **resolver o mapeamento anamnese → grupos da planilha** (ver §6 deste spec).
+- [x] **Specs 00–02** (tabela `anamneses` com RLS `gestor_id = auth.uid()`; `subcontas`/`categorias`).
+- [x] **Spec 07** (painel onde o gestor gerencia as anamneses).
+- [x] Antes do M5: **resolver o mapeamento anamnese → grupos da planilha** (ver §6 deste spec). → `MAPA_CATEGORIAS` em `lib/anamnese.ts` + doc no topo de `app/actions/anamneses.ts`.
 
 ## 2. Objetivo
 Construir o fluxo de anamnese (prioritário — o Thiago está saindo do Upify): gestor cria e envia
@@ -42,8 +42,8 @@ As perguntas da anamnese **precisam cair nos mesmos `grupos` da planilha** (ex.:
 ## 7. Critérios de aceite
 
 ### Automáticos
-- [ ] `npm run build` e `npm run lint` passam.
-- [ ] Route Handler de submissão usa **service-role**; nenhuma policy de SELECT público em `anamneses` (`get_advisors(security)` limpo).
+- [x] `npm run build` e `npm run lint` passam.
+- [x] Route Handler de submissão usa **service-role**; nenhuma policy de SELECT público em `anamneses` (`get_advisors(security)` limpo p/ `anamneses`).
 
 ### Manuais
 - [ ] Gestor cria anamnese → recebe link público; abrir o link **sem login** mostra o formulário.

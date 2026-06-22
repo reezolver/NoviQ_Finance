@@ -33,8 +33,8 @@ ano** dos juros compostos.
 ## 6. Critérios de aceite
 
 ### Automáticos
-- [ ] `npm run build` e `npm run lint` passam.
-- [ ] `lib/calculations.ts` tem a versão de capitalização **anual** com JSDoc explicando o alinhamento à planilha.
+- [x] `npm run build` e `npm run lint` passam.
+- [x] `lib/calculations.ts` tem a versão de capitalização **anual** com JSDoc explicando o alinhamento à planilha.
 
 ### Manuais
 - [ ] Com inputs de teste iguais aos de uma aba "Renda Futura" da planilha, os números **batem** (patrimônio necessário e projeção ano a ano).

@@ -23,19 +23,23 @@ export default async function WorkspaceLayout({
   const { subcontaId } = await params
   const supabase = await createSupabaseServerClient()
 
-  const { data: subconta } = await supabase
+  // Todas as subcontas acessíveis (RLS-enforced) alimentam o seletor de
+  // subconta no header. Se a subconta da URL não estiver entre elas, a RLS
+  // negou (ou o id não existe) → `notFound()`.
+  const { data: subcontas } = await supabase
     .from('subcontas')
     .select('id, nome, tipo')
-    .eq('id', subcontaId)
-    .maybeSingle()
+    .order('tipo', { ascending: true })
+    .order('nome', { ascending: true })
 
-  if (!subconta) {
+  const acessiveis = subcontas ?? []
+  if (!acessiveis.some((s) => s.id === subcontaId)) {
     notFound()
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <WorkspaceHeader nome={subconta.nome} tipo={subconta.tipo} />
+      <WorkspaceHeader subcontas={acessiveis} subcontaAtivaId={subcontaId} />
       <main className="flex-1">{children}</main>
     </div>
   )

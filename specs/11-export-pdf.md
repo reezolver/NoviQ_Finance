@@ -7,7 +7,7 @@
 - `meu-projeto/prompts/spec-mvp-noviq-2026-06-20.md` §12 e §10.9
 
 ## 1. Pré-requisitos
-- [ ] **Spec 04** (Controle Mensal — fonte do extrato). Para o diagnóstico, **Spec 08** (anamnese).
+- [x] **Spec 04** (Controle Mensal — fonte do extrato). Para o diagnóstico, **Spec 08** (anamnese).
 
 ## 2. Objetivo
 Gerar um **"extrato"/relatório em PDF** dos lançamentos do mês (e/ou o diagnóstico da anamnese)
@@ -32,8 +32,8 @@ para o educador enviar ao cliente no WhatsApp. Funcionalidade **desejável** —
 ## 6. Critérios de aceite
 
 ### Automáticos
-- [ ] `npm run build` e `npm run lint` passam.
-- [ ] O endpoint/rota valida acesso à subconta no servidor (RLS + checagem); **não** vaza dados de outra subconta.
+- [x] `npm run build` e `npm run lint` passam.
+- [x] O endpoint/rota valida acesso à subconta no servidor (RLS + checagem); **não** vaza dados de outra subconta.
 
 ### Manuais
 - [ ] Gerar o PDF de um mês produz um arquivo legível com os 3 blocos, 50‑30‑20 e saldo corretos (batendo com a tela mensal).

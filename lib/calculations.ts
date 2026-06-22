@@ -368,6 +368,115 @@ export function calcularMesesRestantes(dataConclusao: string): number {
   return Math.max(0, total)
 }
 
+// ─── Investimentos / Patrimônio (derivados — Spec 09) ────────────────────────────
+
+/**
+ * Multiplicador da meta de reserva de emergência (decisão de produto #4,
+ * 2026-06-20): a reserva ideal é **6× as despesas mensais**. Fonte única —
+ * nunca repetir o `6` inline.
+ */
+export const MULTIPLICADOR_RESERVA_EMERGENCIA = 6
+
+/**
+ * **Total Aplicado** de um ativo da carteira = `valor + rentabilidade`.
+ * @param valor - Valor aportado/saldo do ativo
+ * @param rentabilidade - Rendimento acumulado do ativo
+ * @returns Total aplicado
+ */
+export function calcularTotalAplicado(valor: number, rentabilidade: number): number {
+  return valor + rentabilidade
+}
+
+/**
+ * **Patrimônio Líquido (derivado)** = `Σ patrimônio − Σ dívidas`.
+ * @param totalPatrimonio - Soma dos valores em `patrimonio`
+ * @param totalDividas - Soma dos `valor_total` em `dividas`
+ * @returns Patrimônio líquido (pode ser negativo)
+ */
+export function calcularPatrimonioLiquido(
+  totalPatrimonio: number,
+  totalDividas: number
+): number {
+  return totalPatrimonio - totalDividas
+}
+
+/**
+ * Média da **despesa mensal** realizada (`fixa + variavel`) sobre os meses que
+ * tiveram movimento. Base da meta de reserva (decisão #4). Reusa a agregação do
+ * Spec 04 (`agregarRealizadoPorMes`): quem chama passa os 12 baldes do ano.
+ * Meses sem despesa não diluem a média (estado vazio = 0, nunca erro).
+ * @param realizadoPorMes - 12 `TotaisData` do realizado (ver `agregarRealizadoPorMes`)
+ * @returns Despesa mensal média (0 se não houve despesa)
+ */
+export function calcularDespesaMensalMedia(
+  realizadoPorMes: ReadonlyArray<TotaisData>
+): number {
+  const comMovimento = realizadoPorMes.filter((m) => m.fixas + m.variaveis > 0)
+  if (comMovimento.length === 0) return 0
+  const soma = comMovimento.reduce((acc, m) => acc + m.fixas + m.variaveis, 0)
+  return soma / comMovimento.length
+}
+
+/** Reserva de emergência: valor atual, meta (6×) e progresso (atual ÷ meta). */
+export interface StatusReserva {
+  /** Reserva atual (Σ patrimônio com finalidade = reserva). */
+  atual: number
+  /** Meta = `MULTIPLICADOR_RESERVA_EMERGENCIA × despesas mensais`. */
+  meta: number
+  /** Progresso = `atual ÷ meta` (0–1+; 0 quando a meta é 0). */
+  progresso: number
+}
+
+/**
+ * **Reserva de emergência (derivado)** — meta `6× despesas mensais` e status
+ * (`atual ÷ meta`). Divisão por zero tratada graciosamente (meta 0 → progresso 0).
+ * @param reservaAtual - Σ patrimônio com finalidade = reserva
+ * @param despesaMensal - Despesa mensal (ver `calcularDespesaMensalMedia`)
+ * @returns Reserva atual, meta e progresso
+ */
+export function calcularStatusReserva(
+  reservaAtual: number,
+  despesaMensal: number
+): StatusReserva {
+  const meta = despesaMensal * MULTIPLICADOR_RESERVA_EMERGENCIA
+  return {
+    atual: reservaAtual,
+    meta,
+    progresso: meta === 0 ? 0 : reservaAtual / meta,
+  }
+}
+
+/** Um ativo da carteira reduzido ao essencial para agregação por chave. */
+export interface AtivoAgregavel {
+  /** Chave de agrupamento (categoria de investimento ou finalidade); `null` = sem chave. */
+  chave: string | null
+  /** Valor do ativo. */
+  valor: number
+  /** Rentabilidade acumulada do ativo. */
+  rentabilidade: number
+}
+
+/**
+ * Agrega o **Total Aplicado** (`valor + rentabilidade`) por chave — usado tanto
+ * para a **distribuição por categoria** quanto para o **resumo Reserva vs
+ * Patrimônio** por finalidade. Ativos com `chave = null` são ignorados.
+ * @param ativos - Ativos da carteira (chave, valor, rentabilidade)
+ * @returns Mapa chave → total aplicado somado
+ */
+export function agregarTotalAplicadoPorChave(
+  ativos: ReadonlyArray<AtivoAgregavel>
+): Map<string, number> {
+  const totais = new Map<string, number>()
+  for (const a of ativos) {
+    if (a.chave === null) continue
+    totais.set(
+      a.chave,
+      (totais.get(a.chave) ?? 0) + calcularTotalAplicado(a.valor, a.rentabilidade)
+    )
+  }
+  return totais
+}
+
 // ─── Funções para Renda Futura (Juros Compostos) ────────────────────────────────────
 
 /**
@@ -474,4 +583,93 @@ export function calcularJurosCompostos(
     rendaPassivaMensal,
     projecaoAnual,
   }
+}
+
+/**
+ * Projeção de **Renda Futura** (aposentadoria) com **capitalização ANUAL**,
+ * alinhada à planilha do Thiago (fonte de verdade — ver Spec 10 §4).
+ *
+ * ⚠️ Por que existe além de `calcularJurosCompostos`: aquela capitaliza ao
+ * **mês** (`M = P(1+i)^n + PMT((1+i)^n − 1)/i`), o que diverge da planilha. Aqui
+ * o capital evolui ano a ano pela recorrência da planilha — os 12 aportes do
+ * ano entram e só então o montante rende a taxa anual:
+ *
+ *     C(0)   = capitalInicial
+ *     C(n+1) = (C(n) + aporteMensal × 12) × (1 + taxa)
+ *
+ * Use esta versão na tela de Renda Futura para os números baterem com a planilha.
+ * Casos de borda tratados sem crash: `idadeAlvo ≤ idadeAtual` → horizonte 0
+ * (só o ano atual); `taxa 0` → sem rendimento (só acumula aportes).
+ *
+ * @param capitalInicial - Aporte inicial aplicado
+ * @param aporteMensal - Aporte mensal (somado 12× por ano)
+ * @param taxaAnual - Taxa média anual em % (ex.: 10 = 10% a.a.)
+ * @param idadeAtual - Idade atual (início da projeção)
+ * @param idadeAlvo - Idade-alvo (fim); horizonte (anos) = `idadeAlvo − idadeAtual`
+ */
+export function calcularRendaFuturaAnual(
+  capitalInicial: number,
+  aporteMensal: number,
+  taxaAnual: number,
+  idadeAtual: number,
+  idadeAlvo: number
+): ProjetoJurosCompostos {
+  const taxa = taxaAnual / 100
+  const aporteNoAno = aporteMensal * 12
+  const anos = Math.max(0, Math.floor(idadeAlvo - idadeAtual))
+  const anoCalendarioBase = new Date().getFullYear()
+
+  // Ano 0 = ponto de partida (sem aporte/rendimento computados ainda).
+  const projecaoAnual: AnoProjetado[] = [
+    {
+      idade: idadeAtual,
+      ano: anoCalendarioBase,
+      patrimonioAcumulado: capitalInicial,
+      aporteNoAno: 0,
+      rendimentoNoAno: 0,
+    },
+  ]
+
+  let patrimonioAcumulado = capitalInicial
+  for (let ano = 1; ano <= anos; ano++) {
+    const anterior = patrimonioAcumulado
+    patrimonioAcumulado = (anterior + aporteNoAno) * (1 + taxa)
+    projecaoAnual.push({
+      idade: idadeAtual + ano,
+      ano: anoCalendarioBase + ano,
+      patrimonioAcumulado,
+      aporteNoAno,
+      rendimentoNoAno: patrimonioAcumulado - anterior - aporteNoAno,
+    })
+  }
+
+  const patrimonioFinal = patrimonioAcumulado
+  const totalAportado = capitalInicial + aporteNoAno * anos
+  const rendimentoTotal = patrimonioFinal - totalAportado
+  const rendaPassivaMensal = (patrimonioFinal * taxa) / 12
+
+  return {
+    patrimonioFinal,
+    totalAportado,
+    rendimentoTotal,
+    rendaPassivaMensal,
+    projecaoAnual,
+  }
+}
+
+/**
+ * **Patrimônio Necessário** para sustentar uma renda passiva pela perpetuidade:
+ * `(rendaPassivaMensal × 12) / taxa`. Taxa ≤ 0 → retorna `0` (perpetuidade
+ * indefinida; evita divisão por zero / `Infinity`).
+ *
+ * @param rendaPassivaMensal - Renda passiva mensal desejada
+ * @param taxaAnual - Taxa média anual em % (ex.: 10 = 10% a.a.)
+ */
+export function calcularPatrimonioNecessario(
+  rendaPassivaMensal: number,
+  taxaAnual: number
+): number {
+  const taxa = taxaAnual / 100
+  if (taxa <= 0) return 0
+  return (rendaPassivaMensal * 12) / taxa
 }

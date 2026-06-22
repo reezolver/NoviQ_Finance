@@ -38,8 +38,8 @@ Objetivo **abate da meta** (soma manual no MVP).
 ## 6. Critérios de aceite
 
 ### Automáticos
-- [ ] `npm run build` e `npm run lint` passam.
-- [ ] Cálculos só via `lib/calculations.ts` (sem inline).
+- [x] `npm run build` e `npm run lint` passam.
+- [x] Cálculos só via `lib/calculations.ts` (sem inline).
 
 ### Manuais
 - [ ] Criar objetivo (Casamento, R$ 50.000, data futura) mostra progresso 0% e necessário/mês = alvo/meses.

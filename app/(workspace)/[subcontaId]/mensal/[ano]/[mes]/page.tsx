@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import { Receipt, ShoppingCart, Wallet } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import {
@@ -18,29 +19,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { BlocoGrupo, type LinhaBloco } from "@/components/mensal/BlocoGrupo"
+import { BlocoGrupo } from "@/components/mensal/BlocoGrupo"
 import { NavegacaoMeses } from "@/components/mensal/NavegacaoMeses"
 import { NovoLancamentoButton } from "@/components/mensal/NovoLancamentoButton"
+import { ExportarPdfButton } from "@/components/mensal/ExportarPdfButton"
+import { ControleMensalChart } from "@/components/mensal/ControleMensalChart"
+import { Resumo503020 } from "@/components/mensal/Resumo503020"
+import { formatarMoeda, type GrupoCategoria } from "@/lib/calculations"
 import {
-  ControleMensalChart,
-  type ControleMensalChartData,
-} from "@/components/mensal/ControleMensalChart"
-import {
-  Resumo503020,
-  type FaixaResumo,
-} from "@/components/mensal/Resumo503020"
-import {
-  agregarCategoriasDoMes,
-  calcularDiferenca,
-  calcularDistribuicao503020,
-  calcularPercentual,
-  calcularSaldoMes,
-  formatarMoeda,
-  REGRA_503020,
-  totalizarPorGrupo,
-  type GrupoCategoria,
-} from "@/lib/calculations"
-import type { TotaisData } from "@/types/financeiro"
+  GRUPO_LABEL,
+  montarExtratoMensal,
+  type CategoriaRow,
+  type LancamentoRow,
+  type OrcamentoRow,
+} from "@/lib/extrato"
 import { cn } from "@/lib/utils"
 
 /**
@@ -50,8 +42,9 @@ import { cn } from "@/lib/utils"
  * 50‑30‑20. O investimento (aporte) entra no saldo e no resumo 50‑30‑20 — não
  * é um 4º bloco grande (decisão de UX alinhada à planilha, onde é o "20%").
  *
- * Server Component: só busca dados (RLS-enforced) e monta a UI. Todo cálculo
- * financeiro vive em `lib/calculations.ts`; cor/sinal em `components/mensal`.
+ * Server Component: só busca dados (RLS-enforced) e monta a UI. A agregação
+ * vive em `lib/extrato.ts` (reusa `lib/calculations.ts`) — a mesma função
+ * alimenta o PDF (Spec 11), então tela e extrato batem por construção.
  */
 
 const MESES_NOMES = [
@@ -69,40 +62,11 @@ const MESES_NOMES = [
   "Dezembro",
 ] as const
 
-/** Mapeia cada grupo para o campo correspondente em `TotaisData`. */
-const CAMPO_POR_GRUPO: Record<GrupoCategoria, keyof TotaisData> = {
-  renda: "renda",
-  fixa: "fixas",
-  variavel: "variaveis",
-  investimento: "investimento",
-}
-
-const GRUPO_LABEL: Record<GrupoCategoria, string> = {
-  renda: "Renda",
-  fixa: "Fixa",
-  variavel: "Variável",
-  investimento: "Investimento",
-}
-
-// ─── Tipos das linhas retornadas pelas queries (client Supabase não tipado) ──────
-
-interface LancamentoRow {
-  valor: number
-  categoria_id: string | null
-}
-
-interface OrcamentoRow {
-  categoria_id: string
-  valor_planejado: number
-  ano: number | null
-  mes: number | null
-}
-
-interface CategoriaRow {
-  id: string
-  nome: string
-  grupo: GrupoCategoria
-  ordem: number
+/** Ícone de cada bloco. */
+const ICONE_BLOCO: Record<Extract<GrupoCategoria, "renda" | "fixa" | "variavel">, LucideIcon> = {
+  renda: Wallet,
+  fixa: Receipt,
+  variavel: ShoppingCart,
 }
 
 interface ObjetivoRow {
@@ -192,114 +156,12 @@ export default async function ControleMensalPage({
   const categorias = (categoriasData ?? []) as unknown as CategoriaRow[]
   const objetivos = (objetivosData ?? []) as unknown as ObjetivoRow[]
 
-  const nomePorId = new Map(categorias.map((c) => [c.id, c.nome]))
-
-  // Agregação por categoria (Planejado × Realizado) do mês — base de tudo.
-  const categoriasAgregadas = agregarCategoriasDoMes({
-    mes,
-    categorias: categorias.map((c) => ({ id: c.id, grupo: c.grupo })),
-    lancamentos: lancamentos
-      .filter((l): l is LancamentoRow & { categoria_id: string } => l.categoria_id !== null)
-      .map((l) => ({ categoriaId: l.categoria_id, valor: Number(l.valor) })),
-    orcamentos: orcamentos
-      .filter(
-        (o) =>
-          (o.ano === null && o.mes === null) || (o.ano === ano && o.mes === mes)
-      )
-      .map((o) => ({
-        categoriaId: o.categoria_id,
-        grupo: categorias.find((c) => c.id === o.categoria_id)?.grupo ?? "variavel",
-        valorPlanejado: Number(o.valor_planejado),
-        mes: o.mes,
-      })),
-  })
-
-  const saldos = totalizarPorGrupo(categoriasAgregadas)
-
-  // ── Saldo do mês (4 grupos) ──
-  const saldoPlanejado = calcularSaldoMes(saldos.planejado)
-  const saldoRealizado = calcularSaldoMes(saldos.realizado)
-  const saldoDiferenca = calcularDiferenca(saldoRealizado, saldoPlanejado)
-
-  // ── Linhas/total por bloco ──
-  const linhasDoGrupo = (grupo: GrupoCategoria): LinhaBloco[] =>
-    categoriasAgregadas
-      .filter((c) => c.grupo === grupo)
-      .map((c) => ({
-        id: c.categoriaId,
-        nome: nomePorId.get(c.categoriaId) ?? "Sem nome",
-        planejado: c.planejado,
-        realizado: c.realizado,
-        // Diferença da linha = Planejado − Realizado (spec §4).
-        diferenca: calcularDiferenca(c.planejado, c.realizado),
-      }))
-      .filter((l) => l.planejado !== 0 || l.realizado !== 0)
-
-  const totalDoGrupo = (grupo: GrupoCategoria) => {
-    const campo = CAMPO_POR_GRUPO[grupo]
-    const planejado = saldos.planejado[campo]
-    const realizado = saldos.realizado[campo]
-    return { planejado, realizado, diferenca: calcularDiferenca(planejado, realizado) }
-  }
-
-  // ── Resumo 50‑30‑20 (base = renda planejada; fallback p/ realizada) ──
-  const rendaBase =
-    saldos.planejado.renda > 0 ? saldos.planejado.renda : saldos.realizado.renda
-  const ideais = calcularDistribuicao503020(rendaBase)
-  const faixas: FaixaResumo[] = [
-    {
-      rotulo: "Despesa Fixa",
-      grupo: "fixa",
-      metaPct: REGRA_503020.fixa * 100,
-      ideal: ideais.fixo,
-      realizado: saldos.realizado.fixas,
-      percentualRenda: calcularPercentual(saldos.realizado.fixas, rendaBase),
-    },
-    {
-      rotulo: "Despesa Variável",
-      grupo: "variavel",
-      metaPct: REGRA_503020.variavel * 100,
-      ideal: ideais.variavel,
-      realizado: saldos.realizado.variaveis,
-      percentualRenda: calcularPercentual(saldos.realizado.variaveis, rendaBase),
-    },
-    {
-      rotulo: "Investimento",
-      grupo: "investimento",
-      metaPct: REGRA_503020.investimento * 100,
-      ideal: ideais.investimento,
-      realizado: saldos.realizado.investimento,
-      percentualRenda: calcularPercentual(saldos.realizado.investimento, rendaBase),
-    },
-  ]
-
-  // ── Gráfico: Planejado × Realizado por grupo ──
-  const dadosGrafico: ControleMensalChartData[] = (
-    ["renda", "fixa", "variavel", "investimento"] as const
-  ).map((grupo) => {
-    const campo = CAMPO_POR_GRUPO[grupo]
-    return {
-      grupo: GRUPO_LABEL[grupo],
-      planejado: saldos.planejado[campo],
-      realizado: saldos.realizado[campo],
-    }
-  })
-
-  // ── Detalhamento por categoria (realizado + % sobre a renda) ──
-  const detalhamento = categoriasAgregadas
-    .filter((c) => c.realizado !== 0)
-    .map((c) => ({
-      id: c.categoriaId,
-      nome: nomePorId.get(c.categoriaId) ?? "Sem nome",
-      grupo: c.grupo,
-      realizado: c.realizado,
-      percentualRenda: calcularPercentual(c.realizado, rendaBase),
-    }))
-    .sort((a, b) => b.realizado - a.realizado)
+  // Agregação centralizada (mesma fonte do PDF de export — Spec 11).
+  const extrato = montarExtratoMensal({ ano, mes, categorias, lancamentos, orcamentos })
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-8">
-      {/* Cabeçalho + ação */}
+      {/* Cabeçalho + ações */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">Controle Mensal</h1>
@@ -307,15 +169,18 @@ export default async function ControleMensalPage({
             {MESES_NOMES[mes - 1]} de {ano} — Planejado, Realizado e Diferença.
           </p>
         </div>
-        <NovoLancamentoButton
-          subcontaId={subcontaId}
-          categorias={categorias.map((c) => ({
-            id: c.id,
-            nome: c.nome,
-            grupo: c.grupo,
-          }))}
-          objetivos={objetivos.map((o) => ({ id: o.id, nome: o.nome }))}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <ExportarPdfButton subcontaId={subcontaId} ano={ano} mes={mes} />
+          <NovoLancamentoButton
+            subcontaId={subcontaId}
+            categorias={categorias.map((c) => ({
+              id: c.id,
+              nome: c.nome,
+              grupo: c.grupo,
+            }))}
+            objetivos={objetivos.map((o) => ({ id: o.id, nome: o.nome }))}
+          />
+        </div>
       </div>
 
       {/* Navegação por meses (mantém a subconta) */}
@@ -323,9 +188,9 @@ export default async function ControleMensalPage({
 
       {/* Saldo do mês */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <SaldoCard rotulo="Saldo Planejado" valor={saldoPlanejado} />
-        <SaldoCard rotulo="Saldo Realizado" valor={saldoRealizado} />
-        <SaldoCard rotulo="Diferença" valor={saldoDiferenca} colorir />
+        <SaldoCard rotulo="Saldo Planejado" valor={extrato.saldoPlanejado} />
+        <SaldoCard rotulo="Saldo Realizado" valor={extrato.saldoRealizado} />
+        <SaldoCard rotulo="Diferença" valor={extrato.saldoDiferenca} colorir />
       </div>
 
       {/* Gráfico em destaque */}
@@ -337,38 +202,27 @@ export default async function ControleMensalPage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ControleMensalChart data={dadosGrafico} />
+          <ControleMensalChart data={extrato.dadosGrafico} />
         </CardContent>
       </Card>
 
       {/* 3 blocos */}
       <div className="space-y-4">
-        <BlocoGrupo
-          titulo="Renda"
-          grupo="renda"
-          icone={Wallet}
-          linhas={linhasDoGrupo("renda")}
-          total={totalDoGrupo("renda")}
-        />
-        <BlocoGrupo
-          titulo="Despesa Fixa"
-          grupo="fixa"
-          icone={Receipt}
-          linhas={linhasDoGrupo("fixa")}
-          total={totalDoGrupo("fixa")}
-        />
-        <BlocoGrupo
-          titulo="Despesa Variável"
-          grupo="variavel"
-          icone={ShoppingCart}
-          linhas={linhasDoGrupo("variavel")}
-          total={totalDoGrupo("variavel")}
-        />
+        {extrato.blocos.map((bloco) => (
+          <BlocoGrupo
+            key={bloco.grupo}
+            titulo={bloco.titulo}
+            grupo={bloco.grupo}
+            icone={ICONE_BLOCO[bloco.grupo]}
+            linhas={bloco.linhas}
+            total={bloco.total}
+          />
+        ))}
       </div>
 
       {/* Resumo 50‑30‑20 + detalhamento por categoria */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Resumo503020 rendaBase={rendaBase} faixas={faixas} />
+        <Resumo503020 rendaBase={extrato.rendaBase} faixas={extrato.faixas} />
 
         <Card size="sm">
           <CardHeader>
@@ -378,7 +232,7 @@ export default async function ControleMensalPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {detalhamento.length === 0 ? (
+            {extrato.detalhamento.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">
                 Nenhum lançamento neste mês.
               </p>
@@ -393,7 +247,7 @@ export default async function ControleMensalPage({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {detalhamento.map((item) => (
+                  {extrato.detalhamento.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.nome}</TableCell>
                       <TableCell>

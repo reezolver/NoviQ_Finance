@@ -39,8 +39,8 @@ distribuição, e os **derivados**: **Patrimônio Líquido** e **Reserva de emer
 ## 6. Critérios de aceite
 
 ### Automáticos
-- [ ] `npm run build` e `npm run lint` passam.
-- [ ] PL e reserva calculados em `lib/calculations.ts` (sem inline).
+- [x] `npm run build` e `npm run lint` passam.
+- [x] PL e reserva calculados em `lib/calculations.ts` (sem inline).
 
 ### Manuais
 - [ ] Distribuição % por categoria e resumo Reserva vs Patrimônio batem com dados de teste.

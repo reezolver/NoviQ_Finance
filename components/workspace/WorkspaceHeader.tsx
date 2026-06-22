@@ -1,25 +1,25 @@
-import Link from 'next/link'
+import Link from "next/link"
 
-import { Badge } from '@/components/ui/badge'
-import { ThemeToggle } from '@/components/theme-toggle'
-import type { Database } from '@/types/database'
-
-type TipoSubconta = Database['public']['Enums']['tipo_subconta']
+import { ThemeToggle } from "@/components/theme-toggle"
+import {
+  SeletorSubconta,
+  type SubcontaAcessivel,
+} from "@/components/workspace/SeletorSubconta"
 
 /**
- * Header mínimo do workspace: marca + nome da subconta ativa + toggle de tema.
+ * Header do workspace: marca + **seletor de subconta** ("trocar de conta estilo
+ * Instagram") + toggle de tema. O seletor lista as subcontas acessíveis (já
+ * filtradas pela RLS) e troca apenas o contexto de workspace — não a sessão.
  *
- * O **seletor de subconta** completo (lista de clientes, troca "estilo
- * Instagram") chega no Spec 07 — aqui só exibimos a subconta atual. O link da
- * marca aponta para `/`, onde o middleware redireciona conforme o papel
- * (cliente → própria subconta; gestor → `/painel`).
+ * O link da marca aponta para `/`, onde o middleware redireciona conforme o
+ * papel (cliente → própria subconta; gestor → `/painel`).
  */
 export function WorkspaceHeader({
-  nome,
-  tipo,
+  subcontas,
+  subcontaAtivaId,
 }: {
-  nome: string
-  tipo: TipoSubconta
+  subcontas: SubcontaAcessivel[]
+  subcontaAtivaId: string
 }) {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background px-4 md:px-6">
@@ -34,10 +34,10 @@ export function WorkspaceHeader({
         <span className="text-muted-foreground" aria-hidden>
           /
         </span>
-        <span className="truncate font-medium text-foreground">{nome}</span>
-        <Badge variant="secondary" className="capitalize">
-          {tipo}
-        </Badge>
+        <SeletorSubconta
+          subcontas={subcontas}
+          subcontaAtivaId={subcontaAtivaId}
+        />
       </div>
       <ThemeToggle />
     </header>

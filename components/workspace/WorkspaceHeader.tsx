@@ -33,6 +33,15 @@ export async function WorkspaceHeader({
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background px-4 md:px-6">
       <div className="flex min-w-0 items-center gap-2 md:gap-3">
+        {/* "Voltar ao painel" à esquerda (convenção de voltar) — só gestor. */}
+        {isGestor ? (
+          <Button asChild variant="outline" size="sm">
+            <Link href="/painel" aria-label="Voltar ao painel de gestão">
+              <ArrowLeft />
+              <span className="hidden sm:inline">Voltar ao painel</span>
+            </Link>
+          </Button>
+        ) : null}
         <Link
           href="/"
           className="text-xl font-bold text-primary"
@@ -46,19 +55,10 @@ export async function WorkspaceHeader({
         <SeletorSubconta
           subcontas={subcontas}
           subcontaAtivaId={subcontaAtivaId}
+          isGestor={isGestor}
         />
       </div>
-      <div className="flex items-center gap-1 md:gap-2">
-        {isGestor ? (
-          <Button asChild variant="outline" size="sm">
-            <Link href="/painel" aria-label="Voltar ao painel de gestão">
-              <ArrowLeft />
-              <span className="hidden sm:inline">Voltar ao painel</span>
-            </Link>
-          </Button>
-        ) : null}
-        <ThemeToggle />
-      </div>
+      <ThemeToggle />
     </header>
   )
 }

@@ -1,8 +1,15 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Check, ChevronsUpDown, User, Users } from "lucide-react"
+import {
+  Check,
+  ChevronsUpDown,
+  LayoutDashboard,
+  User,
+  Users,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -34,13 +41,20 @@ export interface SubcontaAcessivel {
  * A lista já chega filtrada pela RLS (a pessoal do gestor + os clientes
  * acessíveis). Para o cliente final — que só enxerga a própria subconta —
  * exibe um rótulo estático, sem dropdown.
+ *
+ * Para o **gestor** (educador/master), o dropdown também oferece um atalho
+ * "Painel de gestão" no topo — separado das contas — para deixar claro que
+ * selecionar o nome pessoal **entra na conta pessoal**, e voltar ao painel é
+ * outra ação.
  */
 export function SeletorSubconta({
   subcontas,
   subcontaAtivaId,
+  isGestor = false,
 }: {
   subcontas: SubcontaAcessivel[]
   subcontaAtivaId: string
+  isGestor?: boolean
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -60,11 +74,13 @@ export function SeletorSubconta({
 
   if (!ativa) return null
 
-  const podeTrocar = subcontas.length > 1
   const pessoais = subcontas.filter((s) => s.tipo === "pessoal")
   const clientes = subcontas.filter((s) => s.tipo === "cliente")
+  // Gestor sempre tem dropdown (mesmo com só a conta pessoal) — precisa do
+  // atalho para o painel. Cliente só ganha dropdown se tiver mais de uma conta.
+  const mostrarDropdown = isGestor || subcontas.length > 1
 
-  if (!podeTrocar) {
+  if (!mostrarDropdown) {
     return (
       <div className="flex min-w-0 items-center gap-2">
         <span className="truncate font-medium text-foreground">{ativa.nome}</span>
@@ -93,6 +109,17 @@ export function SeletorSubconta({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-60">
+        {isGestor && (
+          <>
+            <DropdownMenuItem asChild className="gap-2">
+              <Link href="/painel">
+                <LayoutDashboard className="size-4 text-muted-foreground" />
+                <span className="truncate">Painel de gestão</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
         {pessoais.length > 0 && (
           <>
             <DropdownMenuLabel>Conta pessoal</DropdownMenuLabel>

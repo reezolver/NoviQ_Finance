@@ -12,6 +12,14 @@ versionamento segue o [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 - (nada ainda — as próximas mudanças entram aqui antes de virarem uma versão)
 
+## [0.4.0] - 2026-06-22
+
+### Adicionado
+
+- **Atalho "Voltar ao painel" no workspace:** botão no cabeçalho que leva o
+  gestor (educador/master) de volta ao painel de gestão. Aparece apenas para
+  gestor — cliente não tem painel — e mostra só o ícone no mobile.
+
 ## [0.3.0] - 2026-06-22
 
 ### Adicionado
@@ -58,7 +66,8 @@ Primeiro MVP da Noviq Finance — fundação completa e telas principais do clie
 - **Exportar PDF:** extrato do mês / diagnóstico em PDF.
 - **Design system** completo em `app/styleguide/` (tema claro e escuro, cor primária `#008CFF`).
 
-[Não lançado]: https://github.com/reezolver/NoviQ_Finance/compare/v0.3.0...HEAD
+[Não lançado]: https://github.com/reezolver/NoviQ_Finance/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/reezolver/NoviQ_Finance/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/reezolver/NoviQ_Finance/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/reezolver/NoviQ_Finance/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/reezolver/NoviQ_Finance/releases/tag/v0.1.0

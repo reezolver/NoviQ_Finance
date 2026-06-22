@@ -346,6 +346,7 @@ export type Database = {
           email: string | null
           id: string
           nome: string | null
+          preferencia_inicial: string | null
           status: Database["public"]["Enums"]["status_perfil"]
           tipo_perfil: Database["public"]["Enums"]["tipo_perfil"]
         }
@@ -354,6 +355,7 @@ export type Database = {
           email?: string | null
           id: string
           nome?: string | null
+          preferencia_inicial?: string | null
           status?: Database["public"]["Enums"]["status_perfil"]
           tipo_perfil?: Database["public"]["Enums"]["tipo_perfil"]
         }
@@ -362,6 +364,7 @@ export type Database = {
           email?: string | null
           id?: string
           nome?: string | null
+          preferencia_inicial?: string | null
           status?: Database["public"]["Enums"]["status_perfil"]
           tipo_perfil?: Database["public"]["Enums"]["tipo_perfil"]
         }

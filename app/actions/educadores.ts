@@ -8,6 +8,11 @@ import { createSupabaseAdminClient } from '@/lib/supabase-admin'
 const userIdSchema = z.object({ userId: z.string().uuid() })
 
 /**
+ * @deprecated Spec 16 · RF-5 — modelo **sem aprovação**. O trigger da Spec 14 já
+ * cria o educador como `educador/ativo` no auto-cadastro, então o cadastro não
+ * promove mais nada e esta action **não é chamada por nenhum fluxo**. Mantida
+ * temporariamente para não quebrar imports; pode ser removida (sem usos).
+ *
  * Marca uma conta **recém-cadastrada** como **educador pendente**.
  *
  * Fluxo: a página `/cadastro` faz `supabase.auth.signUp({ email, password,
@@ -60,6 +65,10 @@ export async function marcarComoEducadorPendente(userId: string) {
 
 /**
  * Aprova um educador pendente — **só master**.
+ *
+ * Spec 16 · §11.2: **mantida para reativação futura** de uma conta suspensa
+ * (`status='inativo'`/`pendente`). No MVP **nenhum fluxo a dispara** (ninguém
+ * nasce pendente no auto-cadastro), mas o gate de suspensão é reservado.
  *
  * Seta o claim `status='ativo'` (via admin) e espelha em `profiles`. O
  * educador precisa **refazer login** para o novo claim valer no JWT

@@ -33,6 +33,7 @@ import {
   AnamnesesPanel,
   type AnamneseResumo,
 } from "@/components/anamnese/AnamnesesPanel"
+import { LeadsPanel, type LeadResumo } from "@/components/painel/LeadsPanel"
 import type { AnaliseAnamnese } from "@/lib/anamnese"
 
 /**
@@ -72,7 +73,11 @@ export default async function PainelPage() {
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle(),
-    supabase.from("profiles").select("nome").eq("id", usuario.id).maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("nome, preferencia_inicial")
+      .eq("id", usuario.id)
+      .maybeSingle(),
     supabase
       .from("anamneses")
       .select(
@@ -94,6 +99,21 @@ export default async function PainelPage() {
     analise: (a.analise as AnaliseAnamnese | null) ?? null,
   }))
   const nomeGestor = profile?.nome?.trim() || "Minha conta"
+  const preferenciaInicial =
+    (profile?.preferencia_inicial as "pessoal" | "gestor" | null) ?? null
+
+  // Leads (RF-10): só o master enxerga educadores em modo pessoal. A RLS via
+  // `is_master()` já libera a leitura — sem policy nova.
+  let leads: LeadResumo[] = []
+  if (isMaster) {
+    const { data: leadsData } = await supabase
+      .from("profiles")
+      .select("id, nome, email, created_at")
+      .eq("tipo_perfil", "educador")
+      .eq("preferencia_inicial", "pessoal")
+      .order("created_at", { ascending: false })
+    leads = leadsData ?? []
+  }
 
   // Só o master enxerga os gestores (privacidade via RLS): nomes para a coluna
   // "Gestor" + opções de destino do "mover cliente".
@@ -129,7 +149,7 @@ export default async function PainelPage() {
         </Link>
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          <MenuUsuario nome={nomeGestor} />
+          <MenuUsuario nome={nomeGestor} preferenciaInicial={preferenciaInicial} />
         </div>
       </header>
 
@@ -152,7 +172,7 @@ export default async function PainelPage() {
                 nomeSugerido={nomeGestor}
               />
               <EnviarAnamneseModal />
-              <CriarClienteModal />
+              <CriarClienteModal limiteAtingido={clientes.length >= 3} />
             </div>
           </div>
 
@@ -227,6 +247,8 @@ export default async function PainelPage() {
               </CardContent>
             </Card>
           )}
+
+          {isMaster && <LeadsPanel leads={leads} />}
 
           <AnamnesesPanel anamneses={anamneses} />
         </div>

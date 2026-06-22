@@ -35,6 +35,13 @@ const criarSubcontaSchema = z.object({
 })
 
 /**
+ * Tetos fixos de subcontas por gestor (Spec 16 · RF-8). Não atrelados a billing
+ * — MVP. O trigger `trg_limite_subcontas` no banco é a fonte de verdade; esta
+ * checagem na app é UX + defesa em profundidade. Os dois usam os mesmos valores.
+ */
+const LIMITES = { pessoal: 1, cliente: 3 } as const
+
+/**
  * Cria uma subconta (carteira) e **semeia as categorias default**.
  *
  * - `pessoal`: `owner_user_id = gestor_id` (não tem login próprio).
@@ -55,6 +62,23 @@ export async function criarSubconta(
   const dados = criarSubcontaSchema.parse({ tipo, nome, ownerEmail })
   const gestor = await assertGestor()
   const supabase = await createSupabaseServerClient()
+
+  // Limite por gestor (Spec 16 · RF-8): barra antes do insert. Conta roda pelo
+  // client de usuário (RLS) — as subcontas do gestor já são visíveis a ele. A UI
+  // captura este `Error` e mostra `toast`. O trigger do banco é a barreira final.
+  const { count } = await supabase
+    .from('subcontas')
+    .select('id', { count: 'exact', head: true })
+    .eq('gestor_id', gestor.id)
+    .eq('tipo', dados.tipo)
+
+  if ((count ?? 0) >= LIMITES[dados.tipo]) {
+    throw new Error(
+      dados.tipo === 'pessoal'
+        ? 'Você já tem uma conta pessoal.'
+        : `Você atingiu o limite de ${LIMITES.cliente} contas de cliente.`
+    )
+  }
 
   const { data: subconta, error } = await supabase
     .from('subcontas')

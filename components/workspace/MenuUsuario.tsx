@@ -1,9 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { LogOut, UserCircle } from "lucide-react"
+import { LogOut, Users, UserCircle } from "lucide-react"
+import { toast } from "sonner"
 
 import { createClient } from "@/lib/supabase"
+import { virarGestor } from "@/app/actions/onboarding"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -22,21 +24,43 @@ import {
  *
  * `nome`/`email` são opcionais: quando vêm, identificam a conta logada no topo
  * do menu.
+ *
+ * `preferenciaInicial` controla o item **"Gerenciar clientes"** (Spec 17 · RF-11):
+ * só aparece no modo pessoal (`=== 'pessoal'`), onde permite o auto-upgrade
+ * pessoal → gestor (sem mudança de papel — só preferência) e leva ao `/painel`.
  */
 export function MenuUsuario({
   nome,
   email,
+  preferenciaInicial,
 }: {
   nome?: string | null
   email?: string | null
+  preferenciaInicial?: "pessoal" | "gestor" | null
 }) {
   const [saindo, setSaindo] = React.useState(false)
+  const [virando, setVirando] = React.useState(false)
 
   const sair = React.useCallback(async () => {
     setSaindo(true)
     const supabase = createClient()
     await supabase.auth.signOut()
     window.location.href = "/login"
+  }, [])
+
+  const tornarGestor = React.useCallback(async () => {
+    setVirando(true)
+    try {
+      await virarGestor()
+      window.location.href = "/painel"
+    } catch (erro) {
+      toast.error(
+        erro instanceof Error
+          ? erro.message
+          : "Não foi possível ativar a gestão de clientes."
+      )
+      setVirando(false)
+    }
   }, [])
 
   const titulo = nome?.trim() || email?.trim() || "Minha conta"
@@ -63,6 +87,19 @@ export function MenuUsuario({
           ) : null}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {preferenciaInicial === "pessoal" ? (
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault()
+              void tornarGestor()
+            }}
+            disabled={virando}
+            className="gap-2"
+          >
+            <Users />
+            {virando ? "Ativando…" : "Gerenciar clientes"}
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem
           variant="destructive"
           onSelect={(e) => {

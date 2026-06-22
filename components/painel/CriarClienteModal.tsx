@@ -29,6 +29,12 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const formSchema = z.object({
   nome: z.string().trim().min(1, "Informe o nome do cliente."),
@@ -46,7 +52,15 @@ type FormValues = z.infer<typeof formSchema>
  * Roda como Server Actions (RLS + `assertGestor`). Reflete na hora com
  * `router.refresh()` (o painel é Server Component) + toast.
  */
-export function CriarClienteModal({ trigger }: { trigger?: React.ReactNode }) {
+export function CriarClienteModal({
+  trigger,
+  limiteAtingido = false,
+}: {
+  trigger?: React.ReactNode
+  /** Spec 16 · RF-8: quando `true`, antecipa o limite de 3 clientes na UI
+   * (gatilho desabilitado + tooltip). A server action continua a barreira real. */
+  limiteAtingido?: boolean
+}) {
   const router = useRouter()
   const [open, setOpen] = React.useState(false)
   const [enviando, setEnviando] = React.useState(false)
@@ -76,6 +90,28 @@ export function CriarClienteModal({ trigger }: { trigger?: React.ReactNode }) {
     } finally {
       setEnviando(false)
     }
+  }
+
+  // Limite atingido: não abre o modal — mostra o gatilho desabilitado + tooltip.
+  if (limiteAtingido) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {/* `span` recebe os eventos do tooltip mesmo com o botão desabilitado. */}
+            <span className="inline-flex">
+              {trigger ?? (
+                <Button disabled>
+                  <Plus />
+                  Criar conta de cliente
+                </Button>
+              )}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>Limite de 3 clientes atingido.</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
   }
 
   return (

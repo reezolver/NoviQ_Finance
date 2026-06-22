@@ -36,9 +36,11 @@ export async function WorkspaceHeader({
   const supabase = await createSupabaseServerClient()
   const { data: profile } = await supabase
     .from("profiles")
-    .select("nome, email")
+    .select("nome, email, preferencia_inicial")
     .eq("id", usuario?.id ?? "")
     .maybeSingle()
+  const preferenciaInicial =
+    (profile?.preferencia_inicial as "pessoal" | "gestor" | null) ?? null
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background px-4 md:px-6">
@@ -70,7 +72,11 @@ export async function WorkspaceHeader({
       </div>
       <div className="flex items-center gap-1">
         <ThemeToggle />
-        <MenuUsuario nome={profile?.nome} email={profile?.email} />
+        <MenuUsuario
+          nome={profile?.nome}
+          email={profile?.email}
+          preferenciaInicial={preferenciaInicial}
+        />
       </div>
     </header>
   )

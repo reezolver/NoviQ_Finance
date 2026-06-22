@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,6 +15,8 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Separator } from '@/components/ui/separator'
+import { GoogleButton } from '@/components/auth/GoogleButton'
 
 /**
  * Tela de login (porta de entrada do app). Autentica via
@@ -21,11 +25,16 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
  * cliente → Controle Anual da própria subconta). O reload completo garante que
  * o cookie de sessão chegue ao servidor antes do roteamento.
  */
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams()
+  const erroCallback = searchParams.get('erro') === 'auth'
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(
+    erroCallback ? 'Não foi possível concluir o acesso. Tente novamente.' : null
+  )
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,7 +94,15 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Senha</Label>
+                  <Link
+                    href="/recuperar-senha"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Esqueci a senha
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   type="password"
@@ -108,9 +125,32 @@ export default function LoginPage() {
                 {loading ? 'Entrando...' : 'Entrar'}
               </Button>
             </form>
+
+            <div className="my-6 flex items-center gap-4">
+              <Separator className="flex-1" />
+              <span className="text-sm text-muted-foreground">ou</span>
+              <Separator className="flex-1" />
+            </div>
+
+            <GoogleButton label="Entrar com Google" />
+
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Não tem conta?{' '}
+              <Link href="/cadastro" className="text-primary hover:underline">
+                Criar conta
+              </Link>
+            </p>
           </CardContent>
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }

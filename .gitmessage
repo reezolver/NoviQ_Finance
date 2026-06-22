@@ -1,0 +1,7 @@
+# tipo: descrição curta no presente (sem ponto final)
+#
+# Tipos: feat (nova funcionalidade) · fix (bug) · docs · style ·
+#        refactor · chore · test   | use tipo! para quebra de compatibilidade
+#
+# (linha em branco)
+# Corpo opcional: o porquê da mudança, se não for óbvio.

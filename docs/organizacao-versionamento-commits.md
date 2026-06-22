@@ -65,6 +65,10 @@ Quando quiser fechar uma nova versão, é só pedir algo assim no Claude Code:
 > `CHANGELOG.md` com o que mudou, faz o commit `chore(release): v0.2.0`, cria a tag
 > `v0.2.0` e envia tudo pro GitHub."
 
+> **Procedimento canônico de release:** os passos detalhados (na ordem exata, num único
+> commit de release) estão em [`specs/12-versionamento-release.md`](../specs/12-versionamento-release.md) §3.2.
+> Basta pedir ao Claude *"fecha a versão X.Y.Z"* que ele segue o roteiro.
+
 ---
 
 ## 3. Commits semânticos (Conventional Commits) — a mensagem de cada salvamento
@@ -108,6 +112,10 @@ feat!: muda o formato das categorias (contas antigas precisam migrar)
 
 **Você não precisa decorar nada disso.** Ao pedir uma mudança no Claude, é só dizer:
 *"faça o commit seguindo Conventional Commits"* — ele monta a mensagem certa.
+
+> **Lembrete no editor:** o repo usa `git config commit.template .gitmessage`, que
+> pré-preenche o editor de commit com os tipos disponíveis (comentados, não bloqueia nada).
+> O arquivo é o [`.gitmessage`](../.gitmessage) na raiz do repo.
 
 ---
 

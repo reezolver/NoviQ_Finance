@@ -31,6 +31,7 @@ de aceite. Derivam da fonte de verdade:
 | 10 | [`09-investimentos-patrimonio.md`](09-investimentos-patrimonio.md) | Investimentos/Patrimônio + reserva de emergência + PL | 00–04 |
 | 11 | [`10-renda-futura.md`](10-renda-futura.md) | Renda Futura (juros compostos / aposentadoria) | 00–02 |
 | 12 | [`11-export-pdf.md`](11-export-pdf.md) | Exportar PDF (extrato do mês / diagnóstico) | 04, 08 |
+| 13 | [`12-versionamento-release.md`](12-versionamento-release.md) | Versionamento, commits semânticos e procedimento de release (processo) | — |
 
 > **Specs 00–02 são pré-requisito de tudo.** As telas (03+) podem ser feitas em paralelo
 > entre si depois que a fundação estiver de pé, respeitando as dependências da tabela.
@@ -49,3 +50,4 @@ de aceite. Derivam da fonte de verdade:
 - [ ] 09 — Investimentos/Patrimônio
 - [ ] 10 — Renda Futura
 - [ ] 11 — Export PDF
+- [x] 12 — Versionamento / release

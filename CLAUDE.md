@@ -81,18 +81,23 @@ Arquivo novo entra **na pasta do assunto dele**. Não criar arquivos soltos na r
 - Cálculo, conexão, fórmula → `lib/`
 - Tipos TypeScript → `types/`
 - Mudança no banco → `supabase/migrations/`
-- Documentação → `docs/`
-- Specs de feature → `specs/` · contexto de produto → `prompts/`
+
+O repositório `noviq-app/` guarda **só o app** (código + config). Os materiais de
+**planejamento** e **documentação** vivem **fora do repo**, na pasta-mãe `../_planejamento/`:
+- Documentação → `../_planejamento/docs/`
+- Specs de feature → `../_planejamento/specs/` · contexto de produto → `../_planejamento/prompts/`
+
+> Esses materiais são **só locais** (fora do Git e do deploy). São referência — eu
+> (Claude) leio e atualizo lá; não recriar `docs/`/`specs/`/`prompts/` dentro do repo.
 
 O **design system** (`app/styleguide/`) é **preservado** — não recriar nem apagar.
-A **v1 arquivada** foi movida para **fora do repositório**, na pasta-mãe `../_arquivo/v1/`
-(só local, fora do Git e do deploy); preservar como referência, não recriar dentro do repo.
+A **v1 arquivada** está em `../_arquivo/v1/` (também fora do repo, só local).
 
 ---
 
 ## 6. COMMITS E VERSIONAMENTO
 
-Seguir os padrões documentados em **`docs/organizacao-versionamento-commits.md`**.
+Seguir os padrões documentados em **`../_planejamento/docs/organizacao-versionamento-commits.md`** (fora do repo).
 
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/pt-br/v1.0.0/) —
   `feat:` (funcionalidade), `fix:` (bug), `docs:`, `chore:`, `refactor:`, etc.

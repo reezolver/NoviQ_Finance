@@ -47,13 +47,11 @@ components/          Componentes de UI por feature (+ components/ui base Shadcn)
 lib/                 Lógica e integrações (cálculos, Supabase, auth)
 types/               Tipos TypeScript
 supabase/migrations/ Migrations do banco
-specs/               Specs do MVP (uma por feature) — ver specs/README.md
-prompts/             Contexto de produto e prompts reutilizáveis
-docs/                Documentação do projeto (organização, versionamento, commits)
 ```
 
-> A **v1 arquivada** vive **fora deste repositório**, na pasta-mãe `../_arquivo/v1/`
-> (só local, fora do Git e do deploy) — o repositório guarda apenas código vivo.
+> O repositório guarda **apenas o app** (código vivo). Materiais de **planejamento e
+> documentação** (`docs/`, `specs/`, `prompts/`) e a **v1 arquivada** vivem **fora do repo**,
+> na pasta-mãe: `../_planejamento/` e `../_arquivo/v1/` — só locais, fora do Git e do deploy.
 
 ---
 
@@ -73,8 +71,8 @@ O deploy é **automático**: todo `git push` para a branch `main` dispara um nov
 
 Este projeto segue padrões de mercado para manter tudo organizado:
 
-- **Commits:** [Conventional Commits](docs/organizacao-versionamento-commits.md)
-- **Versões:** [Semantic Versioning](docs/organizacao-versionamento-commits.md)
+- **Commits:** Conventional Commits
+- **Versões:** Semantic Versioning
 - **Histórico de versões:** [CHANGELOG.md](CHANGELOG.md)
 
-📖 Guia completo (em português, passo a passo): **[docs/organizacao-versionamento-commits.md](docs/organizacao-versionamento-commits.md)**
+📖 Guia completo (em português, passo a passo): `../_planejamento/docs/organizacao-versionamento-commits.md` (fora do repo, só local).

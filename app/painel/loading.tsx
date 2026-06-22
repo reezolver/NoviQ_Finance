@@ -15,7 +15,10 @@ export default function Loading() {
     >
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background px-4 md:px-6">
         <span className="text-xl font-bold text-primary">Noviq</span>
-        <Skeleton className="size-9 rounded-md" aria-hidden />
+        <div className="flex items-center gap-1">
+          <Skeleton className="size-9 rounded-full" aria-hidden />
+          <Skeleton className="size-9 rounded-full" aria-hidden />
+        </div>
       </header>
 
       <main className="flex-1">

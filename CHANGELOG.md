@@ -12,6 +12,15 @@ versionamento segue o [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 - (nada ainda — as próximas mudanças entram aqui antes de virarem uma versão)
 
+## [0.6.0] - 2026-06-22
+
+### Adicionado
+
+- **Opção de sair da conta:** ícone de usuário no cabeçalho (workspace e painel)
+  abre um menu com nome, e-mail e o botão **Sair**. Ao clicar, desloga via
+  `supabase.auth.signOut()` e redireciona para `/login` com reload completo
+  (garante que o cookie limpo chegue ao servidor antes de qualquer roteamento).
+
 ## [0.5.0] - 2026-06-22
 
 ### Modificado
@@ -81,7 +90,8 @@ Primeiro MVP da Noviq Finance — fundação completa e telas principais do clie
 - **Exportar PDF:** extrato do mês / diagnóstico em PDF.
 - **Design system** completo em `app/styleguide/` (tema claro e escuro, cor primária `#008CFF`).
 
-[Não lançado]: https://github.com/reezolver/NoviQ_Finance/compare/v0.5.0...HEAD
+[Não lançado]: https://github.com/reezolver/NoviQ_Finance/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/reezolver/NoviQ_Finance/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/reezolver/NoviQ_Finance/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/reezolver/NoviQ_Finance/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/reezolver/NoviQ_Finance/compare/v0.2.0...v0.3.0

@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { MenuUsuario } from "@/components/workspace/MenuUsuario"
 import { CriarClienteModal } from "@/components/painel/CriarClienteModal"
 import { ContaPessoalButton } from "@/components/painel/ContaPessoalButton"
 import {
@@ -126,7 +127,10 @@ export default async function PainelPage() {
         >
           Noviq
         </Link>
-        <ThemeToggle />
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <MenuUsuario nome={nomeGestor} />
+        </div>
       </header>
 
       <main className="flex-1">

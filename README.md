@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Noviq Finance
 
-## Getting Started
+SaaS web de **organização financeira pessoal** que traz a clareza de uma planilha
+(modelo **planejado × realizado × diferença**, distribuição **50‑30‑20**) para dentro de
+um app moderno. Usado pelo **cliente final** (organiza as próprias finanças) e pelo
+**educador financeiro** (acompanha a carteira de clientes e lança no lugar deles quando
+preciso).
 
-First, run the development server:
+**Stack:** Next.js 16 (App Router) · TypeScript · Shadcn/ui + Tailwind CSS · Supabase · Vercel.
+
+> Versão atual: **0.1.0** — primeiro MVP (ver [CHANGELOG.md](CHANGELOG.md)).
+
+---
+
+## Como rodar localmente
+
+Pré-requisito: Node.js 20+.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install        # instala as dependências (1ª vez)
+npm run dev        # sobe o servidor de desenvolvimento em http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Outros comandos:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build      # build de produção
+npm run start      # roda o build de produção localmente
+npm run lint       # checa o código com ESLint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+As variáveis de ambiente ficam em `.env.local` (não versionado). É preciso ter as chaves
+do Supabase configuradas.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Estrutura do projeto
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+app/                 Páginas e rotas (Next.js App Router)
+  (auth)/            Login e fluxos de autenticação
+  (workspace)/       Área logada por subconta — [subcontaId]/...
+  styleguide/        🎨 Design system (NÃO alterar sem necessidade)
+  api/               Rotas de API (anamnese, export)
+  actions/           Server Actions
+components/          Componentes de UI por feature (+ components/ui base Shadcn)
+lib/                 Lógica e integrações (cálculos, Supabase, auth)
+types/               Tipos TypeScript
+supabase/migrations/ Migrations do banco
+specs/               Specs do MVP (uma por feature) — ver specs/README.md
+prompts/             Contexto de produto e prompts reutilizáveis
+docs/                Documentação do projeto (organização, versionamento, commits)
+_arquivo-v1/         Versão 1 arquivada (mantida só localmente, fora do Git)
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Serviços conectados (nuvem)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Serviço     | Para quê                                  | Referência                                  |
+|-------------|-------------------------------------------|---------------------------------------------|
+| **GitHub**  | Repositório / histórico / versões         | `reezolver/NoviQ_Finance`                   |
+| **Vercel**  | Deploy automático a cada push na `main`    | projeto `novi-q-finance`                     |
+| **Supabase**| Banco de dados + autenticação             | conectado via MCP no Claude Code             |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+O deploy é **automático**: todo `git push` para a branch `main` dispara um novo deploy no Vercel.
+
+---
+
+## Convenções (como contribuir)
+
+Este projeto segue padrões de mercado para manter tudo organizado:
+
+- **Commits:** [Conventional Commits](docs/organizacao-versionamento-commits.md)
+- **Versões:** [Semantic Versioning](docs/organizacao-versionamento-commits.md)
+- **Histórico de versões:** [CHANGELOG.md](CHANGELOG.md)
+
+📖 Guia completo (em português, passo a passo): **[docs/organizacao-versionamento-commits.md](docs/organizacao-versionamento-commits.md)**

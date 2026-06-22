@@ -54,3 +54,49 @@ dois modos**.
   nunca cores fixas
 - Quando precisar de ajuste específico, usar as variantes `dark:` do Tailwind
 - Ao finalizar qualquer tela ou componente, validar visualmente nos dois modos
+
+---
+
+## 4. SERVIÇOS CONECTADOS NA NUVEM
+
+Este SaaS está conectado a três serviços externos. Ao construir qualquer coisa, use a
+conexão **real** — não invente dados, schema, URLs nem configuração.
+
+| Serviço | Papel | Como usar |
+|---------|-------|-----------|
+| **Supabase** | Banco de dados + autenticação | Conectado via **MCP** (ver seção 1). Consulte o schema real antes de codar dados. |
+| **GitHub** (`reezolver/NoviQ_Finance`) | Repositório, histórico e versões | Commits semânticos, `push` na `main`, tags e releases (ver seção 6). |
+| **Vercel** (`novi-q-finance`) | Deploy do site | **Deploy automático** a cada `push` na branch `main`. Conferir build/logs pelo MCP do Vercel quando algo der errado no ar. |
+
+> Fluxo: implementar → commit semântico → `push main` → Vercel faz deploy automático.
+
+---
+
+## 5. ORGANIZAÇÃO DE ARQUIVOS
+
+Arquivo novo entra **na pasta do assunto dele**. Não criar arquivos soltos na raiz.
+
+- Tela / rota → `app/` (auth em `(auth)/`, área logada em `(workspace)/[subcontaId]/`)
+- Peça de tela reaproveitável → `components/` (base Shadcn em `components/ui/`)
+- Cálculo, conexão, fórmula → `lib/`
+- Tipos TypeScript → `types/`
+- Mudança no banco → `supabase/migrations/`
+- Documentação → `docs/`
+- Specs de feature → `specs/` · contexto de produto → `prompts/`
+
+O **design system** (`app/styleguide/`) e a **v1 arquivada** (`_arquivo-v1/`, só local)
+são **preservados** — não recriar nem apagar.
+
+---
+
+## 6. COMMITS E VERSIONAMENTO
+
+Seguir os padrões documentados em **`docs/organizacao-versionamento-commits.md`**.
+
+- **Commits:** [Conventional Commits](https://www.conventionalcommits.org/pt-br/v1.0.0/) —
+  `feat:` (funcionalidade), `fix:` (bug), `docs:`, `chore:`, `refactor:`, etc.
+  Mensagem curta, em português, no presente.
+- **Versões:** [SemVer](https://semver.org/lang/pt-BR/) — `MAIOR.MENOR.CORRECAO`.
+  `feat` sobe o MENOR; `fix` sobe o CORRECAO; quebra de compatibilidade (`feat!`) sobe o MAIOR.
+- **Ao fechar uma versão:** atualizar **juntos** `package.json` (campo `version`),
+  `CHANGELOG.md` (nova seção) e criar a **tag** `vX.Y.Z`, depois `push --tags`.

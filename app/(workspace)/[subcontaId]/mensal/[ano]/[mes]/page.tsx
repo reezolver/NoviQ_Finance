@@ -22,6 +22,7 @@ import {
 import { BlocoGrupo } from "@/components/mensal/BlocoGrupo"
 import { NavegacaoMeses } from "@/components/mensal/NavegacaoMeses"
 import { NovoLancamentoButton } from "@/components/mensal/NovoLancamentoButton"
+import { EditarPlanejadoButton } from "@/components/mensal/EditarPlanejadoButton"
 import { ExportarPdfButton } from "@/components/mensal/ExportarPdfButton"
 import { ControleMensalChart } from "@/components/mensal/ControleMensalChart"
 import { Resumo503020 } from "@/components/mensal/Resumo503020"
@@ -159,6 +160,19 @@ export default async function ControleMensalPage({
   // Agregação centralizada (mesma fonte do PDF de export — Spec 11).
   const extrato = montarExtratoMensal({ ano, mes, categorias, lancamentos, orcamentos })
 
+  // Planejado vigente por categoria (override do mês × recorrente herdado) —
+  // reusa o `planejado` já resolvido em `categoriasAgregadas` (Spec 23). Mantém
+  // a ordem de `categorias` (já ordenada por `ordem`).
+  const planejadoPorCategoria = new Map(
+    extrato.categoriasAgregadas.map((c) => [c.categoriaId, c.planejado])
+  )
+  const categoriasPlanejadas = categorias.map((c) => ({
+    categoriaId: c.id,
+    nome: c.nome,
+    grupo: c.grupo,
+    planejadoVigente: planejadoPorCategoria.get(c.id) ?? 0,
+  }))
+
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-8">
       {/* Cabeçalho + ações */}
@@ -171,6 +185,12 @@ export default async function ControleMensalPage({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <ExportarPdfButton subcontaId={subcontaId} ano={ano} mes={mes} />
+          <EditarPlanejadoButton
+            subcontaId={subcontaId}
+            ano={ano}
+            mes={mes}
+            categorias={categoriasPlanejadas}
+          />
           <NovoLancamentoButton
             subcontaId={subcontaId}
             categorias={categorias.map((c) => ({

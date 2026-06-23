@@ -342,7 +342,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
+          deleted_at: string | null
           email: string | null
           id: string
           nome: string | null
@@ -351,7 +353,9 @@ export type Database = {
           tipo_perfil: Database["public"]["Enums"]["tipo_perfil"]
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           id: string
           nome?: string | null
@@ -360,7 +364,9 @@ export type Database = {
           tipo_perfil?: Database["public"]["Enums"]["tipo_perfil"]
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           id?: string
           nome?: string | null
@@ -373,7 +379,8 @@ export type Database = {
       subcontas: {
         Row: {
           created_at: string
-          gestor_id: string
+          deleted_at: string | null
+          gestor_id: string | null
           id: string
           nome: string
           origem_anamnese_id: string | null
@@ -382,7 +389,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          gestor_id: string
+          deleted_at?: string | null
+          gestor_id?: string | null
           id?: string
           nome: string
           origem_anamnese_id?: string | null
@@ -391,7 +399,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          gestor_id?: string
+          deleted_at?: string | null
+          gestor_id?: string | null
           id?: string
           nome?: string
           origem_anamnese_id?: string | null

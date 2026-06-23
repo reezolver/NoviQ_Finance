@@ -6,9 +6,9 @@ import {
 
 /**
  * Mostrado ao **entrar** numa carteira (enquanto o layout valida a subconta e a
- * 1ª seção carrega). O `WorkspaceHeader` + `WorkspaceNav` vivem no layout e
- * permanecem montados — aqui só o `<main>`. Skeleton genérico de página do
- * workspace (mesmo container das seções, para evitar layout shift — RNF-2).
+ * 1ª seção carrega). A moldura (sidebar + topbar) vive no layout e permanece
+ * montada — aqui só o `<main>`. Skeleton genérico de página do workspace (mesmo
+ * container das seções, para evitar layout shift — RNF-2).
  */
 export default function Loading() {
   return (

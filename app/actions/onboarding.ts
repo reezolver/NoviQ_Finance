@@ -6,6 +6,12 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { criarSubconta } from '@/app/actions/subcontas'
 
 /**
+ * Nome default da conta pessoal (Spec 20 · D3) — genérico e editável depois.
+ * Nunca derivar de `profiles.nome`/`tipo_perfil` (era a origem do "Master").
+ */
+const NOME_PADRAO_PESSOAL = 'Minhas finanças'
+
+/**
  * Onboarding por intenção (Spec 17 · RF-7/RF-11). Grava a **preferência de uso**
  * em `profiles.preferencia_inicial` — é só preferência + roteamento, não altera
  * `tipo_perfil` (todo educador segue `educador/ativo`).
@@ -54,8 +60,9 @@ export async function definirPreferencia(pref: 'pessoal' | 'gestor') {
     if (pessoal) {
       destino = `/${pessoal.id}/controle-anual`
     } else {
-      const nome = await nomeDoUsuario(supabase, usuario.id)
-      const { subconta } = await criarSubconta('pessoal', nome)
+      // Default genérico (Spec 20 · D3) — mantém o onboarding de 1 clique e
+      // nunca grava "Master"/nome do perfil. O usuário renomeia depois.
+      const { subconta } = await criarSubconta('pessoal', NOME_PADRAO_PESSOAL)
       destino = `/${subconta.id}/controle-anual`
     }
   }
@@ -85,16 +92,4 @@ export async function virarGestor() {
 
   revalidatePath('/painel')
   return { ok: true as const }
-}
-
-async function nomeDoUsuario(
-  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
-  id: string
-): Promise<string> {
-  const { data } = await supabase
-    .from('profiles')
-    .select('nome')
-    .eq('id', id)
-    .maybeSingle()
-  return data?.nome?.trim() || 'Minha conta'
 }

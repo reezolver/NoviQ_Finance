@@ -5,7 +5,15 @@ import { z } from 'zod'
 import { assertGestor, assertMaster } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { createSupabaseAdminClient } from '@/lib/supabase-admin'
+import { purgarSubcontaCliente } from '@/lib/exclusao'
 import type { Database } from '@/types/database'
+
+/**
+ * Ban "permanente" (≈100 anos) aplicado ao login do cliente na exclusão
+ * temporária — ele para de entrar na hora e volta a entrar ao restaurar.
+ * O Supabase Auth espera uma duração no formato Go (`876000h`).
+ */
+const BAN_DURACAO = '876000h'
 
 type GrupoCategoria = Database['public']['Enums']['grupo_categoria']
 
@@ -173,6 +181,52 @@ export async function criarLoginCliente(
   return { userId: criado.user.id, email: dados.email }
 }
 
+const renomearSubcontaSchema = z.object({
+  subcontaId: z.string().uuid(),
+  nome: z.string().trim().min(1, 'Nome é obrigatório.').max(60, 'Nome muito longo.'),
+})
+
+/**
+ * Renomeia uma subconta (Spec 20 · RF-3.2). Desacopla o **nome da conta**
+ * (`subcontas.nome`) do nome/tipo do usuário — sem mudança de schema.
+ *
+ * Permissão: a conta `pessoal` só pode ser renomeada pelo próprio dono; a
+ * `cliente`, pelo gestor dono ou pelo master. **Nunca** a `pessoal` alheia
+ * (privacidade). A RLS de `UPDATE` (`gestor_id = auth.uid() OR is_master()`) é
+ * a barreira real; a checagem explícita abaixo é defesa em profundidade.
+ */
+export async function renomearSubconta(subcontaId: string, nome: string) {
+  const dados = renomearSubcontaSchema.parse({ subcontaId, nome })
+  const gestor = await assertGestor()
+  const supabase = await createSupabaseServerClient()
+
+  // Defesa em profundidade: confirma posse/tipo antes do update (a RLS é a barreira real).
+  const { data: sub } = await supabase
+    .from('subcontas')
+    .select('id, tipo, gestor_id, owner_user_id')
+    .eq('id', dados.subcontaId)
+    .maybeSingle()
+  if (!sub) throw new Error('Subconta não encontrada ou sem acesso.')
+
+  // Master pode renomear clientes, mas não a pessoal alheia (coerente com a RLS).
+  const isMaster = gestor.tipo_perfil === 'master'
+  const ehMinhaPessoal = sub.tipo === 'pessoal' && sub.gestor_id === gestor.id
+  const ehClienteQuePosso =
+    sub.tipo === 'cliente' && (sub.gestor_id === gestor.id || isMaster)
+  if (!ehMinhaPessoal && !ehClienteQuePosso) {
+    throw new Error('Sem permissão para renomear esta conta.')
+  }
+
+  const { error } = await supabase
+    .from('subcontas')
+    .update({ nome: dados.nome })
+    .eq('id', dados.subcontaId)
+  if (error) throw new Error(`Erro ao renomear: ${error.message}`)
+
+  revalidatePath('/painel')
+  return { ok: true as const }
+}
+
 const moverClienteSchema = z.object({
   subcontaId: z.string().uuid(),
   novoGestorId: z.string().uuid(),
@@ -231,4 +285,143 @@ export async function moverCliente(subcontaId: string, novoGestorId: string) {
 
   revalidatePath('/painel')
   return { ok: true as const }
+}
+
+const excluirClienteSchema = z.object({
+  subcontaId: z.string().uuid(),
+  modo: z.enum(['temporario', 'permanente']),
+})
+
+/**
+ * Exclui uma subconta de **cliente** (Spec 21 · RF-5.2) em duas modalidades:
+ *
+ * - **`temporario` (soft-delete):** marca `deleted_at = now()` (some das
+ *   listagens) e **bane o login na hora** — o cliente para de entrar
+ *   imediatamente, mas é recuperável por 90 dias via {@link restaurarCliente}.
+ * - **`permanente` (hard-delete):** roda a purga completa agora
+ *   ({@link purgarSubcontaCliente}: desvincula anamnese → apaga a subconta e os
+ *   dados-filhos → remove o login). Sem volta.
+ *
+ * Permissão: educador exclui **só os seus** clientes; master, qualquer cliente.
+ * **Nunca** uma `pessoal` (RF-5.4). A RLS (DELETE: `tipo='cliente' AND
+ * (gestor_id=auth.uid() OR is_master())`) é a barreira real; a checagem
+ * explícita abaixo é defesa em profundidade.
+ */
+export async function excluirCliente(
+  subcontaId: string,
+  modo: 'temporario' | 'permanente'
+) {
+  const dados = excluirClienteSchema.parse({ subcontaId, modo })
+  const gestor = await assertGestor()
+  const supabase = await createSupabaseServerClient()
+
+  const { data: sub } = await supabase
+    .from('subcontas')
+    .select('id, tipo, gestor_id, owner_user_id')
+    .eq('id', dados.subcontaId)
+    .maybeSingle()
+  if (!sub) throw new Error('Subconta não encontrada ou sem acesso.')
+  if (sub.tipo !== 'cliente') {
+    throw new Error('Apenas contas de cliente podem ser excluídas.')
+  }
+  const isMaster = gestor.tipo_perfil === 'master'
+  if (!isMaster && sub.gestor_id !== gestor.id) {
+    throw new Error('Sem permissão para excluir este cliente.')
+  }
+
+  const admin = createSupabaseAdminClient()
+
+  if (dados.modo === 'permanente') {
+    await purgarSubcontaCliente(admin, supabase, sub.id, sub.owner_user_id)
+    revalidatePath('/painel')
+    return { ok: true as const }
+  }
+
+  // temporario: soft-delete + suspender o login na hora.
+  const { error } = await supabase
+    .from('subcontas')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', sub.id)
+  if (error) throw new Error(`Erro ao excluir cliente: ${error.message}`)
+
+  if (sub.owner_user_id) {
+    const { error: erroBan } = await admin.auth.admin.updateUserById(
+      sub.owner_user_id,
+      { ban_duration: BAN_DURACAO }
+    )
+    if (erroBan) {
+      throw new Error(`Cliente movido para a lixeira, mas falhou ao suspender o login: ${erroBan.message}`)
+    }
+  }
+
+  revalidatePath('/painel')
+  return { ok: true as const }
+}
+
+const restaurarClienteSchema = z.object({
+  subcontaId: z.string().uuid(),
+})
+
+/**
+ * Restaura um cliente da lixeira (Spec 21 · RF-5c.3): limpa `deleted_at` e
+ * **reativa o login** (remove o ban). Só funciona dentro da janela de 90 dias —
+ * depois disso a Edge Function `purgar-lixeira` já terá apagado tudo.
+ *
+ * Permissão idêntica à exclusão: gestor dono ou master. A RLS de UPDATE
+ * (`gestor_id=auth.uid() OR is_master()`) autoriza mesmo com `deleted_at` setado.
+ */
+export async function restaurarCliente(subcontaId: string) {
+  const dados = restaurarClienteSchema.parse({ subcontaId })
+  const gestor = await assertGestor()
+  const supabase = await createSupabaseServerClient()
+
+  const { data: sub } = await supabase
+    .from('subcontas')
+    .select('id, tipo, gestor_id, owner_user_id, deleted_at')
+    .eq('id', dados.subcontaId)
+    .maybeSingle()
+  if (!sub) throw new Error('Subconta não encontrada ou sem acesso.')
+  if (sub.tipo !== 'cliente') {
+    throw new Error('Apenas contas de cliente podem ser restauradas.')
+  }
+  const isMaster = gestor.tipo_perfil === 'master'
+  if (!isMaster && sub.gestor_id !== gestor.id) {
+    throw new Error('Sem permissão para restaurar este cliente.')
+  }
+
+  const { error } = await supabase
+    .from('subcontas')
+    .update({ deleted_at: null })
+    .eq('id', sub.id)
+  if (error) throw new Error(`Erro ao restaurar cliente: ${error.message}`)
+
+  if (sub.owner_user_id) {
+    const admin = createSupabaseAdminClient()
+    const { error: erroUnban } = await admin.auth.admin.updateUserById(
+      sub.owner_user_id,
+      { ban_duration: 'none' }
+    )
+    if (erroUnban) {
+      throw new Error(`Cliente restaurado, mas falhou ao reativar o login: ${erroUnban.message}`)
+    }
+  }
+
+  revalidatePath('/painel')
+  return { ok: true as const }
+}
+
+const assumirClienteSchema = z.object({
+  subcontaId: z.string().uuid(),
+  novoGestorId: z.string().uuid(),
+})
+
+/**
+ * Assume um cliente do **pool de não atribuídos** (Spec 21 · RF-5a.3) — só
+ * master (decisão D1: órfãos são responsabilidade do master). É açúcar para
+ * "mover um órfão": atualiza `gestor_id` para o destino escolhido (o próprio
+ * master ou outro educador). Reaproveita a validação de {@link moverCliente}.
+ */
+export async function assumirCliente(subcontaId: string, novoGestorId: string) {
+  assumirClienteSchema.parse({ subcontaId, novoGestorId })
+  return moverCliente(subcontaId, novoGestorId)
 }

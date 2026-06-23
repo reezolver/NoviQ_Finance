@@ -55,14 +55,29 @@ type FormValues = z.infer<typeof formSchema>
 export function CriarClienteModal({
   trigger,
   limiteAtingido = false,
+  open: openProp,
+  onOpenChange,
 }: {
   trigger?: React.ReactNode
   /** Spec 16 · RF-8: quando `true`, antecipa o limite de 3 clientes na UI
    * (gatilho desabilitado + tooltip). A server action continua a barreira real. */
   limiteAtingido?: boolean
+  /** Spec 19 · RF-2.5: modo controlado — abre o modal sem `DialogTrigger`
+   * (ex.: a partir do atalho do account switcher). */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }) {
   const router = useRouter()
-  const [open, setOpen] = React.useState(false)
+  const [internalOpen, setInternalOpen] = React.useState(false)
+  const isControlled = openProp !== undefined
+  const open = isControlled ? openProp : internalOpen
+  const setOpen = React.useCallback(
+    (aberto: boolean) => {
+      if (!isControlled) setInternalOpen(aberto)
+      onOpenChange?.(aberto)
+    },
+    [isControlled, onOpenChange]
+  )
   const [enviando, setEnviando] = React.useState(false)
 
   const form = useForm<FormValues>({
@@ -122,14 +137,16 @@ export function CriarClienteModal({
         if (!aberto) form.reset()
       }}
     >
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button>
-            <Plus />
-            Criar conta de cliente
-          </Button>
-        )}
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          {trigger ?? (
+            <Button>
+              <Plus />
+              Criar conta de cliente
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Criar conta de cliente</DialogTitle>

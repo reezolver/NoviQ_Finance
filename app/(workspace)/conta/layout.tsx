@@ -1,38 +1,32 @@
 import { cookies } from "next/headers"
-import { notFound } from "next/navigation"
+import { redirect } from "next/navigation"
 
 import { getUsuarioAtual } from "@/lib/auth"
 import { createSupabaseServerClient } from "@/lib/supabase-server"
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/components/ui/sidebar"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/workspace/AppSidebar"
 import { Topbar } from "@/components/workspace/Topbar"
 
 /**
- * Layout do route group de workspace — escopa e **valida o acesso** à subconta
- * da URL no servidor, e monta a **moldura única** (sidebar + topbar) ao redor
- * das 5 seções financeiras.
+ * Layout da **página de Conta** (Spec 22 · RF-4.0) — vive no grupo
+ * `(workspace)` mas **fora** do `[subcontaId]` (que valida acesso a subconta),
+ * porque a conta independe de qualquer carteira. Reusa a **mesma moldura**
+ * (sidebar + topbar) das demais áreas para não haver "salto" de header.
  *
- * A query de `subcontas` roda com o client de usuário (RLS-enforced). A policy
- * `can_access_subconta` autoriza dono (`owner_user_id`), gestor (`gestor_id`) e
- * master (sobre subcontas `cliente`). **Se a subconta da URL não estiver entre
- * as acessíveis, a RLS já negou** (ou o id não existe) → `notFound()`. Nunca
- * decidimos acesso no frontend; só refletimos o que o Postgres autorizou.
+ * Sem `[subcontaId]` na URL, escolhemos um alvo de navegação para a sidebar: a
+ * carteira **pessoal** (ou a 1ª acessível). Se houver, a nav usa a variante
+ * `workspace` apontando para ela; sem nenhuma carteira, cai para a `gestao`
+ * (link do painel). O switcher e o footer (com avatar) aparecem sempre.
  */
-export default async function WorkspaceLayout({
+export default async function ContaLayout({
   children,
-  params,
 }: {
   children: React.ReactNode
-  params: Promise<{ subcontaId: string }>
 }) {
-  const { subcontaId } = await params
-  const supabase = await createSupabaseServerClient()
   const usuario = await getUsuarioAtual()
+  if (!usuario) redirect("/login")
 
-  // Subcontas acessíveis (RLS) alimentam o switcher; perfil alimenta o footer.
+  const supabase = await createSupabaseServerClient()
   const [{ data: subcontas }, { data: profile }] = await Promise.all([
     supabase
       .from("subcontas")
@@ -42,36 +36,31 @@ export default async function WorkspaceLayout({
     supabase
       .from("profiles")
       .select("nome, email, avatar_url, preferencia_inicial")
-      .eq("id", usuario?.id ?? "")
+      .eq("id", usuario.id)
       .maybeSingle(),
   ])
 
   const acessiveis = subcontas ?? []
-  const ativa = acessiveis.find((s) => s.id === subcontaId)
-  if (!ativa) {
-    notFound()
-  }
-
-  // "Voltar/gestão" só faz sentido para o gestor (educador/master).
   const isGestor =
-    usuario?.tipo_perfil === "educador" || usuario?.tipo_perfil === "master"
+    usuario.tipo_perfil === "educador" || usuario.tipo_perfil === "master"
 
-  // Dicas de UI para os atalhos de "criar conta" do switcher (Spec 19 · RF-2.5).
-  // A barreira real do limite continua na action + trigger do banco.
+  // Alvo de navegação da sidebar (a conta não tem subconta na URL).
+  const alvoNav =
+    acessiveis.find((s) => s.tipo === "pessoal") ?? acessiveis[0] ?? null
+
   const temPessoal = acessiveis.some((s) => s.tipo === "pessoal")
   const clientesNoLimite =
     acessiveis.filter((s) => s.tipo === "cliente").length >= 3
 
-  // Estado aberto/fechado persistido no cookie nativo do componente.
   const cookieStore = await cookies()
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false"
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar
-        variante="workspace"
+        variante={alvoNav ? "workspace" : "gestao"}
         subcontas={acessiveis}
-        subcontaAtivaId={subcontaId}
+        subcontaAtivaId={alvoNav?.id}
         isGestor={isGestor}
         temPessoal={temPessoal}
         clientesNoLimite={clientesNoLimite}
@@ -84,7 +73,7 @@ export default async function WorkspaceLayout({
         }}
       />
       <SidebarInset>
-        <Topbar variante="workspace" contaNome={ativa.nome} />
+        <Topbar variante="gestao" titulo="Conta" />
         <main className="flex-1">{children}</main>
       </SidebarInset>
     </SidebarProvider>

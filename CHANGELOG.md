@@ -12,6 +12,17 @@ versionamento segue o [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 - (nada ainda — as próximas mudanças entram aqui antes de virarem uma versão)
 
+## [0.9.0] - 2026-06-23
+
+### Modificado
+
+- **Reserva de emergência por custo de vida essencial:** a meta da reserva
+  deixa de ser estimada por 6× a despesa média realizada (que misturava luxo
+  com essencial) e passa a ser **6× o custo de vida essencial** informado
+  **manualmente** na tela de Investimentos. Campo vazio = sem meta. Um
+  mini-texto orienta o que conta (moradia, alimentação, transporte essencial,
+  contas básicas) e o que não conta (lazer, restaurantes, supérfluos).
+
 ## [0.8.0] - 2026-06-23
 
 ### Adicionado

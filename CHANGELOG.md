@@ -12,6 +12,31 @@ versionamento segue o [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 - (nada ainda — as próximas mudanças entram aqui antes de virarem uma versão)
 
+## [0.8.0] - 2026-06-23
+
+### Adicionado
+
+- **Planejado editável no Controle Mensal:** o educador define/edita o valor
+  planejado de cada categoria direto no mês, pelo botão **Editar planejado**.
+  Por padrão a edição vale **só para aquele mês**; um checkbox **"Aplicar a
+  todos os meses (recorrente)"** torna o valor o padrão dos meses sem ajuste.
+- **Aporte de objetivo com grupo (Fixa/Variável):** ao lançar um aporte em um
+  objetivo, agora se escolhe se ele conta como gasto **Fixo** ou **Variável**.
+  O aporte passa a **aparecer no mês** — no bloco do grupo (como "Aporte:
+  \<objetivo\>"), no detalhamento, no resumo 50‑30‑20 e no % da renda — e a
+  reduzir o saldo do mês.
+- **Saldo inicial da conta:** controle discreto no Controle Mensal para definir
+  o saldo de partida da conta (aceita valor negativo).
+
+### Modificado
+
+- **"Saldo Realizado" → "Saldo em conta" (acumulado):** o saldo do mês agora é
+  **acumulado** (saldo inicial + tudo que entrou e saiu até o fim do mês), para
+  bater com o extrato bancário. No Controle Anual, cada mês mostra o saldo em
+  conta acumulado ao fim daquele mês, e o resumo do topo usa o valor de
+  dezembro. O **Saldo Planejado** segue por mês; a **Diferença** não muda. O PDF
+  do mês reflete o mesmo "Saldo em conta" da tela.
+
 ## [0.7.3] - 2026-06-23
 
 ### Corrigido

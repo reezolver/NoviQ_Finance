@@ -12,6 +12,32 @@ versionamento segue o [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 - (nada ainda — as próximas mudanças entram aqui antes de virarem uma versão)
 
+## [0.7.1] - 2026-06-23
+
+### Adicionado
+
+- **Sidebar unificada de navegação:** uma moldura única (sidebar + topbar)
+  envolve workspace e painel, com **account switcher** no topo (trocar de
+  carteira sem trocar de sessão) e **menu do usuário** no rodapé. A sidebar
+  colapsa para ícones (atalho `Ctrl/Cmd+B`) e vira drawer no mobile.
+- **Renomear conta/carteira:** o nome da carteira (`subcontas.nome`) passa a ser
+  editável pelo switcher, desacoplado do nome do usuário — fim do "Master".
+- **Exclusão de cliente com lixeira:** remoção **temporária** (recuperável por
+  90 dias, login suspenso) ou **permanente**, mais o **pool de não atribuídos**
+  para o master reatribuir clientes órfãos e uma rotina de purga automática.
+- **Página de Conta (`/conta`):** abas **Perfil · Segurança · Conta ·
+  Preferências** — editar nome e **foto de perfil** (avatar), trocar **senha** e
+  **e-mail** com reautenticação, ajustar **tema** e **excluir a própria conta**
+  (temporária ou permanente). Acessível pelo menu do usuário, que agora mostra
+  avatar + nome.
+
+### Corrigido
+
+- **Seletor de contas levava a 404 fora do workspace:** ao escolher uma conta
+  estando em `/conta` ou `/painel`, o switcher navegava para uma rota sem página
+  índice ("Página não encontrada"). Agora abre a conta escolhida na seção padrão
+  (Controle Anual).
+
 ## [0.6.0] - 2026-06-22
 
 ### Adicionado
@@ -90,7 +116,8 @@ Primeiro MVP da Noviq Finance — fundação completa e telas principais do clie
 - **Exportar PDF:** extrato do mês / diagnóstico em PDF.
 - **Design system** completo em `app/styleguide/` (tema claro e escuro, cor primária `#008CFF`).
 
-[Não lançado]: https://github.com/reezolver/NoviQ_Finance/compare/v0.6.0...HEAD
+[Não lançado]: https://github.com/reezolver/NoviQ_Finance/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/reezolver/NoviQ_Finance/compare/v0.6.0...v0.7.1
 [0.6.0]: https://github.com/reezolver/NoviQ_Finance/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/reezolver/NoviQ_Finance/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/reezolver/NoviQ_Finance/compare/v0.3.0...v0.4.0

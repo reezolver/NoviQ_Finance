@@ -12,6 +12,16 @@ versionamento segue o [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 - (nada ainda — as próximas mudanças entram aqui antes de virarem uma versão)
 
+## [0.7.3] - 2026-06-23
+
+### Corrigido
+
+- **Envio da anamnese sem login:** qualquer pessoa com o link público da
+  anamnese agora consegue preencher e enviar, mesmo sem estar logada. O envio
+  (`POST /api/anamnese/[token]`) estava sendo barrado pelo middleware e
+  redirecionado para o login, causando erro em guia anônima. A gravação segue
+  protegida (token válido, link de uso único e consentimento LGPD).
+
 ## [0.7.2] - 2026-06-23
 
 ### Adicionado

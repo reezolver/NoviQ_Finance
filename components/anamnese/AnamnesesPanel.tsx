@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Check,
   Copy,
+  Download,
   FileText,
   Search,
   Trash2,
@@ -184,6 +185,19 @@ export function AnamnesesPanel({ anamneses }: { anamneses: AnamneseResumo[] }) {
                     <div className="flex items-center justify-end gap-1">
                       {a.status === "preenchida" && a.analise && (
                         <DiagnosticoDialog anamnese={a} />
+                      )}
+
+                      {a.status === "preenchida" && (
+                        <Button asChild size="sm" variant="outline">
+                          <a
+                            href={`/api/export/anamnese/${a.id}`}
+                            download
+                            aria-label={`Exportar anamnese de ${a.nome_lead} em PDF`}
+                          >
+                            <Download />
+                            PDF
+                          </a>
+                        </Button>
                       )}
 
                       {a.subconta_id ? (

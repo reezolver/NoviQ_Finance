@@ -12,6 +12,17 @@ versionamento segue o [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 - (nada ainda — as próximas mudanças entram aqui antes de virarem uma versão)
 
+## [0.7.2] - 2026-06-23
+
+### Adicionado
+
+- **Exportar anamnese em PDF:** depois que o cliente preenche a anamnese, o
+  educador pode baixar um PDF com as **respostas** dele (dados pessoais,
+  dependentes, renda, despesas fixas/variáveis, investimento, patrimônio,
+  dívidas, objetivos e observações). Botão **PDF** na lista de anamneses do
+  painel, ao lado do diagnóstico. Geração 100% no servidor com acesso validado
+  por RLS — nenhum dado sensível trafega pelo cliente.
+
 ## [0.7.1] - 2026-06-23
 
 ### Adicionado
@@ -116,7 +127,8 @@ Primeiro MVP da Noviq Finance — fundação completa e telas principais do clie
 - **Exportar PDF:** extrato do mês / diagnóstico em PDF.
 - **Design system** completo em `app/styleguide/` (tema claro e escuro, cor primária `#008CFF`).
 
-[Não lançado]: https://github.com/reezolver/NoviQ_Finance/compare/v0.7.1...HEAD
+[Não lançado]: https://github.com/reezolver/NoviQ_Finance/compare/v0.7.2...HEAD
+[0.7.2]: https://github.com/reezolver/NoviQ_Finance/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/reezolver/NoviQ_Finance/compare/v0.6.0...v0.7.1
 [0.6.0]: https://github.com/reezolver/NoviQ_Finance/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/reezolver/NoviQ_Finance/compare/v0.4.0...v0.5.0

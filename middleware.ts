@@ -102,7 +102,11 @@ export async function middleware(request: NextRequest) {
 
   // Públicas que NÃO redirecionam logados: landing `/` e anamnese pública (Spec 08).
   const isRoot = pathname === '/'
-  const isAnamnesePublica = pathname.startsWith('/anamnese/')
+  // Página pública (`/anamnese/[token]`) E a API de submissão pública
+  // (`POST /api/anamnese/[token]`): o lead não tem sessão, então ambas precisam
+  // passar sem redirect para `/login` (Spec 08).
+  const isAnamnesePublica =
+    pathname.startsWith('/anamnese/') || pathname.startsWith('/api/anamnese/')
   // Callback PKCE (OAuth/reset de senha): chega SEM sessão e precisa rodar a
   // troca do `code` antes de qualquer redirect — nunca interceptar (Spec 14).
   const isAuthCallback = pathname.startsWith('/auth/callback')

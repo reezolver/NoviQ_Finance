@@ -91,11 +91,18 @@ export function AccountSwitcher({
   const trocar = React.useCallback(
     (novoId: string) => {
       if (novoId === subcontaAtivaId) return
-      // Preserva a seção atual (segmentos após o `[subcontaId]`).
-      const resto = pathname.split("/").filter(Boolean).slice(1)
-      router.push(`/${[novoId, ...resto].join("/")}`)
+      // Preserva a seção atual **só** quando já estamos num workspace
+      // (`/[subcontaId]/seção`). Fora dele (ex.: `/conta`, `/painel`) o 1º
+      // segmento não é uma subconta — sem isso, navegaríamos para `/{id}`, que
+      // não tem página índice e cai no not-found. Nesse caso, vai para a seção
+      // default da conta escolhida.
+      const segmentos = pathname.split("/").filter(Boolean)
+      const noWorkspace = subcontas.some((s) => s.id === segmentos[0])
+      const resto = noWorkspace ? segmentos.slice(1) : []
+      const secao = resto.length > 0 ? resto : ["controle-anual"]
+      router.push(`/${[novoId, ...secao].join("/")}`)
     },
-    [pathname, router, subcontaAtivaId]
+    [pathname, router, subcontaAtivaId, subcontas]
   )
 
   const criarPessoal = React.useCallback(async () => {

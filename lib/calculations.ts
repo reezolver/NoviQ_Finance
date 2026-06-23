@@ -243,6 +243,42 @@ export function totalizarPorGrupo(
   return { planejado, realizado }
 }
 
+// ─── Aportes de objetivo (lançamentos sem categoria, com grupo) ─────────────────
+
+/** Aporte de objetivo sem categoria, já com grupo e nome do objetivo (Spec 24). */
+export interface AporteSemCategoria {
+  /** Id do objetivo do aporte. */
+  objetivoId: string
+  /** Nome do objetivo (para o rótulo "Aporte: <nome>"). */
+  nome: string
+  /** Grupo escolhido no lançamento (só fixa | variavel). */
+  grupo: Extract<GrupoCategoria, "fixa" | "variavel">
+  /** Valor do aporte. */
+  valor: number
+}
+
+/**
+ * Soma os aportes **por objetivo** — uma entrada por objetivo, com o valor
+ * total somado. Mantém o grupo e o nome do primeiro aporte de cada objetivo
+ * (todos os aportes de um mesmo objetivo no mês compartilham objetivo/grupo).
+ * @param aportes - Aportes do mês (já sem categoria, com grupo)
+ * @returns Uma `AporteSemCategoria` por objetivo, valor somado
+ */
+export function agregarAportesPorObjetivo(
+  aportes: ReadonlyArray<AporteSemCategoria>
+): AporteSemCategoria[] {
+  const porObjetivo = new Map<string, AporteSemCategoria>()
+  for (const a of aportes) {
+    const atual = porObjetivo.get(a.objetivoId)
+    if (atual) {
+      atual.valor += a.valor
+    } else {
+      porObjetivo.set(a.objetivoId, { ...a })
+    }
+  }
+  return Array.from(porObjetivo.values())
+}
+
 /**
  * Calcula o progresso percentual de um objetivo.
  * @param valorAcumulado - Valor já acumulado

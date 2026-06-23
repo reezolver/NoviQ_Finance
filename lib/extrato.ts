@@ -13,6 +13,7 @@
  */
 
 import {
+  agregarAportesPorObjetivo,
   agregarCategoriasDoMes,
   calcularDiferenca,
   calcularDistribuicao503020,
@@ -56,6 +57,16 @@ const GRUPOS_BLOCO = ["renda", "fixa", "variavel"] as const
 export interface LancamentoRow {
   valor: number
   categoria_id: string | null
+  /** Grupo do aporte (só quando `categoria_id` é nulo). Spec 24. */
+  grupo: GrupoCategoria | null
+  /** Objetivo do aporte (só quando é um lançamento de objetivo). */
+  objetivo_id: string | null
+}
+
+/** Objetivo (id + nome) — para rotular o aporte "Aporte: <nome>". */
+export interface ObjetivoRow {
+  id: string
+  nome: string
 }
 
 export interface OrcamentoRow {
@@ -141,6 +152,13 @@ export interface ExtratoMensal {
  * Monta o extrato do mês a partir das linhas cruas das queries. Replica a
  * agregação do Spec 04 (mesmas funções de `lib/calculations.ts`), então os
  * números do PDF batem com a tela por construção.
+ *
+ * **Aportes de objetivo (Spec 24):** lançamentos sem categoria mas **com grupo**
+ * (fixa|variavel) entram no **realizado** do seu grupo — somam em
+ * `saldos.realizado[fixas|variaveis]` antes do saldo/blocos/faixas, então o
+ * Saldo Realizado, o 50‑30‑20 e o % da renda já refletem o aporte por
+ * construção. Cada objetivo vira uma linha "Aporte: <nome>" (planejado 0) no
+ * bloco do grupo e no detalhamento, com id `aporte-<objetivoId>`.
  */
 export function montarExtratoMensal({
   ano,
@@ -148,15 +166,18 @@ export function montarExtratoMensal({
   categorias,
   lancamentos,
   orcamentos,
+  objetivos = [],
 }: {
   ano: number
   mes: number
   categorias: ReadonlyArray<CategoriaRow>
   lancamentos: ReadonlyArray<LancamentoRow>
   orcamentos: ReadonlyArray<OrcamentoRow>
+  objetivos?: ReadonlyArray<ObjetivoRow>
 }): ExtratoMensal {
   const nomePorId = new Map(categorias.map((c) => [c.id, c.nome]))
   const grupoPorId = new Map(categorias.map((c) => [c.id, c.grupo]))
+  const nomeObjetivoPorId = new Map(objetivos.map((o) => [o.id, o.nome]))
 
   // Agregação por categoria (Planejado × Realizado) do mês — base de tudo.
   const categoriasAgregadas = agregarCategoriasDoMes({
@@ -178,7 +199,28 @@ export function montarExtratoMensal({
       })),
   })
 
+  // Aportes de objetivo: lançamentos sem categoria, com grupo (fixa|variavel).
+  const aportes = agregarAportesPorObjetivo(
+    lancamentos
+      .filter(
+        (l): l is LancamentoRow & { grupo: "fixa" | "variavel"; objetivo_id: string } =>
+          l.categoria_id === null &&
+          l.objetivo_id !== null &&
+          (l.grupo === "fixa" || l.grupo === "variavel")
+      )
+      .map((l) => ({
+        objetivoId: l.objetivo_id,
+        nome: nomeObjetivoPorId.get(l.objetivo_id) ?? "Objetivo",
+        grupo: l.grupo,
+        valor: Number(l.valor),
+      }))
+  )
+
   const saldos = totalizarPorGrupo(categoriasAgregadas)
+  // Mescla os aportes no realizado do grupo escolhido — antes do saldo/faixas.
+  for (const a of aportes) {
+    saldos.realizado[a.grupo === "fixa" ? "fixas" : "variaveis"] += a.valor
+  }
 
   // ── Saldo do mês (4 grupos) ──
   const saldoPlanejado = calcularSaldoMes(saldos.planejado)
@@ -198,6 +240,19 @@ export function montarExtratoMensal({
         diferenca: calcularDiferenca(c.planejado, c.realizado),
       }))
       .filter((l) => l.planejado !== 0 || l.realizado !== 0)
+
+    // Aportes do grupo entram como linhas "Aporte: <nome>" (planejado 0).
+    for (const a of aportes) {
+      const grupoAporte = a.grupo === "fixa" ? "fixa" : "variavel"
+      if (grupoAporte !== grupo) continue
+      linhas.push({
+        id: `aporte-${a.objetivoId}`,
+        nome: `Aporte: ${a.nome}`,
+        planejado: 0,
+        realizado: a.valor,
+        diferenca: calcularDiferenca(0, a.valor),
+      })
+    }
 
     const campo = CAMPO_POR_GRUPO[grupo]
     const planejado = saldos.planejado[campo]
@@ -254,16 +309,25 @@ export function montarExtratoMensal({
   })
 
   // ── Detalhamento por categoria (realizado + % sobre a renda) ──
-  const detalhamento: DetalheCategoria[] = categoriasAgregadas
-    .filter((c) => c.realizado !== 0)
-    .map((c) => ({
-      id: c.categoriaId,
-      nome: nomePorId.get(c.categoriaId) ?? "Sem nome",
-      grupo: c.grupo,
-      realizado: c.realizado,
-      percentualRenda: calcularPercentual(c.realizado, rendaBase),
-    }))
-    .sort((a, b) => b.realizado - a.realizado)
+  const detalhamento: DetalheCategoria[] = [
+    ...categoriasAgregadas
+      .filter((c) => c.realizado !== 0)
+      .map((c) => ({
+        id: c.categoriaId,
+        nome: nomePorId.get(c.categoriaId) ?? "Sem nome",
+        grupo: c.grupo,
+        realizado: c.realizado,
+        percentualRenda: calcularPercentual(c.realizado, rendaBase),
+      })),
+    // Aportes de objetivo entram no detalhamento com seu grupo e % da renda.
+    ...aportes.map((a) => ({
+      id: `aporte-${a.objetivoId}`,
+      nome: `Aporte: ${a.nome}`,
+      grupo: a.grupo as GrupoCategoria,
+      realizado: a.valor,
+      percentualRenda: calcularPercentual(a.valor, rendaBase),
+    })),
+  ].sort((a, b) => b.realizado - a.realizado)
 
   return {
     categoriasAgregadas,

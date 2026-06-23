@@ -132,7 +132,7 @@ export default async function ControleMensalPage({
   ] = await Promise.all([
     supabase
       .from("lancamentos")
-      .select("valor, categoria_id")
+      .select("valor, categoria_id, grupo, objetivo_id")
       .eq("subconta_id", subcontaId)
       .gte("data", inicio)
       .lt("data", fimExclusivo),
@@ -158,7 +158,14 @@ export default async function ControleMensalPage({
   const objetivos = (objetivosData ?? []) as unknown as ObjetivoRow[]
 
   // Agregação centralizada (mesma fonte do PDF de export — Spec 11).
-  const extrato = montarExtratoMensal({ ano, mes, categorias, lancamentos, orcamentos })
+  const extrato = montarExtratoMensal({
+    ano,
+    mes,
+    categorias,
+    lancamentos,
+    orcamentos,
+    objetivos,
+  })
 
   // Planejado vigente por categoria (override do mês × recorrente herdado) —
   // reusa o `planejado` já resolvido em `categoriasAgregadas` (Spec 23). Mantém

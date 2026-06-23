@@ -53,7 +53,11 @@ const MESES = [
 interface LancamentoRow {
   data: string
   valor: number
-  categorias: { grupo: GrupoCategoria }
+  categoria_id: string | null
+  /** Grupo do aporte (só quando sem categoria). Spec 24. */
+  grupo: GrupoCategoria | null
+  /** Join opcional (null para aportes sem categoria). */
+  categorias: { grupo: GrupoCategoria } | null
 }
 
 interface OrcamentoRow {
@@ -101,8 +105,9 @@ export default async function ControleAnualPage({
   // Duas queries agregadas (sem N+1 por mês). RLS já escopa pela subconta.
   const [{ data: lancamentosData }, { data: orcamentosData }] = await Promise.all([
     supabase
+      // Join NÃO `!inner` para incluir aportes sem categoria (com grupo próprio).
       .from("lancamentos")
-      .select("data, valor, categorias!inner(grupo)")
+      .select("data, valor, categoria_id, grupo, categorias(grupo)")
       .eq("subconta_id", subcontaId)
       .gte("data", `${ano}-01-01`)
       .lte("data", `${ano}-12-31`),
@@ -115,13 +120,19 @@ export default async function ControleAnualPage({
   const lancamentos = (lancamentosData ?? []) as unknown as LancamentoRow[]
   const orcamentos = (orcamentosData ?? []) as unknown as OrcamentoRow[]
 
-  // Realizado: soma de lançamentos por mês/grupo.
+  // Realizado: soma de lançamentos por mês/grupo. Grupo vem da categoria ou,
+  // para aportes sem categoria, da coluna `grupo` (Spec 24). Sem nenhum dos
+  // dois (aporte antigo pré-Spec 24), o lançamento é ignorado.
   const realizadoPorMes = agregarRealizadoPorMes(
-    lancamentos.map((l) => ({
-      mes: Number(l.data.slice(5, 7)),
-      grupo: l.categorias.grupo,
-      valor: Number(l.valor),
-    }))
+    lancamentos
+      .map((l) => ({
+        mes: Number(l.data.slice(5, 7)),
+        grupo: l.categorias?.grupo ?? l.grupo,
+        valor: Number(l.valor),
+      }))
+      .filter((l): l is { mes: number; grupo: GrupoCategoria; valor: number } =>
+        l.grupo !== null
+      )
   )
 
   // Planejado: recorrentes (mes/ano null) + overrides do ano selecionado.

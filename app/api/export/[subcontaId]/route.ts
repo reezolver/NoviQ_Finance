@@ -6,6 +6,7 @@ import {
   montarExtratoMensal,
   type CategoriaRow,
   type LancamentoRow,
+  type ObjetivoRow,
   type OrcamentoRow,
 } from "@/lib/extrato"
 import type { AnaliseAnamnese } from "@/lib/anamnese"
@@ -154,10 +155,11 @@ export async function GET(
     { data: lancamentosData },
     { data: orcamentosData },
     { data: categoriasData },
+    { data: objetivosData },
   ] = await Promise.all([
     supabase
       .from("lancamentos")
-      .select("valor, categoria_id")
+      .select("valor, categoria_id, grupo, objetivo_id")
       .eq("subconta_id", subcontaId)
       .gte("data", inicio)
       .lt("data", fimExclusivo),
@@ -170,14 +172,26 @@ export async function GET(
       .select("id, nome, grupo, ordem")
       .eq("subconta_id", subcontaId)
       .order("ordem"),
+    supabase
+      .from("objetivos")
+      .select("id, nome")
+      .eq("subconta_id", subcontaId),
   ])
 
   const lancamentos = (lancamentosData ?? []) as unknown as LancamentoRow[]
   const orcamentos = (orcamentosData ?? []) as unknown as OrcamentoRow[]
   const categorias = (categoriasData ?? []) as unknown as CategoriaRow[]
+  const objetivos = (objetivosData ?? []) as unknown as ObjetivoRow[]
 
   // Mesma agregação da tela → os números do PDF batem com a tela (Spec 11 §4).
-  const extrato = montarExtratoMensal({ ano, mes, categorias, lancamentos, orcamentos })
+  const extrato = montarExtratoMensal({
+    ano,
+    mes,
+    categorias,
+    lancamentos,
+    orcamentos,
+    objetivos,
+  })
 
   const buffer = await renderToBuffer(
     ExtratoMensalPdf({

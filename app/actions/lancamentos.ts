@@ -42,7 +42,9 @@ const lancamentoSchema = z.discriminatedUnion('tipo', [
     tipo: z.literal('objetivo'),
     valor: valorSchema,
     objetivoId: z.string().uuid('Objetivo inválido.'),
-    // Objetivo pode ficar sem categoria (decisão da Spec 05).
+    // Objetivo não tem categoria (Spec 05) → ganha grupo próprio fixa|variavel
+    // (Spec 24, RF-2), para o aporte contabilizar no bloco/saldo certos.
+    grupo: z.enum(['fixa', 'variavel'], { error: 'Classifique como Fixa ou Variável.' }),
     categoriaId: z.string().uuid().nullable().optional(),
     data: dataSchema,
     descricao: textoOpcional,
@@ -57,6 +59,8 @@ const editarLancamentoSchema = z.object({
   valor: valorSchema.optional(),
   categoriaId: z.string().uuid().nullable().optional(),
   objetivoId: z.string().uuid().nullable().optional(),
+  // Só faz sentido sem categoria (aporte); a constraint do banco é a barreira final.
+  grupo: z.enum(['fixa', 'variavel']).nullable().optional(),
   data: dataSchema.optional(),
   descricao: textoOpcional,
   observacao: textoOpcional,
@@ -117,6 +121,9 @@ export async function criarLancamento(
 
   let categoriaId: string | null = null
   let objetivoId: string | null = null
+  // Grupo só é preenchido para o aporte de objetivo (sem categoria). Despesa/
+  // receita derivam o grupo da categoria → coluna fica nula (Spec 24).
+  let grupo: Extract<GrupoCategoria, 'fixa' | 'variavel'> | null = null
 
   if (dadosValidados.tipo === 'objetivo') {
     const { data: objetivo } = await supabase
@@ -130,6 +137,7 @@ export async function criarLancamento(
     }
     objetivoId = dadosValidados.objetivoId
     categoriaId = dadosValidados.categoriaId ?? null
+    grupo = dadosValidados.grupo
   } else {
     const { data: categoria } = await supabase
       .from('categorias')
@@ -158,6 +166,7 @@ export async function criarLancamento(
     data: dadosValidados.data,
     categoria_id: categoriaId,
     objetivo_id: objetivoId,
+    grupo,
     descricao: dadosValidados.descricao || null,
     observacao: dadosValidados.observacao || null,
   })
@@ -189,6 +198,7 @@ export async function editarLancamento(
   if (dadosValidados.valor !== undefined) patch.valor = dadosValidados.valor
   if (dadosValidados.categoriaId !== undefined) patch.categoria_id = dadosValidados.categoriaId
   if (dadosValidados.objetivoId !== undefined) patch.objetivo_id = dadosValidados.objetivoId
+  if (dadosValidados.grupo !== undefined) patch.grupo = dadosValidados.grupo
   if (dadosValidados.data !== undefined) patch.data = dadosValidados.data
   if (dadosValidados.descricao !== undefined) patch.descricao = dadosValidados.descricao || null
   if (dadosValidados.observacao !== undefined) patch.observacao = dadosValidados.observacao || null

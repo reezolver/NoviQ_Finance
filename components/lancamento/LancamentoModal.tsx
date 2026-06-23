@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 type GrupoCategoria = Database["public"]["Enums"]["grupo_categoria"]
 type TipoLancamento = Database["public"]["Enums"]["tipo_lancamento"]
@@ -99,6 +100,8 @@ const formSchema = z
     valor: z.string().min(1, "Informe o valor."),
     categoriaId: z.string().optional(),
     objetivoId: z.string().optional(),
+    // Grupo do aporte (só objetivo) — fixa | variavel (Spec 24).
+    grupo: z.enum(["fixa", "variavel"]).optional(),
     data: z.string().min(1, "Informe a data."),
     descricao: z.string().optional(),
     observacao: z.string().optional(),
@@ -118,6 +121,13 @@ const formSchema = z
           code: "custom",
           path: ["objetivoId"],
           message: "Selecione um objetivo.",
+        })
+      }
+      if (!val.grupo) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["grupo"],
+          message: "Classifique como Fixa ou Variável.",
         })
       }
     } else if (!val.categoriaId) {
@@ -158,6 +168,7 @@ export function LancamentoModal({
       valor: "",
       categoriaId: "",
       objetivoId: "",
+      grupo: undefined,
       data: hojeISO(),
       descricao: "",
       observacao: "",
@@ -179,7 +190,8 @@ export function LancamentoModal({
     form.setValue("tipo", tipoNovo)
     form.setValue("categoriaId", "")
     form.setValue("objetivoId", "")
-    form.clearErrors(["categoriaId", "objetivoId"])
+    form.setValue("grupo", undefined)
+    form.clearErrors(["categoriaId", "objetivoId", "grupo"])
   }
 
   function resetar() {
@@ -206,7 +218,12 @@ export function LancamentoModal({
 
     let payload: CriarLancamentoInput
     if (values.tipo === "objetivo") {
-      payload = { tipo: "objetivo", objetivoId: values.objetivoId!, ...base }
+      payload = {
+        tipo: "objetivo",
+        objetivoId: values.objetivoId!,
+        grupo: values.grupo!,
+        ...base,
+      }
     } else if (values.tipo === "receita") {
       payload = { tipo: "receita", categoriaId: values.categoriaId!, ...base }
     } else {
@@ -288,39 +305,73 @@ export function LancamentoModal({
 
             {/* Categoria (despesa/receita) ou Objetivo */}
             {tipo === "objetivo" ? (
-              <FormField
-                control={form.control}
-                name="objetivoId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Objetivo</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+              <>
+                <FormField
+                  control={form.control}
+                  name="objetivoId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Objetivo</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger
+                            className="w-full"
+                            aria-invalid={!!form.formState.errors.objetivoId}
+                          >
+                            <SelectValue
+                              placeholder={
+                                objetivos.length
+                                  ? "Selecione um objetivo"
+                                  : "Nenhum objetivo cadastrado"
+                              }
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {objetivos.map((o) => (
+                            <SelectItem key={o.id} value={o.id}>
+                              {o.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Classifica o aporte como gasto Fixo ou Variável (Spec 24). */}
+                <FormField
+                  control={form.control}
+                  name="grupo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Classificar como</FormLabel>
                       <FormControl>
-                        <SelectTrigger
-                          className="w-full"
-                          aria-invalid={!!form.formState.errors.objetivoId}
+                        <RadioGroup
+                          className="flex gap-6"
+                          onValueChange={field.onChange}
+                          value={field.value ?? ""}
                         >
-                          <SelectValue
-                            placeholder={
-                              objetivos.length
-                                ? "Selecione um objetivo"
-                                : "Nenhum objetivo cadastrado"
-                            }
-                          />
-                        </SelectTrigger>
+                          <FormItem className="flex items-center gap-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="fixa" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Fixa</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center gap-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="variavel" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Variável</FormLabel>
+                          </FormItem>
+                        </RadioGroup>
                       </FormControl>
-                      <SelectContent>
-                        {objetivos.map((o) => (
-                          <SelectItem key={o.id} value={o.id}>
-                            {o.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
             ) : (
               <FormField
                 control={form.control}

@@ -150,6 +150,7 @@ export type Database = {
           created_by_user_id: string
           data: string
           descricao: string | null
+          grupo: Database["public"]["Enums"]["grupo_categoria"] | null
           id: string
           objetivo_id: string | null
           observacao: string | null
@@ -163,6 +164,7 @@ export type Database = {
           created_by_user_id?: string
           data?: string
           descricao?: string | null
+          grupo?: Database["public"]["Enums"]["grupo_categoria"] | null
           id?: string
           objetivo_id?: string | null
           observacao?: string | null
@@ -176,6 +178,7 @@ export type Database = {
           created_by_user_id?: string
           data?: string
           descricao?: string | null
+          grupo?: Database["public"]["Enums"]["grupo_categoria"] | null
           id?: string
           objetivo_id?: string | null
           observacao?: string | null

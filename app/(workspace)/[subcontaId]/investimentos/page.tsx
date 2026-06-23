@@ -34,16 +34,14 @@ import {
   type TipoPatrimonio,
 } from "@/components/investimentos/labels"
 import {
-  agregarRealizadoPorMes,
   agregarTotalAplicadoPorChave,
-  calcularDespesaMensalMedia,
   calcularPatrimonioLiquido,
   calcularPercentual,
   calcularStatusReserva,
   calcularTotalAplicado,
   formatarMoeda,
-  type GrupoCategoria,
 } from "@/lib/calculations"
+import { CustoEssencialCard } from "@/components/investimentos/CustoEssencialCard"
 import { cn } from "@/lib/utils"
 
 /**
@@ -73,12 +71,6 @@ interface DividaRow {
   valor_total: number
 }
 
-interface LancamentoDespesaRow {
-  data: string
-  valor: number
-  categorias: { grupo: GrupoCategoria }
-}
-
 export default async function InvestimentosPage({
   params,
 }: {
@@ -86,10 +78,9 @@ export default async function InvestimentosPage({
 }) {
   const { subcontaId } = await params
   const supabase = await createSupabaseServerClient()
-  const ano = new Date().getFullYear()
 
   // Três queries (sem N+1). RLS já escopa pela subconta.
-  const [{ data: patrimonioData }, { data: dividasData }, { data: lancamentosData }] =
+  const [{ data: patrimonioData }, { data: dividasData }, { data: subcontaData }] =
     await Promise.all([
       supabase
         .from("patrimonio")
@@ -101,34 +92,26 @@ export default async function InvestimentosPage({
         .from("dividas")
         .select("id, tipo, valor_total")
         .eq("subconta_id", subcontaId),
-      // Despesas (fixa + variável) do ano → base da meta de reserva (6×).
+      // Custo de vida essencial → base da meta de reserva (6×), informado à mão.
       supabase
-        .from("lancamentos")
-        .select("data, valor, categorias!inner(grupo)")
-        .eq("subconta_id", subcontaId)
-        .eq("tipo", "despesa")
-        .gte("data", `${ano}-01-01`)
-        .lte("data", `${ano}-12-31`),
+        .from("subcontas")
+        .select("custo_vida_essencial")
+        .eq("id", subcontaId)
+        .maybeSingle(),
     ])
 
   const ativos = (patrimonioData ?? []) as unknown as PatrimonioRow[]
   const dividas = (dividasData ?? []) as unknown as DividaRow[]
-  const lancamentos = (lancamentosData ?? []) as unknown as LancamentoDespesaRow[]
+  const custoEssencial =
+    subcontaData?.custo_vida_essencial === null ||
+    subcontaData?.custo_vida_essencial === undefined
+      ? null
+      : Number(subcontaData.custo_vida_essencial)
 
   // ─── Derivados (tudo via lib/calculations.ts) ──────────────────────────────
   const totalPatrimonio = ativos.reduce((s, a) => s + Number(a.valor), 0)
   const totalDividas = dividas.reduce((s, d) => s + Number(d.valor_total), 0)
   const patrimonioLiquido = calcularPatrimonioLiquido(totalPatrimonio, totalDividas)
-
-  // Despesa mensal média (fixa + variável) → meta de reserva.
-  const realizadoPorMes = agregarRealizadoPorMes(
-    lancamentos.map((l) => ({
-      mes: Number(l.data.slice(5, 7)),
-      grupo: l.categorias.grupo,
-      valor: Number(l.valor),
-    }))
-  )
-  const despesaMensal = calcularDespesaMensalMedia(realizadoPorMes)
 
   // Total aplicado por finalidade (reserva × patrimônio).
   const porFinalidade = agregarTotalAplicadoPorChave(
@@ -140,7 +123,9 @@ export default async function InvestimentosPage({
   )
   const totalReserva = porFinalidade.get("reserva") ?? 0
   const totalPatrimonioFinalidade = porFinalidade.get("patrimonio") ?? 0
-  const reserva = calcularStatusReserva(totalReserva, despesaMensal)
+  // Meta = 6× o custo de vida essencial informado (Spec 26). Vazio → meta 0.
+  const baseMeta = custoEssencial ?? 0
+  const reserva = calcularStatusReserva(totalReserva, baseMeta)
 
   // Distribuição por categoria de investimento.
   const porCategoria = agregarTotalAplicadoPorChave(
@@ -223,9 +208,10 @@ export default async function InvestimentosPage({
             />
             <p className="text-xs text-muted-foreground">
               {reserva.meta > 0
-                ? `${reservaPct.toFixed(0)}% da meta (6× a despesa mensal de ${formatarMoeda(despesaMensal)})`
-                : "Meta de 6× a despesa mensal — registre despesas para calcular."}
+                ? `${reservaPct.toFixed(0)}% da meta (6× o custo essencial de ${formatarMoeda(baseMeta)})`
+                : "Informe seu custo de vida essencial para calcular a meta (6×)."}
             </p>
+            <CustoEssencialCard subcontaId={subcontaId} custoAtual={custoEssencial} />
           </CardContent>
         </Card>
       </div>

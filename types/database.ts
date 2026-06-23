@@ -385,6 +385,7 @@ export type Database = {
       subcontas: {
         Row: {
           created_at: string
+          custo_vida_essencial: number | null
           deleted_at: string | null
           gestor_id: string | null
           id: string
@@ -396,6 +397,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          custo_vida_essencial?: number | null
           deleted_at?: string | null
           gestor_id?: string | null
           id?: string
@@ -407,6 +409,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          custo_vida_essencial?: number | null
           deleted_at?: string | null
           gestor_id?: string | null
           id?: string

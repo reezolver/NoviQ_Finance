@@ -274,6 +274,53 @@ export async function definirSaldoInicial(subcontaId: string, valor: number) {
   return { ok: true as const }
 }
 
+const definirCustoEssencialSchema = z.object({
+  subcontaId: z.string().uuid(),
+  // >= 0 para informar; null para limpar (volta a meta 0).
+  valor: z.number().min(0, 'O valor não pode ser negativo.').nullable(),
+})
+
+/**
+ * Define o **custo de vida essencial** mensal da subconta (Spec 26 · RF-5) —
+ * base da meta de reserva de emergência (6×). `null` limpa o valor (meta 0).
+ *
+ * Permissão idêntica ao {@link renomearSubconta}/{@link definirSaldoInicial}: a
+ * `pessoal` só pelo próprio dono; a `cliente` pelo gestor dono ou master;
+ * **nunca** a `pessoal` alheia. A RLS de UPDATE é a barreira real.
+ */
+export async function definirCustoVidaEssencial(
+  subcontaId: string,
+  valor: number | null
+) {
+  const dados = definirCustoEssencialSchema.parse({ subcontaId, valor })
+  const gestor = await assertGestor()
+  const supabase = await createSupabaseServerClient()
+
+  const { data: sub } = await supabase
+    .from('subcontas')
+    .select('id, tipo, gestor_id, owner_user_id')
+    .eq('id', dados.subcontaId)
+    .maybeSingle()
+  if (!sub) throw new Error('Subconta não encontrada ou sem acesso.')
+
+  const isMaster = gestor.tipo_perfil === 'master'
+  const ehMinhaPessoal = sub.tipo === 'pessoal' && sub.gestor_id === gestor.id
+  const ehClienteQuePosso =
+    sub.tipo === 'cliente' && (sub.gestor_id === gestor.id || isMaster)
+  if (!ehMinhaPessoal && !ehClienteQuePosso) {
+    throw new Error('Sem permissão para editar o custo essencial desta conta.')
+  }
+
+  const { error } = await supabase
+    .from('subcontas')
+    .update({ custo_vida_essencial: dados.valor })
+    .eq('id', dados.subcontaId)
+  if (error) throw new Error(`Erro ao salvar o custo essencial: ${error.message}`)
+
+  revalidatePath('/[subcontaId]/investimentos', 'page')
+  return { ok: true as const }
+}
+
 const moverClienteSchema = z.object({
   subcontaId: z.string().uuid(),
   novoGestorId: z.string().uuid(),

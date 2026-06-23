@@ -227,6 +227,53 @@ export async function renomearSubconta(subcontaId: string, nome: string) {
   return { ok: true as const }
 }
 
+const definirSaldoInicialSchema = z.object({
+  subcontaId: z.string().uuid(),
+  // Saldo de partida: aceita negativo (conta pode começar no vermelho).
+  valor: z.number({ error: 'Informe um valor.' }).finite('Valor inválido.'),
+})
+
+/**
+ * Define o **saldo inicial** da subconta (Spec 25 · RF-4) — base do "Saldo em
+ * conta" acumulado. Aceita negativo.
+ *
+ * Permissão idêntica ao {@link renomearSubconta}: a `pessoal` só pelo próprio
+ * dono; a `cliente` pelo gestor dono ou master; **nunca** a `pessoal` alheia. A
+ * RLS de UPDATE (`gestor_id = auth.uid() OR is_master()`) é a barreira real; a
+ * checagem abaixo é defesa em profundidade.
+ */
+export async function definirSaldoInicial(subcontaId: string, valor: number) {
+  const dados = definirSaldoInicialSchema.parse({ subcontaId, valor })
+  const gestor = await assertGestor()
+  const supabase = await createSupabaseServerClient()
+
+  const { data: sub } = await supabase
+    .from('subcontas')
+    .select('id, tipo, gestor_id, owner_user_id')
+    .eq('id', dados.subcontaId)
+    .maybeSingle()
+  if (!sub) throw new Error('Subconta não encontrada ou sem acesso.')
+
+  const isMaster = gestor.tipo_perfil === 'master'
+  const ehMinhaPessoal = sub.tipo === 'pessoal' && sub.gestor_id === gestor.id
+  const ehClienteQuePosso =
+    sub.tipo === 'cliente' && (sub.gestor_id === gestor.id || isMaster)
+  if (!ehMinhaPessoal && !ehClienteQuePosso) {
+    throw new Error('Sem permissão para editar o saldo inicial desta conta.')
+  }
+
+  const { error } = await supabase
+    .from('subcontas')
+    .update({ saldo_inicial: dados.valor })
+    .eq('id', dados.subcontaId)
+  if (error) throw new Error(`Erro ao salvar o saldo inicial: ${error.message}`)
+
+  // O "Saldo em conta" aparece no Mensal e no Anual — revalida os dois.
+  revalidatePath('/[subcontaId]/mensal/[ano]/[mes]', 'page')
+  revalidatePath('/[subcontaId]/controle-anual', 'page')
+  return { ok: true as const }
+}
+
 const moverClienteSchema = z.object({
   subcontaId: z.string().uuid(),
   novoGestorId: z.string().uuid(),

@@ -156,7 +156,7 @@ export interface ExtratoMensal {
  * **Aportes de objetivo (Spec 24):** lançamentos sem categoria mas **com grupo**
  * (fixa|variavel) entram no **realizado** do seu grupo — somam em
  * `saldos.realizado[fixas|variaveis]` antes do saldo/blocos/faixas, então o
- * Saldo Realizado, o 50‑30‑20 e o % da renda já refletem o aporte por
+ * saldo do realizado, o 50‑30‑20 e o % da renda já refletem o aporte por
  * construção. Cada objetivo vira uma linha "Aporte: <nome>" (planejado 0) no
  * bloco do grupo e no detalhamento, com id `aporte-<objetivoId>`.
  */

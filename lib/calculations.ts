@@ -77,6 +77,59 @@ export function calcularSaldoMes(totais: TotaisData): number {
   return totais.renda - totais.fixas - totais.variaveis - totais.investimento
 }
 
+/**
+ * Agrega uma lista plana de itens `{ grupo, valor }` num **único** `TotaisData`
+ * (sem dimensão de mês). Útil para o total acumulado do histórico (Spec 25) e
+ * para o carry de anos anteriores no Controle Anual.
+ * @param itens - Itens com grupo e valor (já com o grupo resolvido)
+ * @returns Um `TotaisData` com a soma por grupo
+ */
+export function agregarTotais(
+  itens: ReadonlyArray<{ grupo: GrupoCategoria; valor: number }>
+): TotaisData {
+  const totais = totaisZerados()
+  for (const { grupo, valor } of itens) {
+    totais[GRUPO_PARA_CAMPO[grupo]] += valor
+  }
+  return totais
+}
+
+/**
+ * Saldo em conta **acumulado** num ponto único (fim do mês alvo): saldo de
+ * partida + Σ do saldo de cada mês até o alvo (inclusive). Saldo de um mês =
+ * `renda − fixa − variavel − investimento` (mesma composição de
+ * {@link calcularSaldoMes}, incluindo o aporte como saída — Spec 24).
+ * @param saldoBase - Saldo inicial (+ carry de anos anteriores)
+ * @param realizadoAteOMes - Baldes de realizado até o mês alvo (inclusive)
+ * @returns Saldo em conta ao fim do mês alvo
+ */
+export function calcularSaldoAcumulado(
+  saldoBase: number,
+  realizadoAteOMes: ReadonlyArray<TotaisData>
+): number {
+  return realizadoAteOMes.reduce((acc, totais) => acc + calcularSaldoMes(totais), saldoBase)
+}
+
+/**
+ * Saldo em conta **acumulado ao fim de cada mês**: prefixo cumulativo de
+ * {@link calcularSaldoMes} a partir de `saldoBase`.
+ * @param saldoBase - Saldo inicial (+ carry de anos anteriores)
+ * @param realizadoPorMes - 12 baldes do ano (ver {@link agregarRealizadoPorMes})
+ * @returns 12 valores (índice 0 = fim de Janeiro … 11 = fim de Dezembro)
+ */
+export function calcularSaldoAcumuladoPorMes(
+  saldoBase: number,
+  realizadoPorMes: ReadonlyArray<TotaisData>
+): number[] {
+  const saldos: number[] = []
+  let acumulado = saldoBase
+  for (const totais of realizadoPorMes) {
+    acumulado += calcularSaldoMes(totais)
+    saldos.push(acumulado)
+  }
+  return saldos
+}
+
 /** Um lançamento já reduzido ao essencial para agregação por mês/grupo. */
 export interface LancamentoAgregavel {
   /** Mês do lançamento (1–12). */

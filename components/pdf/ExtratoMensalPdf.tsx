@@ -98,6 +98,11 @@ export interface ExtratoMensalPdfProps {
   mesNome: string
   ano: number
   extrato: ExtratoMensal
+  /**
+   * Saldo em conta acumulado ao fim do mês (Spec 25). Único número que depende
+   * do histórico, não só do mês — por isso vem de fora de `montarExtratoMensal`.
+   */
+  saldoEmConta: number
   geradoEm: string
 }
 
@@ -136,6 +141,7 @@ export function ExtratoMensalPdf({
   mesNome,
   ano,
   extrato,
+  saldoEmConta,
   geradoEm,
 }: ExtratoMensalPdfProps) {
   return (
@@ -153,7 +159,7 @@ export function ExtratoMensalPdf({
         {/* Saldo do mês */}
         <View style={styles.saldoRow}>
           <SaldoCard rotulo="Saldo Planejado" valor={extrato.saldoPlanejado} />
-          <SaldoCard rotulo="Saldo Realizado" valor={extrato.saldoRealizado} />
+          <SaldoCard rotulo="Saldo em conta" valor={saldoEmConta} />
           <SaldoCard rotulo="Diferença" valor={extrato.saldoDiferenca} colorir />
         </View>
 

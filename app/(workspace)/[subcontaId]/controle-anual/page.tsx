@@ -17,7 +17,9 @@ import {
 import {
   agregarPlanejadoPorMes,
   agregarRealizadoPorMes,
+  agregarTotais,
   calcularDiferenca,
+  calcularSaldoAcumuladoPorMes,
   calcularSaldoMes,
   formatarMoeda,
   type GrupoCategoria,
@@ -102,8 +104,13 @@ export default async function ControleAnualPage({
 
   const supabase = await createSupabaseServerClient()
 
-  // Duas queries agregadas (sem N+1 por mês). RLS já escopa pela subconta.
-  const [{ data: lancamentosData }, { data: orcamentosData }] = await Promise.all([
+  // Quatro queries agregadas (sem N+1 por mês). RLS já escopa pela subconta.
+  const [
+    { data: lancamentosData },
+    { data: orcamentosData },
+    { data: carryData },
+    { data: subcontaData },
+  ] = await Promise.all([
     supabase
       // Join NÃO `!inner` para incluir aportes sem categoria (com grupo próprio).
       .from("lancamentos")
@@ -115,10 +122,28 @@ export default async function ControleAnualPage({
       .from("orcamentos")
       .select("categoria_id, valor_planejado, ano, mes, categorias!inner(grupo)")
       .eq("subconta_id", subcontaId),
+    // Carry: lançamentos de anos anteriores (base do acumulado de janeiro).
+    supabase
+      .from("lancamentos")
+      .select("valor, categoria_id, grupo, categorias(grupo)")
+      .eq("subconta_id", subcontaId)
+      .lt("data", `${ano}-01-01`),
+    supabase
+      .from("subcontas")
+      .select("saldo_inicial")
+      .eq("id", subcontaId)
+      .maybeSingle(),
   ])
 
   const lancamentos = (lancamentosData ?? []) as unknown as LancamentoRow[]
   const orcamentos = (orcamentosData ?? []) as unknown as OrcamentoRow[]
+  const carry = (carryData ?? []) as unknown as Array<{
+    valor: number
+    categoria_id: string | null
+    grupo: GrupoCategoria | null
+    categorias: { grupo: GrupoCategoria } | null
+  }>
+  const saldoInicial = Number(subcontaData?.saldo_inicial ?? 0)
 
   // Realizado: soma de lançamentos por mês/grupo. Grupo vem da categoria ou,
   // para aportes sem categoria, da coluna `grupo` (Spec 24). Sem nenhum dos
@@ -150,6 +175,18 @@ export default async function ControleAnualPage({
       }))
   )
 
+  // "Saldo em conta" acumulado (Spec 25): base = saldo inicial + carry de anos
+  // anteriores; depois prefixo cumulativo dos 12 meses do ano. Grupo do carry vem
+  // da categoria ou, para aportes sem categoria (Spec 24), da coluna `grupo`.
+  const carryComGrupo = carry
+    .map((l) => ({
+      grupo: l.categorias?.grupo ?? l.grupo,
+      valor: Number(l.valor),
+    }))
+    .filter((l): l is { grupo: GrupoCategoria; valor: number } => l.grupo !== null)
+  const saldoBase = saldoInicial + calcularSaldoMes(agregarTotais(carryComGrupo))
+  const saldoEmContaPorMes = calcularSaldoAcumuladoPorMes(saldoBase, realizadoPorMes)
+
   // Modelo de visão dos 12 meses.
   const meses = MESES.map((m, i) => {
     const saldoPlanejado = calcularSaldoMes(planejadoPorMes[i])
@@ -160,6 +197,8 @@ export default async function ControleAnualPage({
       abrev: m.abrev,
       saldoPlanejado,
       saldoRealizado,
+      // Saldo em conta acumulado ao fim deste mês (Q4).
+      saldoEmConta: saldoEmContaPorMes[i],
       // Saldo: Realizado − Planejado → positivo (verde) = favorável.
       diferenca: calcularDiferenca(saldoRealizado, saldoPlanejado),
     }
@@ -168,6 +207,8 @@ export default async function ControleAnualPage({
   const totalPlanejado = meses.reduce((s, m) => s + m.saldoPlanejado, 0)
   const totalRealizado = meses.reduce((s, m) => s + m.saldoRealizado, 0)
   const totalDiferenca = calcularDiferenca(totalRealizado, totalPlanejado)
+  // Resumo do topo: saldo em conta ao fim de dezembro (não a soma dos isolados).
+  const saldoEmContaFinal = saldoEmContaPorMes[saldoEmContaPorMes.length - 1]
 
   const dadosGrafico: SaldoAnualChartData[] = meses.map((m) => ({
     mes: m.abrev,
@@ -205,7 +246,7 @@ export default async function ControleAnualPage({
       {/* Resumo do ano */}
       <div className="grid gap-4 sm:grid-cols-3">
         <ResumoCard rotulo="Saldo Planejado" valor={totalPlanejado} />
-        <ResumoCard rotulo="Saldo Realizado" valor={totalRealizado} />
+        <ResumoCard rotulo="Saldo em conta" valor={saldoEmContaFinal} />
         <ResumoCard rotulo="Diferença" valor={totalDiferenca} colorir />
       </div>
 
@@ -259,9 +300,9 @@ export default async function ControleAnualPage({
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between gap-2 text-xs">
-                  <span className="text-muted-foreground">Realizado</span>
+                  <span className="text-muted-foreground">Saldo em conta</span>
                   <span className="font-mono tabular-nums">
-                    {formatarMoeda(m.saldoRealizado)}
+                    {formatarMoeda(m.saldoEmConta)}
                   </span>
                 </div>
               </CardContent>

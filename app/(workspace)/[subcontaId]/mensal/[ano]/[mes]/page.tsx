@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { notFound } from "next/navigation"
 import { Receipt, ShoppingCart, Wallet } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -23,10 +24,16 @@ import { BlocoGrupo } from "@/components/mensal/BlocoGrupo"
 import { NavegacaoMeses } from "@/components/mensal/NavegacaoMeses"
 import { NovoLancamentoButton } from "@/components/mensal/NovoLancamentoButton"
 import { EditarPlanejadoButton } from "@/components/mensal/EditarPlanejadoButton"
+import { SaldoInicialDialog } from "@/components/mensal/SaldoInicialDialog"
 import { ExportarPdfButton } from "@/components/mensal/ExportarPdfButton"
 import { ControleMensalChart } from "@/components/mensal/ControleMensalChart"
 import { Resumo503020 } from "@/components/mensal/Resumo503020"
-import { formatarMoeda, type GrupoCategoria } from "@/lib/calculations"
+import {
+  agregarTotais,
+  calcularSaldoAcumulado,
+  formatarMoeda,
+  type GrupoCategoria,
+} from "@/lib/calculations"
 import {
   GRUPO_LABEL,
   montarExtratoMensal,
@@ -123,12 +130,14 @@ export default async function ControleMensalPage({
 
   const supabase = await createSupabaseServerClient()
 
-  // Quatro queries agregadas (sem N+1). RLS já escopa pela subconta.
+  // Seis queries agregadas (sem N+1). RLS já escopa pela subconta.
   const [
     { data: lancamentosData },
     { data: orcamentosData },
     { data: categoriasData },
     { data: objetivosData },
+    { data: historicoData },
+    { data: subcontaData },
   ] = await Promise.all([
     supabase
       .from("lancamentos")
@@ -150,12 +159,29 @@ export default async function ControleMensalPage({
       .select("id, nome")
       .eq("subconta_id", subcontaId)
       .order("created_at"),
+    // Histórico completo até o fim do mês (base do "Saldo em conta" acumulado).
+    supabase
+      .from("lancamentos")
+      .select("valor, categoria_id, grupo")
+      .eq("subconta_id", subcontaId)
+      .lt("data", fimExclusivo),
+    supabase
+      .from("subcontas")
+      .select("saldo_inicial")
+      .eq("id", subcontaId)
+      .maybeSingle(),
   ])
 
   const lancamentos = (lancamentosData ?? []) as unknown as LancamentoRow[]
   const orcamentos = (orcamentosData ?? []) as unknown as OrcamentoRow[]
   const categorias = (categoriasData ?? []) as unknown as CategoriaRow[]
   const objetivos = (objetivosData ?? []) as unknown as ObjetivoRow[]
+  const historico = (historicoData ?? []) as unknown as Array<{
+    valor: number
+    categoria_id: string | null
+    grupo: GrupoCategoria | null
+  }>
+  const saldoInicial = Number(subcontaData?.saldo_inicial ?? 0)
 
   // Agregação centralizada (mesma fonte do PDF de export — Spec 11).
   const extrato = montarExtratoMensal({
@@ -179,6 +205,21 @@ export default async function ControleMensalPage({
     grupo: c.grupo,
     planejadoVigente: planejadoPorCategoria.get(c.id) ?? 0,
   }))
+
+  // "Saldo em conta" (Spec 25): único número que depende do HISTÓRICO, não só do
+  // mês. = saldo inicial + Σ(renda − fixa − variavel − investimento) de todos os
+  // lançamentos até o fim do mês. O grupo vem da categoria; para o aporte sem
+  // categoria (Spec 24), da coluna `grupo`. Sem grupo (aporte antigo) é ignorado.
+  const grupoPorCategoria = new Map(categorias.map((c) => [c.id, c.grupo]))
+  const historicoComGrupo = historico
+    .map((l) => ({
+      grupo: l.categoria_id ? grupoPorCategoria.get(l.categoria_id) ?? null : l.grupo,
+      valor: Number(l.valor),
+    }))
+    .filter((l): l is { grupo: GrupoCategoria; valor: number } => l.grupo !== null)
+  const saldoEmConta = calcularSaldoAcumulado(saldoInicial, [
+    agregarTotais(historicoComGrupo),
+  ])
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-8">
@@ -213,10 +254,14 @@ export default async function ControleMensalPage({
       {/* Navegação por meses (mantém a subconta) */}
       <NavegacaoMeses subcontaId={subcontaId} ano={ano} mes={mes} />
 
-      {/* Saldo do mês */}
+      {/* Saldo do mês — "Saldo em conta" é acumulado (saldo inicial + histórico). */}
       <div className="grid gap-4 sm:grid-cols-3">
         <SaldoCard rotulo="Saldo Planejado" valor={extrato.saldoPlanejado} />
-        <SaldoCard rotulo="Saldo Realizado" valor={extrato.saldoRealizado} />
+        <SaldoCard
+          rotulo="Saldo em conta"
+          valor={saldoEmConta}
+          rodape={<SaldoInicialDialog subcontaId={subcontaId} saldoInicial={saldoInicial} />}
+        />
         <SaldoCard rotulo="Diferença" valor={extrato.saldoDiferenca} colorir />
       </div>
 
@@ -303,17 +348,20 @@ function SaldoCard({
   rotulo,
   valor,
   colorir = false,
+  rodape,
 }: {
   rotulo: string
   valor: number
   colorir?: boolean
+  /** Slot opcional abaixo do valor (ex.: editar saldo inicial). */
+  rodape?: ReactNode
 }) {
   return (
     <Card size="sm">
       <CardHeader className="pb-0">
         <CardDescription>{rotulo}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-1">
         <p
           className={cn(
             "font-mono text-xl font-semibold tabular-nums",
@@ -323,6 +371,7 @@ function SaldoCard({
           {colorir ? sinalSaldo(valor) : ""}
           {formatarMoeda(valor)}
         </p>
+        {rodape}
       </CardContent>
     </Card>
   )

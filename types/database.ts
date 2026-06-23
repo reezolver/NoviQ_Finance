@@ -391,6 +391,7 @@ export type Database = {
           nome: string
           origem_anamnese_id: string | null
           owner_user_id: string | null
+          saldo_inicial: number
           tipo: Database["public"]["Enums"]["tipo_subconta"]
         }
         Insert: {
@@ -401,6 +402,7 @@ export type Database = {
           nome: string
           origem_anamnese_id?: string | null
           owner_user_id?: string | null
+          saldo_inicial?: number
           tipo: Database["public"]["Enums"]["tipo_subconta"]
         }
         Update: {
@@ -411,6 +413,7 @@ export type Database = {
           nome?: string
           origem_anamnese_id?: string | null
           owner_user_id?: string | null
+          saldo_inicial?: number
           tipo?: Database["public"]["Enums"]["tipo_subconta"]
         }
         Relationships: [

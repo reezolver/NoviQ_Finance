@@ -3,6 +3,11 @@ import { renderToBuffer } from "@react-pdf/renderer"
 
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import {
+  agregarTotais,
+  calcularSaldoAcumulado,
+  type GrupoCategoria,
+} from "@/lib/calculations"
+import {
   montarExtratoMensal,
   type CategoriaRow,
   type LancamentoRow,
@@ -156,6 +161,8 @@ export async function GET(
     { data: orcamentosData },
     { data: categoriasData },
     { data: objetivosData },
+    { data: historicoData },
+    { data: subcontaSaldoData },
   ] = await Promise.all([
     supabase
       .from("lancamentos")
@@ -176,12 +183,29 @@ export async function GET(
       .from("objetivos")
       .select("id, nome")
       .eq("subconta_id", subcontaId),
+    // Histórico completo até o fim do mês + saldo inicial (Saldo em conta).
+    supabase
+      .from("lancamentos")
+      .select("valor, categoria_id, grupo")
+      .eq("subconta_id", subcontaId)
+      .lt("data", fimExclusivo),
+    supabase
+      .from("subcontas")
+      .select("saldo_inicial")
+      .eq("id", subcontaId)
+      .maybeSingle(),
   ])
 
   const lancamentos = (lancamentosData ?? []) as unknown as LancamentoRow[]
   const orcamentos = (orcamentosData ?? []) as unknown as OrcamentoRow[]
   const categorias = (categoriasData ?? []) as unknown as CategoriaRow[]
   const objetivos = (objetivosData ?? []) as unknown as ObjetivoRow[]
+  const historico = (historicoData ?? []) as unknown as Array<{
+    valor: number
+    categoria_id: string | null
+    grupo: GrupoCategoria | null
+  }>
+  const saldoInicial = Number(subcontaSaldoData?.saldo_inicial ?? 0)
 
   // Mesma agregação da tela → os números do PDF batem com a tela (Spec 11 §4).
   const extrato = montarExtratoMensal({
@@ -193,12 +217,26 @@ export async function GET(
     objetivos,
   })
 
+  // "Saldo em conta" acumulado — calculado fora de montarExtratoMensal (que só
+  // conhece o mês), igual à tela mensal (Spec 25).
+  const grupoPorCategoria = new Map(categorias.map((c) => [c.id, c.grupo]))
+  const historicoComGrupo = historico
+    .map((l) => ({
+      grupo: l.categoria_id ? grupoPorCategoria.get(l.categoria_id) ?? null : l.grupo,
+      valor: Number(l.valor),
+    }))
+    .filter((l): l is { grupo: GrupoCategoria; valor: number } => l.grupo !== null)
+  const saldoEmConta = calcularSaldoAcumulado(saldoInicial, [
+    agregarTotais(historicoComGrupo),
+  ])
+
   const buffer = await renderToBuffer(
     ExtratoMensalPdf({
       subcontaNome: subconta.nome,
       mesNome: MESES_NOMES[mes - 1],
       ano,
       extrato,
+      saldoEmConta,
       geradoEm,
     })
   )

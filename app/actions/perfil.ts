@@ -40,6 +40,67 @@ export async function atualizarPerfil(nome: string) {
   return { ok: true as const }
 }
 
+/** Formatos e tamanho aceitos para a foto de perfil (espelha a UI). */
+const AVATAR_FORMATOS = ['image/jpeg', 'image/png', 'image/webp']
+const AVATAR_TAMANHO_MAX = 2 * 1024 * 1024 // 2 MB
+
+/**
+ * **Sobe a foto de perfil e grava a URL** em `profiles.avatar_url`
+ * (Spec 22 · RF-4.1). Roda **no servidor** com a **service-role** (admin):
+ *
+ * O upload feito pelo browser esbarrava na RLS de Storage (`new row violates
+ * row-level security policy`) porque a requisição nem sempre chegava
+ * autenticada como dono da pasta `{uid}/`. Fazendo no servidor, a identidade
+ * vem de {@link getUsuarioAtual} (cookie) e o admin bypassa a RLS — o caminho
+ * continua namespaced por `uid`, então um usuário só grava na própria pasta.
+ *
+ * Recebe o arquivo via `FormData` (server action). Valida tipo e tamanho de
+ * novo no servidor (defesa em profundidade). Retorna a URL pública.
+ */
+export async function salvarAvatar(formData: FormData) {
+  const usuario = await getUsuarioAtual()
+  if (!usuario) throw new Error('Não autenticado.')
+
+  const file = formData.get('file')
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error('Arquivo inválido.')
+  }
+  if (!AVATAR_FORMATOS.includes(file.type)) {
+    throw new Error('Use uma imagem JPG, PNG ou WEBP.')
+  }
+  if (file.size > AVATAR_TAMANHO_MAX) {
+    throw new Error('A imagem deve ter no máximo 2 MB.')
+  }
+
+  const admin = createSupabaseAdminClient()
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  const caminho = `${usuario.id}/avatar-${Date.now()}.${ext}`
+  const buffer = Buffer.from(await file.arrayBuffer())
+
+  const { error: erroUpload } = await admin.storage
+    .from('avatars')
+    .upload(caminho, buffer, { upsert: true, contentType: file.type })
+  if (erroUpload) {
+    throw new Error(`Erro ao enviar a imagem: ${erroUpload.message}`)
+  }
+
+  const {
+    data: { publicUrl },
+  } = admin.storage.from('avatars').getPublicUrl(caminho)
+
+  const { error } = await admin
+    .from('profiles')
+    .update({ avatar_url: publicUrl })
+    .eq('id', usuario.id)
+  if (error) {
+    throw new Error(`Erro ao salvar a foto: ${error.message}`)
+  }
+
+  revalidatePath('/conta')
+  revalidatePath('/painel')
+  return { url: publicUrl }
+}
+
 const atualizarAvatarSchema = z.object({
   // URL pública do arquivo no bucket `avatars` (ou null para remover a foto).
   url: z.string().url().nullable(),

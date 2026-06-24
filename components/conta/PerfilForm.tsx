@@ -8,8 +8,7 @@ import { z } from "zod"
 import { toast } from "sonner"
 import { Loader2, Upload } from "lucide-react"
 
-import { createClient } from "@/lib/supabase"
-import { atualizarPerfil, atualizarAvatar } from "@/app/actions/perfil"
+import { atualizarPerfil, salvarAvatar } from "@/app/actions/perfil"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -40,12 +39,10 @@ type FormValues = z.infer<typeof formSchema>
  * via {@link atualizarAvatar}, alimentando o footer da sidebar e o switcher.
  */
 export function PerfilForm({
-  userId,
   nome,
   email,
   avatarUrl,
 }: {
-  userId: string
   nome: string | null
   email: string | null
   avatarUrl: string | null
@@ -97,20 +94,11 @@ export function PerfilForm({
     setPreview(URL.createObjectURL(file))
     setEnviandoFoto(true)
     try {
-      const supabase = createClient()
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg"
-      const caminho = `${userId}/avatar-${Date.now()}.${ext}`
-
-      const { error: erroUpload } = await supabase.storage
-        .from("avatars")
-        .upload(caminho, file, { upsert: true, contentType: file.type })
-      if (erroUpload) throw new Error(erroUpload.message)
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("avatars").getPublicUrl(caminho)
-
-      await atualizarAvatar(publicUrl)
+      // Upload + gravação rodam no servidor (admin) — evita a RLS de Storage
+      // barrar o upload feito pelo browser.
+      const fd = new FormData()
+      fd.append("file", file)
+      await salvarAvatar(fd)
       toast.success("Foto atualizada.")
       router.refresh()
     } catch (erro) {

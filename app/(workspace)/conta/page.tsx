@@ -65,7 +65,6 @@ export default async function ContaPage() {
 
         <TabsContent value="perfil" className="pt-6">
           <PerfilForm
-            userId={usuario.id}
             nome={profile?.nome ?? null}
             email={profile?.email ?? null}
             avatarUrl={profile?.avatar_url ?? null}

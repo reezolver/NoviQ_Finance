@@ -12,6 +12,16 @@ versionamento segue o [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 - (nada ainda — as próximas mudanças entram aqui antes de virarem uma versão)
 
+## [0.10.1] - 2026-06-24
+
+### Corrigido
+
+- **Foto de perfil não salvava (erro de RLS de Storage):** o upload, antes feito
+  pelo browser, esbarrava na policy do bucket `avatars` (`new row violates
+  row-level security policy`). Agora o upload e a gravação da URL rodam numa
+  server action com a service-role — a identidade vem do cookie de sessão e o
+  caminho continua namespaced por `uid`.
+
 ## [0.10.0] - 2026-06-24
 
 ### Adicionado

@@ -12,6 +12,26 @@ versionamento segue o [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 - (nada ainda — as próximas mudanças entram aqui antes de virarem uma versão)
 
+## [0.11.0] - 2026-06-24
+
+### Adicionado
+
+- **Gerenciamento de categorias:** nova seção **Categorias** na sidebar
+  (`/[subconta]/categorias`) para **criar, renomear e excluir** categorias,
+  organizadas por grupo (Fixa, Variável, Investimento e Renda). A exclusão é
+  bloqueada, com aviso, quando a categoria já tem lançamentos; os orçamentos
+  vinculados são removidos em cascata.
+- **Atalho "Nova categoria" no lançamento:** dentro do modal de lançamento dá
+  para criar uma categoria sem sair da tela — ela já entra selecionada, no grupo
+  do contexto atual.
+
+### Modificado
+
+- **Classificação Fixa/Variável na aba Despesa:** o modal de lançamento ganhou o
+  seletor **"Classificar como" (Fixa · Variável · Investimento)** na aba Despesa,
+  em paridade com a aba Objetivo. Ele filtra a lista de categorias pelo grupo
+  escolhido (a classificação do gasto continua vindo da categoria).
+
 ## [0.10.1] - 2026-06-24
 
 ### Corrigido

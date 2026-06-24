@@ -5,3 +5,6 @@
 #
 # (linha em branco)
 # Corpo opcional: o porquê da mudança, se não for óbvio.
+#
+# Release/versão: SEMPRE conferir a versão atual real (package.json + git tag)
+#                 antes de incrementar — nunca chutar o número.

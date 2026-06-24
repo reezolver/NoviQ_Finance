@@ -104,5 +104,10 @@ Seguir os padrões documentados em **`../_planejamento/docs/organizacao-versiona
   Mensagem curta, em português, no presente.
 - **Versões:** [SemVer](https://semver.org/lang/pt-BR/) — `MAIOR.MENOR.CORRECAO`.
   `feat` sobe o MENOR; `fix` sobe o CORRECAO; quebra de compatibilidade (`feat!`) sobe o MAIOR.
+- **SEMPRE conferir a versão atual antes de mexer nela.** Quando for solicitado um
+  commit de release, bump de versão ou qualquer coisa que dependa do número da versão,
+  primeiro **leia a versão real** (campo `version` do `package.json`; confirmar com a
+  última tag `git tag` / topo do `CHANGELOG.md`) e **incremente em cima dela** — nunca
+  assumir ou chutar o número.
 - **Ao fechar uma versão:** atualizar **juntos** `package.json` (campo `version`),
   `CHANGELOG.md` (nova seção) e criar a **tag** `vX.Y.Z`, depois `push --tags`.

@@ -12,6 +12,21 @@ versionamento segue o [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 - (nada ainda — as próximas mudanças entram aqui antes de virarem uma versão)
 
+## [0.12.0] - 2026-06-24
+
+### Adicionado
+
+- **Landing page pública (`/`):** página de apresentação do Noviq Finance servida na
+  raiz do domínio. Visitante anônimo vê hero, proposta única, método 50-30-20, grade de
+  funcionalidades, vitrine de telas e seção de preços "em breve". Usuário logado
+  continua sendo roteado pelo middleware (sem mudança).
+- **Header público** com logo theme-aware (preta/branca), âncoras de navegação,
+  toggle de tema e menu mobile via Sheet.
+- **Mockups renderizados** das telas principais (Controle Anual, Mensal, Lançamento,
+  Objetivos) como componentes React/Tailwind com dados fictícios — sem screenshots.
+- **Open Graph por código** (`app/opengraph-image.tsx`, `next/og`, 1200×630).
+- **Favicon** via `app/icon.svg` (detectado automaticamente pelo Next.js).
+
 ## [0.11.0] - 2026-06-24
 
 ### Adicionado

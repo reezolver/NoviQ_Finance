@@ -9,6 +9,8 @@ import { ChevronDown, Plus } from "lucide-react"
 import { toast } from "sonner"
 
 import { criarLancamento, type CriarLancamentoInput } from "@/app/actions/lancamentos"
+import { criarCategoria } from "@/app/actions/categorias"
+import { GRUPO_LABEL } from "@/components/categorias/grupos"
 import type { Database } from "@/types/database"
 import { Button } from "@/components/ui/button"
 import {
@@ -68,8 +70,9 @@ const TABS: ReadonlyArray<{ value: TipoLancamento; label: string }> = [
   { value: "objetivo", label: "Objetivo" },
 ]
 
-/** Grupos de categoria mostrados por aba. */
-const GRUPOS_DESPESA: ReadonlyArray<GrupoCategoria> = ["fixa", "variavel", "investimento"]
+/** Grupos de categoria de uma despesa — também as opções do filtro Fixa/Variável/Investimento. */
+const GRUPOS_DESPESA: ReadonlyArray<Extract<GrupoCategoria, "fixa" | "variavel" | "investimento">> =
+  ["fixa", "variavel", "investimento"]
 
 /**
  * Converte um valor digitado no padrão BR (vírgula decimal, ponto de milhar)
@@ -102,6 +105,9 @@ const formSchema = z
     objetivoId: z.string().optional(),
     // Grupo do aporte (só objetivo) — fixa | variavel (Spec 24).
     grupo: z.enum(["fixa", "variavel"]).optional(),
+    // Filtro Fixa/Variável/Investimento da aba Despesa: só restringe a lista de
+    // categorias (o grupo real do lançamento vem da categoria escolhida).
+    classificacaoDespesa: z.enum(["fixa", "variavel", "investimento"]).optional(),
     data: z.string().min(1, "Informe a data."),
     descricao: z.string().optional(),
     observacao: z.string().optional(),
@@ -160,6 +166,9 @@ export function LancamentoModal({
   const [open, setOpen] = React.useState(false)
   const [mostrarOpcionais, setMostrarOpcionais] = React.useState(false)
   const [enviando, setEnviando] = React.useState(false)
+  const [criandoCategoria, setCriandoCategoria] = React.useState(false)
+  const [nomeNovaCategoria, setNomeNovaCategoria] = React.useState("")
+  const [salvandoCategoria, setSalvandoCategoria] = React.useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -169,6 +178,7 @@ export function LancamentoModal({
       categoriaId: "",
       objetivoId: "",
       grupo: undefined,
+      classificacaoDespesa: "fixa",
       data: hojeISO(),
       descricao: "",
       observacao: "",
@@ -176,13 +186,14 @@ export function LancamentoModal({
   })
 
   const tipo = form.watch("tipo")
+  const classificacaoDespesa = form.watch("classificacaoDespesa") ?? "fixa"
 
   const categoriasDaAba = React.useMemo(() => {
     if (tipo === "receita") return categorias.filter((c) => c.grupo === "renda")
     if (tipo === "despesa")
-      return categorias.filter((c) => GRUPOS_DESPESA.includes(c.grupo))
+      return categorias.filter((c) => c.grupo === classificacaoDespesa)
     return []
-  }, [tipo, categorias])
+  }, [tipo, categorias, classificacaoDespesa])
 
   /** Troca de aba = troca de tipo; limpa a seleção dependente do tipo. */
   function trocarTipo(novo: string) {
@@ -194,17 +205,58 @@ export function LancamentoModal({
     form.clearErrors(["categoriaId", "objetivoId", "grupo"])
   }
 
+  /** Troca do filtro Fixa/Variável/Investimento: limpa a categoria selecionada. */
+  function trocarClassificacaoDespesa(novo: string) {
+    form.setValue(
+      "classificacaoDespesa",
+      novo as "fixa" | "variavel" | "investimento"
+    )
+    form.setValue("categoriaId", "")
+    form.clearErrors("categoriaId")
+  }
+
   function resetar() {
     form.reset({
       tipo: "despesa",
       valor: "",
       categoriaId: "",
       objetivoId: "",
+      grupo: undefined,
+      classificacaoDespesa: "fixa",
       data: hojeISO(),
       descricao: "",
       observacao: "",
     })
     setMostrarOpcionais(false)
+    setCriandoCategoria(false)
+    setNomeNovaCategoria("")
+  }
+
+  /**
+   * Cria uma categoria sem sair do modal de lançamento. O grupo é o do contexto
+   * atual: o filtro escolhido (despesa) ou `renda` (receita). Em sucesso, atualiza
+   * a lista (`router.refresh()`) e já seleciona a categoria recém-criada.
+   */
+  async function criarCategoriaRapida() {
+    const nome = nomeNovaCategoria.trim()
+    if (!nome) return
+    const grupo = tipo === "receita" ? "renda" : classificacaoDespesa
+    setSalvandoCategoria(true)
+    try {
+      const { id } = await criarCategoria(subcontaId, { nome, grupo })
+      toast.success("Categoria criada.")
+      form.setValue("categoriaId", id)
+      form.clearErrors("categoriaId")
+      setCriandoCategoria(false)
+      setNomeNovaCategoria("")
+      router.refresh()
+    } catch (erro) {
+      toast.error(
+        erro instanceof Error ? erro.message : "Não foi possível criar a categoria."
+      )
+    } finally {
+      setSalvandoCategoria(false)
+    }
   }
 
   async function onSubmit(values: FormValues) {
@@ -373,33 +425,127 @@ export function LancamentoModal({
                 />
               </>
             ) : (
-              <FormField
-                control={form.control}
-                name="categoriaId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Categoria</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger
-                          className="w-full"
-                          aria-invalid={!!form.formState.errors.categoriaId}
-                        >
-                          <SelectValue placeholder="Selecione uma categoria" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categoriasDaAba.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+              <>
+                {/* Filtro Fixa/Variável/Investimento — só despesa (Spec: paridade
+                    visual com o objetivo). Restringe a lista de categorias abaixo. */}
+                {tipo === "despesa" && (
+                  <FormField
+                    control={form.control}
+                    name="classificacaoDespesa"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Classificar como</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            className="flex flex-wrap gap-x-6 gap-y-2"
+                            onValueChange={trocarClassificacaoDespesa}
+                            value={field.value ?? "fixa"}
+                          >
+                            {GRUPOS_DESPESA.map((g) => (
+                              <FormItem
+                                key={g}
+                                className="flex items-center gap-2 space-y-0"
+                              >
+                                <FormControl>
+                                  <RadioGroupItem value={g} />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  {GRUPO_LABEL[g]}
+                                </FormLabel>
+                              </FormItem>
+                            ))}
+                          </RadioGroup>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
+
+                <FormField
+                  control={form.control}
+                  name="categoriaId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Categoria</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger
+                            className="w-full"
+                            aria-invalid={!!form.formState.errors.categoriaId}
+                          >
+                            <SelectValue
+                              placeholder={
+                                categoriasDaAba.length
+                                  ? "Selecione uma categoria"
+                                  : "Nenhuma categoria — crie uma abaixo"
+                              }
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {categoriasDaAba.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+
+                      {/* Atalho: criar categoria sem sair do lançamento. */}
+                      {criandoCategoria ? (
+                        <div className="mt-2 flex items-center gap-2">
+                          <Input
+                            autoFocus
+                            placeholder="Nome da nova categoria"
+                            value={nomeNovaCategoria}
+                            onChange={(e) => setNomeNovaCategoria(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault()
+                                void criarCategoriaRapida()
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={salvandoCategoria || !nomeNovaCategoria.trim()}
+                            onClick={() => void criarCategoriaRapida()}
+                          >
+                            {salvandoCategoria ? "Criando…" : "Criar"}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setCriandoCategoria(false)
+                              setNomeNovaCategoria("")
+                            }}
+                          >
+                            Cancelar
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="mt-1 justify-start text-muted-foreground"
+                          onClick={() => setCriandoCategoria(true)}
+                        >
+                          <Plus />
+                          Nova categoria
+                          {tipo === "despesa"
+                            ? ` (${GRUPO_LABEL[classificacaoDespesa]})`
+                            : ""}
+                        </Button>
+                      )}
+                    </FormItem>
+                  )}
+                />
+              </>
             )}
 
             {/* Data — default hoje */}

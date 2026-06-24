@@ -9,6 +9,7 @@ import {
   Landmark,
   Target,
   TrendingUp,
+  Tags,
   LayoutDashboard,
   Users,
   GraduationCap,
@@ -57,6 +58,7 @@ export const SECOES: readonly Secao[] = [
   { chave: "investimentos", rotulo: "Investimentos", icone: Landmark },
   { chave: "objetivos", rotulo: "Objetivos", icone: Target },
   { chave: "renda-futura", rotulo: "Renda Futura", icone: TrendingUp },
+  { chave: "categorias", rotulo: "Categorias", icone: Tags },
 ] as const
 
 interface SecaoGestao {

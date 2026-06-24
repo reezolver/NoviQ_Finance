@@ -12,6 +12,35 @@ versionamento segue o [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 - (nada ainda — as próximas mudanças entram aqui antes de virarem uma versão)
 
+## [0.10.0] - 2026-06-24
+
+### Adicionado
+
+- **Dashboard de gestão ("Visão geral"):** o painel master deixa de empilhar
+  tudo numa página e ganha um dashboard de métricas — usuários (total, novos
+  7/30 dias, ativos nos últimos 30 dias), clientes (ligados a você, de outros
+  gestores, pool, lixeira) e anamneses (enviadas/preenchidas/convertidas + taxa
+  de conversão), com gráfico de novos usuários por mês. Educador vê uma versão
+  reduzida da própria operação.
+- **Painel de Educadores (master):** lista todos os gestores com a contagem de
+  clientes e permite **promover um educador a master** ou **excluí-lo** (os
+  clientes dele caem no pool "Não atribuídos").
+- **Avatar no topo:** a foto de perfil real passa a aparecer também no canto
+  superior direito (menu do usuário), além do rodapé da sidebar.
+
+### Modificado
+
+- **Painel de gestão dividido em abas próprias na sidebar:** Clientes,
+  Educadores, Leads e Anamneses viram rotas separadas sob `/painel/*`, com itens
+  de navegação conforme o papel (Educadores e Leads só para master).
+- **Clientes separados por origem:** a aba Clientes do master distingue
+  "ligados a você" de "de outros gestores".
+- **Anamneses — visão master:** o master passa a ver **todas** as anamneses da
+  plataforma (com a coluna "Gestor") e pode excluí-las (nova policy de RLS).
+- **Foto de perfil salva em um passo:** o upload acontece ao escolher a imagem
+  (antes exigia um segundo clique em "Salvar foto", o que fazia a foto "não
+  ficar").
+
 ## [0.9.0] - 2026-06-23
 
 ### Modificado

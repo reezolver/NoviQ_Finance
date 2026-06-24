@@ -19,6 +19,8 @@ export type AppSidebarProps = {
   /** Só no workspace: a subconta ativa da URL. */
   subcontaAtivaId?: string
   isGestor: boolean
+  /** Na variante `gestao`, libera os itens só-master da nav (Educadores, Leads). */
+  isMaster?: boolean
   /** Spec 19 · RF-2.5: dicas de UI para os atalhos de "criar conta". */
   temPessoal: boolean
   clientesNoLimite: boolean
@@ -48,6 +50,7 @@ export function AppSidebar({
   subcontas,
   subcontaAtivaId,
   isGestor,
+  isMaster = false,
   temPessoal,
   clientesNoLimite,
   perfil,
@@ -64,7 +67,11 @@ export function AppSidebar({
         />
       </SidebarHeader>
       <SidebarContent>
-        <SidebarNav variante={variante} subcontaId={subcontaAtivaId} />
+        <SidebarNav
+          variante={variante}
+          subcontaId={subcontaAtivaId}
+          isMaster={isMaster}
+        />
       </SidebarContent>
       <SidebarFooter>
         <MenuUsuario

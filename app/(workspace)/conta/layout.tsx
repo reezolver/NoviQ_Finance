@@ -62,6 +62,7 @@ export default async function ContaLayout({
         subcontas={acessiveis}
         subcontaAtivaId={alvoNav?.id}
         isGestor={isGestor}
+        isMaster={usuario.tipo_perfil === "master"}
         temPessoal={temPessoal}
         clientesNoLimite={clientesNoLimite}
         perfil={{
@@ -73,7 +74,18 @@ export default async function ContaLayout({
         }}
       />
       <SidebarInset>
-        <Topbar variante="gestao" titulo="Conta" />
+        <Topbar
+          variante="gestao"
+          titulo="Conta"
+          perfil={{
+            nome: profile?.nome,
+            email: profile?.email,
+            avatarUrl: profile?.avatar_url,
+            preferenciaInicial:
+              (profile?.preferencia_inicial as "pessoal" | "gestor" | null) ??
+              null,
+          }}
+        />
         <main className="flex-1">{children}</main>
       </SidebarInset>
     </SidebarProvider>

@@ -64,6 +64,8 @@ export interface AnamneseResumo {
   created_at: string
   preenchida_at: string | null
   analise: AnaliseAnamnese | null
+  /** Nome do gestor que enviou — preenchido só na visão master (oversight). */
+  gestor_nome?: string | null
 }
 
 type FiltroStatus = "todas" | "enviada" | "preenchida"
@@ -79,7 +81,14 @@ function formatarData(iso: string | null): string {
  * filtro por status. Cada anamnese permite copiar o link, ver o diagnóstico,
  * converter em subconta ou descartar.
  */
-export function AnamnesesPanel({ anamneses }: { anamneses: AnamneseResumo[] }) {
+export function AnamnesesPanel({
+  anamneses,
+  mostrarGestor = false,
+}: {
+  anamneses: AnamneseResumo[]
+  /** Master: exibe a coluna "Gestor" (quem enviou cada anamnese). */
+  mostrarGestor?: boolean
+}) {
   const router = useRouter()
   const [busca, setBusca] = React.useState("")
   const [filtro, setFiltro] = React.useState<FiltroStatus>("todas")
@@ -160,6 +169,7 @@ export function AnamnesesPanel({ anamneses }: { anamneses: AnamneseResumo[] }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Lead</TableHead>
+                {mostrarGestor && <TableHead>Gestor</TableHead>}
                 <TableHead>Status</TableHead>
                 <TableHead>Recebida</TableHead>
                 <TableHead className="w-px text-right">Ações</TableHead>
@@ -169,6 +179,11 @@ export function AnamnesesPanel({ anamneses }: { anamneses: AnamneseResumo[] }) {
               {filtradas.map((a) => (
                 <TableRow key={a.id}>
                   <TableCell className="font-medium">{a.nome_lead}</TableCell>
+                  {mostrarGestor && (
+                    <TableCell className="text-muted-foreground">
+                      {a.gestor_nome?.trim() || "—"}
+                    </TableCell>
+                  )}
                   <TableCell>
                     {a.subconta_id ? (
                       <Badge variant="outline">Convertida</Badge>

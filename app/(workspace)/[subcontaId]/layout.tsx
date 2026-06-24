@@ -84,7 +84,18 @@ export default async function WorkspaceLayout({
         }}
       />
       <SidebarInset>
-        <Topbar variante="workspace" contaNome={ativa.nome} />
+        <Topbar
+          variante="workspace"
+          contaNome={ativa.nome}
+          perfil={{
+            nome: profile?.nome,
+            email: profile?.email,
+            avatarUrl: profile?.avatar_url,
+            preferenciaInicial:
+              (profile?.preferencia_inicial as "pessoal" | "gestor" | null) ??
+              null,
+          }}
+        />
         <main className="flex-1">{children}</main>
       </SidebarInset>
     </SidebarProvider>

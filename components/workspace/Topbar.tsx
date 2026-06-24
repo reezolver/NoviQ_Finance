@@ -7,11 +7,13 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { rotuloSecao } from "@/components/workspace/SidebarNav"
+import { MenuUsuario } from "@/components/workspace/MenuUsuario"
 
 /**
  * **Barra de topo do conteúdo** (Spec 18 · RF-1.7), dentro do `SidebarInset`:
  * `SidebarTrigger` (colapsa/expande; atalho `Cmd/Ctrl+B` nativo) + breadcrumb de
- * contexto + `ThemeToggle`.
+ * contexto + `ThemeToggle` + **menu do usuário** (avatar real, canto superior
+ * direito).
  *
  * Breadcrumb:
  * - `workspace`: `Noviq / [conta] / [seção]` (seção derivada do segmento atual).
@@ -23,12 +25,20 @@ export function Topbar({
   variante,
   contaNome,
   titulo,
+  perfil,
 }: {
   variante: "workspace" | "gestao"
   /** Nome da subconta ativa — só no workspace. */
   contaNome?: string
   /** Rótulo fixo da trilha (ex.: "Conta") — ignora a derivação por rota. */
   titulo?: string
+  /** Identidade do usuário para o menu do canto superior direito (avatar). */
+  perfil?: {
+    nome?: string | null
+    email?: string | null
+    avatarUrl?: string | null
+    preferenciaInicial?: "pessoal" | "gestor" | null
+  }
 }) {
   const pathname = usePathname()
 
@@ -70,6 +80,14 @@ export function Topbar({
       </nav>
       <div className="ml-auto flex items-center gap-1">
         <ThemeToggle />
+        {perfil ? (
+          <MenuUsuario
+            nome={perfil.nome}
+            email={perfil.email}
+            avatarUrl={perfil.avatarUrl}
+            preferenciaInicial={perfil.preferenciaInicial}
+          />
+        ) : null}
       </div>
     </header>
   )

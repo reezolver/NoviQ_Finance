@@ -53,6 +53,7 @@ export default async function PainelLayout({
         variante="gestao"
         subcontas={acessiveis}
         isGestor
+        isMaster={usuario.tipo_perfil === "master"}
         temPessoal={temPessoal}
         clientesNoLimite={clientesNoLimite}
         perfil={{
@@ -64,7 +65,17 @@ export default async function PainelLayout({
         }}
       />
       <SidebarInset>
-        <Topbar variante="gestao" />
+        <Topbar
+          variante="gestao"
+          perfil={{
+            nome: profile?.nome,
+            email: profile?.email,
+            avatarUrl: profile?.avatar_url,
+            preferenciaInicial:
+              (profile?.preferencia_inicial as "pessoal" | "gestor" | null) ??
+              null,
+          }}
+        />
         {children}
       </SidebarInset>
     </SidebarProvider>

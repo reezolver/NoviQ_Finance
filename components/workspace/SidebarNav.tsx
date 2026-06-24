@@ -10,6 +10,10 @@ import {
   Target,
   TrendingUp,
   LayoutDashboard,
+  Users,
+  GraduationCap,
+  UserPlus,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react"
 
@@ -55,6 +59,32 @@ export const SECOES: readonly Secao[] = [
   { chave: "renda-futura", rotulo: "Renda Futura", icone: TrendingUp },
 ] as const
 
+interface SecaoGestao {
+  /** Rota completa (sob `/painel`). */
+  href: string
+  rotulo: string
+  icone: LucideIcon
+  /** Só master enxerga (Educadores e Leads). */
+  somenteMaster?: boolean
+}
+
+/**
+ * Itens da nav do painel de gestão (Spec 18 + reestruturação do painel master).
+ * Cada seção é uma rota própria sob `/painel`. Educador não vê Educadores/Leads.
+ */
+export const SECOES_GESTAO: readonly SecaoGestao[] = [
+  { href: "/painel", rotulo: "Visão geral", icone: LayoutDashboard },
+  { href: "/painel/clientes", rotulo: "Clientes", icone: Users },
+  {
+    href: "/painel/educadores",
+    rotulo: "Educadores",
+    icone: GraduationCap,
+    somenteMaster: true,
+  },
+  { href: "/painel/leads", rotulo: "Leads", icone: UserPlus, somenteMaster: true },
+  { href: "/painel/anamneses", rotulo: "Anamneses", icone: ClipboardList },
+] as const
+
 /** Rótulo da seção a partir do segmento — reusado pelo breadcrumb do `Topbar`. */
 export function rotuloSecao(chave: string): string | null {
   return SECOES.find((s) => s.chave === chave)?.rotulo ?? null
@@ -82,9 +112,12 @@ function PendingDot() {
 export function SidebarNav({
   variante,
   subcontaId,
+  isMaster = false,
 }: {
   variante: "workspace" | "gestao"
   subcontaId?: string
+  /** Na variante `gestao`, libera os itens só-master (Educadores, Leads). */
+  isMaster?: boolean
 }) {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
@@ -96,20 +129,39 @@ export function SidebarNav({
   }, [pathname, setOpenMobile])
 
   if (variante === "gestao") {
-    const ativo = pathname === "/painel"
+    const itens = SECOES_GESTAO.filter((s) => isMaster || !s.somenteMaster)
     return (
       <SidebarGroup>
         <SidebarGroupLabel>Gestão</SidebarGroupLabel>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={ativo} tooltip="Visão geral">
-              <Link href="/painel" aria-current={ativo ? "page" : undefined}>
-                <LayoutDashboard />
-                <span>Visão geral</span>
-                <PendingDot />
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {itens.map((secao) => {
+            // "Visão geral" só ativa em /painel exato; as demais por prefixo
+            // (cobre sub-rotas futuras de cada seção).
+            const ativo =
+              secao.href === "/painel"
+                ? pathname === "/painel"
+                : pathname === secao.href ||
+                  pathname.startsWith(`${secao.href}/`)
+            const Icone = secao.icone
+            return (
+              <SidebarMenuItem key={secao.href}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={ativo}
+                  tooltip={secao.rotulo}
+                >
+                  <Link
+                    href={secao.href}
+                    aria-current={ativo ? "page" : undefined}
+                  >
+                    <Icone />
+                    <span>{secao.rotulo}</span>
+                    <PendingDot />
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          })}
         </SidebarMenu>
       </SidebarGroup>
     )

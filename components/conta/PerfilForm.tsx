@@ -54,7 +54,6 @@ export function PerfilForm({
   const [enviandoNome, setEnviandoNome] = React.useState(false)
   const [enviandoFoto, setEnviandoFoto] = React.useState(false)
   const [preview, setPreview] = React.useState<string | null>(null)
-  const [arquivo, setArquivo] = React.useState<File | null>(null)
   const inputRef = React.useRef<HTMLInputElement>(null)
 
   const form = useForm<FormValues>({
@@ -73,9 +72,18 @@ export function PerfilForm({
     .slice(0, 2)
     .toUpperCase()
 
-  function onSelecionarArquivo(e: React.ChangeEvent<HTMLInputElement>) {
+  /**
+   * Seleção da foto = **salvar na hora** (um passo só). O fluxo anterior tinha
+   * dois passos (escolher → "Salvar foto"), e era comum escolher, ver o preview
+   * e achar que já tinha salvo — por isso a foto "não ficava". Agora o upload
+   * para o bucket `avatars` + a gravação da URL em `profiles.avatar_url`
+   * acontecem assim que o arquivo é escolhido.
+   */
+  async function onSelecionarArquivo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file) return
+    // Permite re-selecionar o mesmo arquivo depois (limpa o value do input).
+    e.target.value = ""
+    if (!file || enviandoFoto) return
     if (!FORMATOS.includes(file.type)) {
       toast.error("Use uma imagem JPG, PNG ou WEBP.")
       return
@@ -84,22 +92,18 @@ export function PerfilForm({
       toast.error("A imagem deve ter no máximo 2 MB.")
       return
     }
-    if (preview) URL.revokeObjectURL(preview)
-    setArquivo(file)
-    setPreview(URL.createObjectURL(file))
-  }
 
-  async function salvarFoto() {
-    if (!arquivo || enviandoFoto) return
+    if (preview) URL.revokeObjectURL(preview)
+    setPreview(URL.createObjectURL(file))
     setEnviandoFoto(true)
     try {
       const supabase = createClient()
-      const ext = arquivo.name.split(".").pop()?.toLowerCase() || "jpg"
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg"
       const caminho = `${userId}/avatar-${Date.now()}.${ext}`
 
       const { error: erroUpload } = await supabase.storage
         .from("avatars")
-        .upload(caminho, arquivo, { upsert: true, contentType: arquivo.type })
+        .upload(caminho, file, { upsert: true, contentType: file.type })
       if (erroUpload) throw new Error(erroUpload.message)
 
       const {
@@ -108,10 +112,11 @@ export function PerfilForm({
 
       await atualizarAvatar(publicUrl)
       toast.success("Foto atualizada.")
-      setArquivo(null)
-      setPreview(null)
       router.refresh()
     } catch (erro) {
+      // Falhou: descarta o preview otimista e volta para a foto anterior.
+      if (preview) URL.revokeObjectURL(preview)
+      setPreview(null)
       toast.error(
         erro instanceof Error ? erro.message : "Não foi possível salvar a foto."
       )
@@ -146,11 +151,18 @@ export function PerfilForm({
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <Avatar size="lg" className="size-16">
-            <AvatarImage src={preview ?? avatarUrl ?? undefined} alt="" />
-            <AvatarFallback>{iniciais}</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Avatar size="lg" className="size-16">
+              <AvatarImage src={preview ?? avatarUrl ?? undefined} alt="" />
+              <AvatarFallback>{iniciais}</AvatarFallback>
+            </Avatar>
+            {enviandoFoto ? (
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-background/60">
+                <Loader2 className="size-5 animate-spin text-foreground" />
+              </div>
+            ) : null}
+          </div>
+          <div className="flex flex-col gap-1">
             <input
               ref={inputRef}
               type="file"
@@ -165,20 +177,15 @@ export function PerfilForm({
               disabled={enviandoFoto}
             >
               <Upload className="size-4" />
-              Escolher imagem
+              {enviandoFoto
+                ? "Salvando…"
+                : avatarUrl
+                  ? "Trocar imagem"
+                  : "Escolher imagem"}
             </Button>
-            {arquivo ? (
-              <Button
-                type="button"
-                onClick={() => void salvarFoto()}
-                disabled={enviandoFoto}
-              >
-                {enviandoFoto ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : null}
-                {enviandoFoto ? "Salvando…" : "Salvar foto"}
-              </Button>
-            ) : null}
+            <p className="text-xs text-muted-foreground">
+              A foto é salva automaticamente ao escolher.
+            </p>
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { assertMaster } from '@/lib/auth'
 import { createSupabaseAdminClient } from '@/lib/supabase-admin'
+import { purgarContaPropria } from '@/lib/exclusao'
 
 const userIdSchema = z.object({ userId: z.string().uuid() })
 
@@ -108,6 +109,101 @@ export async function aprovarEducador(userId: string) {
     throw new Error(`Erro ao atualizar perfil: ${erroUpdate.message}`)
   }
 
-  revalidatePath('/master/educadores')
+  revalidatePath('/painel/educadores')
+  return { ok: true as const }
+}
+
+/**
+ * **Promove um educador a master** — só master (painel de Educadores).
+ *
+ * Seta o claim `app_metadata.tipo_perfil='master'` (via admin) e espelha em
+ * `profiles`. Espelha o padrão de {@link aprovarEducador}. O usuário promovido
+ * precisa **refazer login** para o novo claim valer no JWT — até lá a app já lê
+ * o papel atualizado de `profiles` (fonte de {@link getUsuarioAtual}).
+ *
+ * Só promove quem está **exatamente** em `educador` — não mexe em clientes nem
+ * em quem já é master.
+ */
+export async function promoverParaMaster(userId: string) {
+  const { userId: id } = userIdSchema.parse({ userId })
+  await assertMaster()
+
+  const admin = createSupabaseAdminClient()
+
+  const { data: profile, error: erroPerfil } = await admin
+    .from('profiles')
+    .select('tipo_perfil')
+    .eq('id', id)
+    .single()
+
+  if (erroPerfil || !profile) {
+    throw new Error('Educador não encontrado.')
+  }
+  if (profile.tipo_perfil !== 'educador') {
+    throw new Error('Apenas um educador pode ser promovido a master.')
+  }
+
+  const { error: erroAuth } = await admin.auth.admin.updateUserById(id, {
+    app_metadata: { tipo_perfil: 'master', status: 'ativo' },
+  })
+  if (erroAuth) {
+    throw new Error(`Erro ao promover a master: ${erroAuth.message}`)
+  }
+
+  const { error: erroUpdate } = await admin
+    .from('profiles')
+    .update({ tipo_perfil: 'master', status: 'ativo' })
+    .eq('id', id)
+  if (erroUpdate) {
+    throw new Error(`Erro ao atualizar perfil: ${erroUpdate.message}`)
+  }
+
+  revalidatePath('/painel/educadores')
+  revalidatePath('/painel')
+  return { ok: true as const }
+}
+
+/**
+ * **Exclui permanentemente um educador** — só master (painel de Educadores).
+ *
+ * Reaproveita {@link purgarContaPropria}: apaga as carteiras **pessoais** do
+ * educador + seus dados + o login. Os **clientes** dele **não** são apagados — a
+ * FK `subcontas.gestor_id → auth.users ON DELETE SET NULL` os transforma em
+ * "não atribuídos" (pool do master) no instante em que o login some. O master
+ * reatribui depois pela aba Clientes.
+ *
+ * Salvaguardas: só exclui quem é `educador` (nunca outro master) e **nunca a si
+ * mesmo** (auto-exclusão é feita na aba Conta, com reautenticação).
+ */
+export async function excluirEducador(userId: string) {
+  const { userId: id } = userIdSchema.parse({ userId })
+  const master = await assertMaster()
+
+  if (id === master.id) {
+    throw new Error(
+      'Você não pode se excluir aqui — use a aba Conta para encerrar a sua conta.'
+    )
+  }
+
+  const admin = createSupabaseAdminClient()
+
+  const { data: profile, error: erroPerfil } = await admin
+    .from('profiles')
+    .select('tipo_perfil')
+    .eq('id', id)
+    .single()
+
+  if (erroPerfil || !profile) {
+    throw new Error('Educador não encontrado.')
+  }
+  if (profile.tipo_perfil !== 'educador') {
+    throw new Error('Só é possível excluir contas de educador por aqui.')
+  }
+
+  await purgarContaPropria(admin, id)
+
+  revalidatePath('/painel/educadores')
+  revalidatePath('/painel')
+  revalidatePath('/painel/clientes')
   return { ok: true as const }
 }

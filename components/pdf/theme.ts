@@ -31,7 +31,13 @@ export function sinal(valor: number): string {
   return valor > 0 ? "+" : ""
 }
 
-/** Cor de um valor de saldo/diferença pela convenção (verde +, vermelho −). */
+/**
+ * Cor de um valor de saldo/diferença pela **convenção única** (Spec 28):
+ * o número já chega assinado pela favorabilidade de `lib/extrato.ts`
+ * (`diferencaFavoravel`), então verde = `+`, vermelho = `−`, cinza = zero —
+ * sem conhecer o grupo. Espelha `corDiferenca` da tela (mesma regra, paleta
+ * fixa de documento), garantindo que o PDF bate com a tela.
+ */
 export function corValor(valor: number): string {
   if (valor > 0) return PDF_COLORS.success
   if (valor < 0) return PDF_COLORS.destructive

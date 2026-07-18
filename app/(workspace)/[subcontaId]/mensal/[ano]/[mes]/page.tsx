@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { BlocoGrupo } from "@/components/mensal/BlocoGrupo"
+import { corDiferenca, sinal } from "@/components/mensal/financeiro-ui"
 import { NavegacaoMeses } from "@/components/mensal/NavegacaoMeses"
 import { NovoLancamentoButton } from "@/components/mensal/NovoLancamentoButton"
 import { EditarPlanejadoButton } from "@/components/mensal/EditarPlanejadoButton"
@@ -80,20 +81,6 @@ const ICONE_BLOCO: Record<Extract<GrupoCategoria, "renda" | "fixa" | "variavel">
 interface ObjetivoRow {
   id: string
   nome: string
-}
-
-// ─── Helpers de UI (cor/sinal do saldo — não são cálculo financeiro) ─────────────
-
-/** Saldo: realizado acima do planejado é favorável (verde); abaixo, vermelho. */
-function corSaldo(diferenca: number): string {
-  if (diferenca > 0) return "text-success"
-  if (diferenca < 0) return "text-destructive"
-  return "text-muted-foreground"
-}
-
-/** Prefixo "+" só para valores positivos (o negativo já vem com sinal). */
-function sinalSaldo(valor: number): string {
-  return valor > 0 ? "+" : ""
 }
 
 /** Valida o segmento numérico do mês (1–12). */
@@ -284,7 +271,6 @@ export default async function ControleMensalPage({
           <BlocoGrupo
             key={bloco.grupo}
             titulo={bloco.titulo}
-            grupo={bloco.grupo}
             icone={ICONE_BLOCO[bloco.grupo]}
             linhas={bloco.linhas}
             total={bloco.total}
@@ -343,7 +329,11 @@ export default async function ControleMensalPage({
   )
 }
 
-/** Card de KPI do saldo. Quando `colorir`, pinta o valor pela convenção de saldo. */
+/**
+ * Card de KPI do saldo. Quando `colorir`, pinta pela **convenção única**
+ * (Spec 28): o valor já chega assinado pela favorabilidade → `+` verde,
+ * `−` vermelho. Mesmos helpers dos blocos — sem função de cor duplicada.
+ */
 function SaldoCard({
   rotulo,
   valor,
@@ -365,10 +355,10 @@ function SaldoCard({
         <p
           className={cn(
             "font-mono text-xl font-semibold tabular-nums",
-            colorir ? corSaldo(valor) : "text-foreground"
+            colorir ? corDiferenca(valor) : "text-foreground"
           )}
         >
-          {colorir ? sinalSaldo(valor) : ""}
+          {colorir ? sinal(valor) : ""}
           {formatarMoeda(valor)}
         </p>
         {rodape}

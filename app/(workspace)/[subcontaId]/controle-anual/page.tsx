@@ -14,6 +14,7 @@ import {
   SaldoAnualChart,
   type SaldoAnualChartData,
 } from "@/components/controle-anual/SaldoAnualChart"
+import { corDiferenca, sinal } from "@/components/mensal/financeiro-ui"
 import {
   agregarPlanejadoPorMes,
   agregarRealizadoPorMes,
@@ -68,20 +69,6 @@ interface OrcamentoRow {
   ano: number | null
   mes: number | null
   categorias: { grupo: GrupoCategoria }
-}
-
-// ─── Helpers de UI (cor/sinal — não são cálculo financeiro) ──────────────────────
-
-/** Saldo: realizado acima do planejado é favorável (verde); abaixo, vermelho. */
-function corDiferenca(diferenca: number): string {
-  if (diferenca > 0) return "text-success"
-  if (diferenca < 0) return "text-destructive"
-  return "text-muted-foreground"
-}
-
-/** Prefixo "+" só para valores positivos (o negativo já vem com sinal). */
-function sinal(valor: number): string {
-  return valor > 0 ? "+" : ""
 }
 
 /** Garante um ano válido a partir do query param, com fallback no ano atual. */

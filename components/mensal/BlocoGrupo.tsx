@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatarMoeda, type GrupoCategoria } from "@/lib/calculations"
+import { formatarMoeda } from "@/lib/calculations"
 import { cn } from "@/lib/utils"
 
 import { corDiferenca, sinal } from "./financeiro-ui"
@@ -30,15 +30,13 @@ export interface LinhaBloco {
   planejado: number
   /** Realizado da categoria no mês. */
   realizado: number
-  /** Diferença = Planejado − Realizado. */
+  /** Diferença já assinada pela favorabilidade (positivo = bom). */
   diferenca: number
 }
 
 export interface BlocoGrupoProps {
   /** Título do bloco (ex.: "Renda", "Despesa Fixa"). */
   titulo: string
-  /** Grupo da taxonomia — define a semântica de cor da Diferença. */
-  grupo: GrupoCategoria
   /** Ícone do bloco (lucide). */
   icone: LucideIcon
   /** Linhas de categoria já calculadas. */
@@ -68,10 +66,12 @@ function CelulaValor({
  * Bloco de um grupo (Renda / Despesa Fixa / Despesa Variável) com a tabela
  * Planejado × Realizado × Diferença por categoria + total. Presentational —
  * todo cálculo chega pronto via props. Tokens do design system → dark + light.
+ *
+ * A Diferença chega **já assinada pela favorabilidade** (Spec 28): o bloco não
+ * conhece o grupo, só pinta `+` de verde e `−` de vermelho.
  */
 export function BlocoGrupo({
   titulo,
-  grupo,
   icone: Icone,
   linhas,
   total,
@@ -86,7 +86,7 @@ export function BlocoGrupo({
         <span
           className={cn(
             "font-mono text-sm font-semibold tabular-nums",
-            corDiferenca(total.diferenca, grupo)
+            corDiferenca(total.diferenca)
           )}
         >
           {sinal(total.diferenca)}
@@ -117,7 +117,7 @@ export function BlocoGrupo({
                   </CelulaValor>
                   <CelulaValor>{formatarMoeda(linha.realizado)}</CelulaValor>
                   <CelulaValor
-                    className={cn("font-medium", corDiferenca(linha.diferenca, grupo))}
+                    className={cn("font-medium", corDiferenca(linha.diferenca))}
                   >
                     {sinal(linha.diferenca)}
                     {formatarMoeda(linha.diferenca)}
@@ -130,7 +130,7 @@ export function BlocoGrupo({
                 <TableCell>Total</TableCell>
                 <CelulaValor>{formatarMoeda(total.planejado)}</CelulaValor>
                 <CelulaValor>{formatarMoeda(total.realizado)}</CelulaValor>
-                <CelulaValor className={corDiferenca(total.diferenca, grupo)}>
+                <CelulaValor className={corDiferenca(total.diferenca)}>
                   {sinal(total.diferenca)}
                   {formatarMoeda(total.diferenca)}
                 </CelulaValor>

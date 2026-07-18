@@ -10,6 +10,25 @@
  *
  * Pura (server-safe e client-safe): a page (Server Component) e o Route Handler
  * de export consomem a MESMA função, garantindo que o PDF bate com a tela.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ## CONVENÇÃO ÚNICA DE SINAL (Spec 28) — vale para TODO o app
+ *
+ * **O número da Diferença carrega o sinal da favorabilidade.**
+ * Positivo = bom para o usuário, em qualquer grupo. Logo `+` é **sempre** verde
+ * e `−` é **sempre** vermelho, e a regra cabe em uma frase explicável ao cliente
+ * final: *"positivo é a seu favor"*.
+ *
+ * A inversão por grupo acontece **uma única vez, aqui** (`diferencaFavoravel`),
+ * nunca na camada de UI:
+ * - **renda** e **investimento**: `Realizado − Planejado` (ganhar/aportar mais é bom).
+ * - **fixa** e **variavel**: `Planejado − Realizado` (gastar menos é bom).
+ * - **saldo do mês**: `Realizado − Planejado` (sobrar mais é bom).
+ *
+ * Corolário: os helpers de cor (`components/mensal/financeiro-ui.ts`) recebem
+ * **só o número** — se alguma chamada precisar do grupo para decidir a cor, a
+ * refatoração está errada.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 
 import {
@@ -52,6 +71,27 @@ const CAMPO_POR_GRUPO: Record<GrupoCategoria, keyof TotaisData> = {
 /** Ordem dos blocos exibidos (investimento não é um 4º bloco — vai no resumo). */
 const GRUPOS_BLOCO = ["renda", "fixa", "variavel"] as const
 
+/**
+ * Diferença **assinada pela favorabilidade** — o único lugar do app onde o
+ * grupo influencia o sinal (ver a convenção no topo do arquivo).
+ *
+ * Positivo = favorável ao usuário, negativo = desfavorável, em qualquer grupo:
+ * - `renda` / `investimento` → `realizado − planejado` (receber/aportar mais é bom);
+ * - `fixa` / `variavel` → `planejado − realizado` (gastar menos é bom).
+ *
+ * A subtração em si continua sendo `calcularDiferenca` (neutra, em
+ * `lib/calculations.ts`); aqui só decidimos a **ordem dos operandos**.
+ */
+export function diferencaFavoravel(
+  grupo: GrupoCategoria,
+  planejado: number,
+  realizado: number
+): number {
+  return grupo === "renda" || grupo === "investimento"
+    ? calcularDiferenca(realizado, planejado)
+    : calcularDiferenca(planejado, realizado)
+}
+
 // ─── Linhas cruas das queries ────────────────────────────────────────────────────
 
 export interface LancamentoRow {
@@ -84,7 +124,7 @@ export interface CategoriaRow {
 
 // ─── Estrutura de saída ────────────────────────────────────────────────────────
 
-/** Uma linha (categoria) de um bloco. Diferença = Planejado − Realizado. */
+/** Uma linha (categoria) de um bloco. Diferença já assinada pela favorabilidade. */
 export interface LinhaExtrato {
   id: string
   nome: string
@@ -93,7 +133,7 @@ export interface LinhaExtrato {
   diferenca: number
 }
 
-/** Total de um bloco. Diferença = Planejado − Realizado. */
+/** Total de um bloco. Diferença já assinada pela favorabilidade. */
 export interface TotalBloco {
   planejado: number
   realizado: number
@@ -225,6 +265,8 @@ export function montarExtratoMensal({
   // ── Saldo do mês (4 grupos) ──
   const saldoPlanejado = calcularSaldoMes(saldos.planejado)
   const saldoRealizado = calcularSaldoMes(saldos.realizado)
+  // Saldo: sobrar mais que o planejado é favorável → `Realizado − Planejado`,
+  // já na convenção única (positivo = bom). Ver o topo do arquivo.
   const saldoDiferenca = calcularDiferenca(saldoRealizado, saldoPlanejado)
 
   // ── Linhas/total por bloco ──
@@ -236,8 +278,8 @@ export function montarExtratoMensal({
         nome: nomePorId.get(c.categoriaId) ?? "Sem nome",
         planejado: c.planejado,
         realizado: c.realizado,
-        // Diferença da linha = Planejado − Realizado (spec §4).
-        diferenca: calcularDiferenca(c.planejado, c.realizado),
+        // Diferença assinada pela favorabilidade (convenção única — Spec 28).
+        diferenca: diferencaFavoravel(grupo, c.planejado, c.realizado),
       }))
       .filter((l) => l.planejado !== 0 || l.realizado !== 0)
 
@@ -250,7 +292,8 @@ export function montarExtratoMensal({
         nome: `Aporte: ${a.nome}`,
         planejado: 0,
         realizado: a.valor,
-        diferenca: calcularDiferenca(0, a.valor),
+        // Aporte não planejado num grupo de despesa → sempre desfavorável.
+        diferenca: diferencaFavoravel(grupo, 0, a.valor),
       })
     }
 
@@ -261,7 +304,11 @@ export function montarExtratoMensal({
       grupo,
       titulo: TITULO_BLOCO[grupo],
       linhas,
-      total: { planejado, realizado, diferenca: calcularDiferenca(planejado, realizado) },
+      total: {
+        planejado,
+        realizado,
+        diferenca: diferencaFavoravel(grupo, planejado, realizado),
+      },
     }
   })
 

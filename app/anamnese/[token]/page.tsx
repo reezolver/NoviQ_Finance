@@ -2,14 +2,11 @@ import { CheckCircle2, FileX2 } from "lucide-react"
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin"
 import { ThemeToggle } from "@/components/theme-toggle"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { AnamneseForm } from "@/components/anamnese/AnamneseForm"
+import {
+  EstadoAnamnese,
+  TEXTO_JA_ENVIADA,
+} from "@/components/anamnese/EstadoAnamnese"
 
 /**
  * Página **pública** da anamnese (Spec 08) — sem auth (a rota `/anamnese/*` está
@@ -41,17 +38,17 @@ export default async function AnamnesePublicaPage({
       <main className="flex-1">
         <div className="mx-auto w-full max-w-2xl p-4 md:p-8">
           {!anamnese ? (
-            <EstadoMensagem
+            <EstadoAnamnese
               icone={<FileX2 className="size-6 text-destructive" />}
               titulo="Link inválido ou expirado"
               descricao="Confira o link com quem te enviou a anamnese ou peça um novo."
               destaque="destructive"
             />
           ) : anamnese.status === "preenchida" ? (
-            <EstadoMensagem
+            <EstadoAnamnese
               icone={<CheckCircle2 className="size-6 text-success" />}
-              titulo="Anamnese já enviada"
-              descricao="Recebemos suas respostas. Seu assessor vai analisá-las antes da reunião. Obrigado!"
+              titulo={TEXTO_JA_ENVIADA.titulo}
+              descricao={TEXTO_JA_ENVIADA.descricao}
               destaque="success"
             />
           ) : (
@@ -77,31 +74,3 @@ export default async function AnamnesePublicaPage({
   )
 }
 
-function EstadoMensagem({
-  icone,
-  titulo,
-  descricao,
-  destaque,
-}: {
-  icone: React.ReactNode
-  titulo: string
-  descricao: string
-  destaque: "success" | "destructive"
-}) {
-  return (
-    <Card>
-      <CardHeader className="items-center text-center">
-        <div
-          className={`mb-2 flex size-12 items-center justify-center rounded-full ${
-            destaque === "success" ? "bg-success/10" : "bg-destructive/10"
-          }`}
-        >
-          {icone}
-        </div>
-        <CardTitle>{titulo}</CardTitle>
-        <CardDescription className="max-w-md">{descricao}</CardDescription>
-      </CardHeader>
-      <CardContent />
-    </Card>
-  )
-}

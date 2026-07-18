@@ -14,6 +14,10 @@ import { CheckCircle2, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { respostasSchema } from "@/lib/anamnese"
+import {
+  EstadoAnamnese,
+  TEXTO_JA_ENVIADA,
+} from "@/components/anamnese/EstadoAnamnese"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -41,6 +45,18 @@ const formSchema = respostasSchema.extend({
 })
 
 type FormValues = z.infer<typeof formSchema>
+
+/** Um erro de validação vindo do servidor, já no caminho do campo do form. */
+interface DetalheErro {
+  campo: string
+  mensagem: string
+}
+
+/** Corpo de erro do `POST /api/anamnese/[token]` (contrato da Spec 29 §3.2). */
+interface RespostaErro {
+  error?: string
+  detalhes?: DetalheErro[]
+}
 
 const VALORES_INICIAIS: FormValues = {
   pessoal: {
@@ -89,6 +105,8 @@ export function AnamneseForm({
 }) {
   const [enviando, setEnviando] = React.useState(false)
   const [enviado, setEnviado] = React.useState(false)
+  /** 409 do servidor: o link já tinha sido usado (R4). */
+  const [jaEnviada, setJaEnviada] = React.useState(false)
 
   // `respostasSchema` usa `coerce`/`default` (defesa na submissão), o que faz o
   // tipo de entrada divergir do de saída. O cast alinha o resolver ao
@@ -111,33 +129,79 @@ export function AnamneseForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ respostas, consentimento }),
       })
-      if (!res.ok) {
-        const corpo = (await res.json().catch(() => null)) as { error?: string } | null
-        throw new Error(corpo?.error ?? "Não foi possível enviar a anamnese.")
+
+      if (res.ok) {
+        setEnviado(true)
+        return
       }
-      setEnviado(true)
-    } catch (erro) {
-      toast.error(erro instanceof Error ? erro.message : "Erro ao enviar a anamnese.")
+
+      const corpo = (await res.json().catch(() => null)) as RespostaErro | null
+
+      // Link de uso único: comportamento correto do produto → vira estado, não
+      // erro vermelho (R4).
+      if (res.status === 409) {
+        setJaEnviada(true)
+        return
+      }
+
+      // Validação: aponta o campo exato e **preserva o que já foi digitado**
+      // (`setError` não mexe nos valores) — R1 e R3.
+      if (res.status === 422 && corpo?.detalhes?.length) {
+        aplicarErrosDeCampo(corpo.detalhes)
+        toast.error(corpo.error ?? "Confira os campos destacados e envie de novo.")
+        return
+      }
+
+      toast.error(corpo?.error ?? "Não foi possível enviar a anamnese.")
+    } catch {
+      // Só cai aqui em falha de rede — o corpo de erro já foi tratado acima.
+      toast.error("Falha de conexão. Confira sua internet e tente de novo.")
     } finally {
       setEnviando(false)
     }
   }
 
+  /**
+   * Escreve cada `{ campo, mensagem }` do servidor no campo correspondente do
+   * formulário e leva o foco para o primeiro. `campo` já vem como caminho de
+   * formulário (ex.: `pessoal.email`, `dependentes.0.idade`). Um campo
+   * desconhecido (schema do servidor à frente do client) não pode sumir: cai
+   * num toast em vez de ser descartado silenciosamente.
+   */
+  function aplicarErrosDeCampo(detalhes: DetalheErro[]) {
+    let primeiro: FieldPath<FormValues> | null = null
+    for (const { campo, mensagem } of detalhes) {
+      if (!campo) {
+        toast.error(mensagem)
+        continue
+      }
+      const caminho = campo as FieldPath<FormValues>
+      form.setError(caminho, { type: "server", message: mensagem })
+      primeiro ??= caminho
+    }
+    if (primeiro) form.setFocus(primeiro)
+  }
+
   if (enviado) {
     return (
-      <Card>
-        <CardHeader className="items-center text-center">
-          <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-success/10">
-            <CheckCircle2 className="size-6 text-success" />
-          </div>
-          <CardTitle>Anamnese enviada!</CardTitle>
-          <CardDescription className="max-w-md">
-            Suas respostas foram enviadas com sucesso. Seu assessor vai analisá-las
-            antes da reunião. Obrigado!
-          </CardDescription>
-        </CardHeader>
-        <CardContent />
-      </Card>
+      <EstadoAnamnese
+        icone={<CheckCircle2 className="size-6 text-success" />}
+        titulo="Anamnese enviada!"
+        descricao="Suas respostas foram enviadas com sucesso. Seu assessor vai analisá-las antes da reunião. Obrigado!"
+        destaque="success"
+      />
+    )
+  }
+
+  // Mesma tela que a página mostra quando o link já chega preenchido.
+  if (jaEnviada) {
+    return (
+      <EstadoAnamnese
+        icone={<CheckCircle2 className="size-6 text-success" />}
+        titulo={TEXTO_JA_ENVIADA.titulo}
+        descricao={TEXTO_JA_ENVIADA.descricao}
+        destaque="success"
+      />
     )
   }
 
@@ -268,7 +332,7 @@ export function AnamneseForm({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => dependentes.append({ nome: "", idade: 0 })}
+              onClick={() => dependentes.append({ nome: "", idade: undefined })}
             >
               <Plus />
               Adicionar dependente

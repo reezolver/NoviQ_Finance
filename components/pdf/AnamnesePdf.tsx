@@ -175,7 +175,9 @@ export function AnamnesePdf({
                 }
               >
                 <Text style={[styles.cell, styles.cellNome]}>{d.nome || "—"}</Text>
-                <Text style={[styles.cell, styles.cellNum]}>{d.idade}</Text>
+                <Text style={[styles.cell, styles.cellNum]}>
+                  {d.idade != null ? String(d.idade) : "—"}
+                </Text>
               </View>
             ))}
           </Secao>

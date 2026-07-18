@@ -25,22 +25,50 @@ import {
 /** Campo monetário: número ≥ 0, vazio/ausente vira 0 (form manda string). */
 const dinheiro = z.coerce.number().min(0, 'Não pode ser negativo.').default(0)
 
+/**
+ * Inteiro **opcional** de item de lista (Spec 29 §3.3 / R2).
+ *
+ * `z.coerce.number()` transforma `''`/`null` em `0` mas `undefined` em `NaN` —
+ * e um `NaN` num único item invalidava a **ficha inteira**, com o lead vendo só
+ * "Dados inválidos.". Aqui normalizamos vazio → `undefined` **antes** de coagir
+ * e deixamos o campo opcional: um dependente sem idade grava normalmente.
+ */
+function inteiroOpcional(max: number, mensagem: string) {
+  return z.preprocess(vazioParaUndefined, z.coerce.number().int().min(0, mensagem).max(max, mensagem).optional())
+}
+
+/**
+ * Mesma tolerância do `inteiroOpcional`, mas com valor padrão: vazio cai no
+ * `padrao` em vez de invalidar o item (Spec 29 R2).
+ */
+function inteiroComPadrao(min: number, max: number, padrao: number, mensagem: string) {
+  return z.preprocess(
+    vazioParaUndefined,
+    z.coerce.number().int().min(min, mensagem).max(max, mensagem).default(padrao)
+  )
+}
+
+/** Normaliza "campo em branco" (`''`, `null`, `NaN`) para `undefined`. */
+function vazioParaUndefined(v: unknown): unknown {
+  return v === '' || v === null || (typeof v === 'number' && Number.isNaN(v)) ? undefined : v
+}
+
 const dependenteSchema = z.object({
   nome: z.string().trim().max(120).default(''),
-  idade: z.coerce.number().int().min(0).max(120),
+  idade: inteiroOpcional(120, 'Idade deve ser entre 0 e 120.'),
 })
 
 const dividaSchema = z.object({
   tipo: z.string().trim().min(1, 'Descreva a dívida.').max(80),
   valor_total: dinheiro,
   valor_parcela: dinheiro,
-  parcelas_restantes: z.coerce.number().int().min(0).default(0),
+  parcelas_restantes: inteiroComPadrao(0, 600, 0, 'Informe um número de parcelas válido.'),
 })
 
 const objetivoSchema = z.object({
   nome: z.string().trim().min(1, 'Descreva o objetivo.').max(120),
   valor_alvo: dinheiro,
-  prazo_meses: z.coerce.number().int().min(1, 'Mínimo 1 mês.').max(600).default(12),
+  prazo_meses: inteiroComPadrao(1, 600, 12, 'Prazo deve ser entre 1 e 600 meses.'),
 })
 
 /**
@@ -52,7 +80,7 @@ export const respostasSchema = z.object({
     nome: z.string().trim().min(1, 'Informe seu nome.').max(120),
     email: z.union([z.string().trim().email('E-mail inválido.'), z.literal('')]).default(''),
     telefone: z.string().trim().max(40).default(''),
-    idade: z.coerce.number().int().min(0).max(120).optional(),
+    idade: inteiroOpcional(120, 'Idade deve ser entre 0 e 120.'),
     profissao: z.string().trim().max(120).default(''),
     estado_civil: z.string().trim().max(40).default(''),
   }),

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { notFound } from "next/navigation"
-import { Receipt, ShoppingCart, Wallet } from "lucide-react"
+import { PiggyBank, Receipt, ShoppingCart, Wallet } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 import { createSupabaseServerClient } from "@/lib/supabase-server"
@@ -71,11 +71,12 @@ const MESES_NOMES = [
   "Dezembro",
 ] as const
 
-/** Ícone de cada bloco. */
-const ICONE_BLOCO: Record<Extract<GrupoCategoria, "renda" | "fixa" | "variavel">, LucideIcon> = {
+/** Ícone de cada bloco (4 grupos desde a Spec 35). */
+const ICONE_BLOCO: Record<GrupoCategoria, LucideIcon> = {
   renda: Wallet,
   fixa: Receipt,
   variavel: ShoppingCart,
+  investimento: PiggyBank,
 }
 
 interface ObjetivoRow {

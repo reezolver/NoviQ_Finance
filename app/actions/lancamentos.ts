@@ -44,7 +44,10 @@ const lancamentoSchema = z.discriminatedUnion('tipo', [
     objetivoId: z.string().uuid('Objetivo inválido.'),
     // Objetivo não tem categoria (Spec 05) → ganha grupo próprio fixa|variavel
     // (Spec 24, RF-2), para o aporte contabilizar no bloco/saldo certos.
-    grupo: z.enum(['fixa', 'variavel'], { error: 'Classifique como Fixa ou Variável.' }),
+    // Spec 35 §3.3: com o 4º bloco, o aporte tambem pode ir para investimento.
+    grupo: z.enum(['fixa', 'variavel', 'investimento'], {
+      error: 'Classifique como Fixa, Variável ou Investimento.',
+    }),
     categoriaId: z.string().uuid().nullable().optional(),
     data: dataSchema,
     descricao: textoOpcional,
@@ -60,7 +63,7 @@ const editarLancamentoSchema = z.object({
   categoriaId: z.string().uuid().nullable().optional(),
   objetivoId: z.string().uuid().nullable().optional(),
   // Só faz sentido sem categoria (aporte); a constraint do banco é a barreira final.
-  grupo: z.enum(['fixa', 'variavel']).nullable().optional(),
+  grupo: z.enum(['fixa', 'variavel', 'investimento']).nullable().optional(),
   data: dataSchema.optional(),
   descricao: textoOpcional,
   observacao: textoOpcional,
@@ -123,7 +126,7 @@ export async function criarLancamento(
   let objetivoId: string | null = null
   // Grupo só é preenchido para o aporte de objetivo (sem categoria). Despesa/
   // receita derivam o grupo da categoria → coluna fica nula (Spec 24).
-  let grupo: Extract<GrupoCategoria, 'fixa' | 'variavel'> | null = null
+  let grupo: Extract<GrupoCategoria, 'fixa' | 'variavel' | 'investimento'> | null = null
 
   if (dadosValidados.tipo === 'objetivo') {
     const { data: objetivo } = await supabase

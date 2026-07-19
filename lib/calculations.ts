@@ -304,8 +304,11 @@ export interface AporteSemCategoria {
   objetivoId: string
   /** Nome do objetivo (para o rótulo "Aporte: <nome>"). */
   nome: string
-  /** Grupo escolhido no lançamento (só fixa | variavel). */
-  grupo: Extract<GrupoCategoria, "fixa" | "variavel">
+  /**
+   * Grupo escolhido no lançamento. `investimento` entrou na Spec 35, quando o
+   * grupo ganhou bloco próprio na tela — antes disso só fixa | variavel.
+   */
+  grupo: Extract<GrupoCategoria, "fixa" | "variavel" | "investimento">
   /** Valor do aporte. */
   valor: number
 }

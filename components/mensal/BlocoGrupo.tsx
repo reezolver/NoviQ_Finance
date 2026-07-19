@@ -1,5 +1,14 @@
-import type { LucideIcon } from "lucide-react"
+"use client"
 
+import * as React from "react"
+import { ChevronDown, type LucideIcon } from "lucide-react"
+
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
   Card,
   CardContent,
@@ -69,6 +78,12 @@ function CelulaValor({
  *
  * A Diferença chega **já assinada pela favorabilidade** (Spec 28): o bloco não
  * conhece o grupo, só pinta `+` de verde e `−` de vermelho.
+ *
+ * **Colapsável (Spec 35 · RF‑16):** com 4 blocos a tela do celular fica longa
+ * demais toda aberta, então o padrão é **expandido no desktop e recolhido no
+ * mobile** (PRD Q4). O **total continua visível no cabeçalho mesmo fechado** —
+ * é exatamente isso que faz o recolhimento valer a pena: o cliente entra, lê os
+ * totais e sai, sem precisar abrir tabela nenhuma.
  */
 export function BlocoGrupo({
   titulo,
@@ -76,24 +91,54 @@ export function BlocoGrupo({
   linhas,
   total,
 }: BlocoGrupoProps) {
+  const isMobile = useIsMobile()
+  // Estado **derivado**, sem efeito: enquanto o usuário não mexer, o padrão
+  // acompanha o dispositivo (expandido no desktop, recolhido no mobile — PRD
+  // Q4); no primeiro clique a escolha dele passa a mandar. Fazer isso com
+  // `useEffect` + `setState` geraria render em cascata.
+  const [escolhaDoUsuario, setEscolhaDoUsuario] = React.useState<boolean | null>(
+    null
+  )
+  const aberto = escolhaDoUsuario ?? !isMobile
+  const setAberto = setEscolhaDoUsuario
+
   return (
-    <Card size="sm" className="gap-3">
-      <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Icone className="size-4 text-muted-foreground" aria-hidden />
-          {titulo}
-        </CardTitle>
-        <span
-          className={cn(
-            "font-mono text-sm font-semibold tabular-nums",
-            corDiferenca(total.diferenca)
-          )}
-        >
-          {sinal(total.diferenca)}
-          {formatarMoeda(total.diferenca)}
-        </span>
-      </CardHeader>
-      <CardContent>
+    <Collapsible asChild open={aberto} onOpenChange={setAberto}>
+      <Card size="sm" className="gap-3">
+        <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
+          <CollapsibleTrigger
+            className={cn(
+              "-m-1 flex flex-1 items-center gap-2 rounded-md p-1 text-left",
+              "outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              // Alvo de toque ≥44px no mobile (R6).
+              "min-h-11 md:min-h-0"
+            )}
+          >
+            <ChevronDown
+              className={cn(
+                "size-4 shrink-0 text-muted-foreground transition-transform",
+                aberto ? "" : "-rotate-90"
+              )}
+              aria-hidden
+            />
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Icone className="size-4 text-muted-foreground" aria-hidden />
+              {titulo}
+            </CardTitle>
+          </CollapsibleTrigger>
+          {/* Fora do trigger: continua legível com o bloco recolhido (R4). */}
+          <span
+            className={cn(
+              "font-mono text-sm font-semibold tabular-nums",
+              corDiferenca(total.diferenca)
+            )}
+          >
+            {sinal(total.diferenca)}
+            {formatarMoeda(total.diferenca)}
+          </span>
+        </CardHeader>
+        <CollapsibleContent asChild>
+        <CardContent>
         {linhas.length === 0 ? (
           <p className="py-4 text-center text-sm text-muted-foreground">
             Sem planejado nem lançamentos neste mês.
@@ -138,7 +183,9 @@ export function BlocoGrupo({
             </TableFooter>
           </Table>
         )}
-      </CardContent>
-    </Card>
+        </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   )
 }

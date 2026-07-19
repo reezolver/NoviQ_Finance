@@ -92,7 +92,7 @@ const formSchema = z
     categoriaId: z.string().optional(),
     objetivoId: z.string().optional(),
     // Grupo do aporte (só objetivo) — fixa | variavel (Spec 24).
-    grupo: z.enum(["fixa", "variavel"]).optional(),
+    grupo: z.enum(["fixa", "variavel", "investimento"]).optional(),
     // Filtro Fixa/Variável/Investimento da aba Despesa: só restringe a lista de
     // categorias (o grupo real do lançamento vem da categoria escolhida).
     classificacaoDespesa: z.enum(["fixa", "variavel", "investimento"]).optional(),
@@ -375,7 +375,8 @@ export function LancamentoModal({
                   )}
                 />
 
-                {/* Classifica o aporte como gasto Fixo ou Variável (Spec 24). */}
+                {/* Classifica o aporte: Fixa/Variável (Spec 24) ou Investimento
+                    (Spec 35 · §3.3, liberado com o 4º bloco). */}
                 <FormField
                   control={form.control}
                   name="grupo"
@@ -399,6 +400,14 @@ export function LancamentoModal({
                               <RadioGroupItem value="variavel" />
                             </FormControl>
                             <FormLabel className="font-normal">Variável</FormLabel>
+                          </FormItem>
+                          {/* Spec 35 · §3.3 — com o bloco Investimento na tela,
+                              o aporte pode ir para o destino natural dele. */}
+                          <FormItem className="flex items-center gap-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="investimento" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Investimento</FormLabel>
                           </FormItem>
                         </RadioGroup>
                       </FormControl>

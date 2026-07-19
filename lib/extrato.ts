@@ -54,10 +54,11 @@ export const GRUPO_LABEL: Record<GrupoCategoria, string> = {
 }
 
 /** Título do bloco (cabeçalho da seção na tela e no PDF). */
-const TITULO_BLOCO: Record<Extract<GrupoCategoria, "renda" | "fixa" | "variavel">, string> = {
+const TITULO_BLOCO: Record<GrupoCategoria, string> = {
   renda: "Renda",
   fixa: "Despesa Fixa",
   variavel: "Despesa Variável",
+  investimento: "Investimento",
 }
 
 /** Mapeia cada grupo para o campo correspondente em `TotaisData`. */
@@ -68,8 +69,15 @@ const CAMPO_POR_GRUPO: Record<GrupoCategoria, keyof TotaisData> = {
   investimento: "investimento",
 }
 
-/** Ordem dos blocos exibidos (investimento não é um 4º bloco — vai no resumo). */
-const GRUPOS_BLOCO = ["renda", "fixa", "variavel"] as const
+/**
+ * Ordem dos blocos exibidos.
+ *
+ * ⚠️ **Spec 35 reverte a decisão da Spec 24** (aprovada no PRD §1.3): o
+ * investimento passa a ter **linha própria**, como na planilha do cliente. Ele
+ * **continua** aparecendo no resumo 50‑30‑20 (é o "20%") — bloco e faixa
+ * coexistem (R2), não é ou-um-ou-outro.
+ */
+const GRUPOS_BLOCO = ["renda", "fixa", "variavel", "investimento"] as const
 
 /**
  * Diferença **assinada pela favorabilidade** — o único lugar do app onde o
@@ -140,9 +148,9 @@ export interface TotalBloco {
   diferenca: number
 }
 
-/** Um bloco do extrato (Renda / Despesa Fixa / Despesa Variável). */
+/** Um bloco do extrato (Renda / Despesa Fixa / Despesa Variável / Investimento). */
 export interface BlocoExtrato {
-  grupo: Extract<GrupoCategoria, "renda" | "fixa" | "variavel">
+  grupo: GrupoCategoria
   titulo: string
   linhas: LinhaExtrato[]
   total: TotalBloco
@@ -253,14 +261,22 @@ export function montarExtratoMensal({
       })),
   })
 
-  // Aportes de objetivo: lançamentos sem categoria, com grupo (fixa|variavel).
+  // Aportes de objetivo: lançamentos sem categoria, com grupo. Desde a Spec 35
+  // o grupo pode ser `investimento` além de fixa|variavel.
   const aportes = agregarAportesPorObjetivo(
     lancamentos
       .filter(
-        (l): l is LancamentoRow & { grupo: "fixa" | "variavel"; objetivo_id: string } =>
+        (
+          l
+        ): l is LancamentoRow & {
+          grupo: "fixa" | "variavel" | "investimento"
+          objetivo_id: string
+        } =>
           l.categoria_id === null &&
           l.objetivo_id !== null &&
-          (l.grupo === "fixa" || l.grupo === "variavel")
+          (l.grupo === "fixa" ||
+            l.grupo === "variavel" ||
+            l.grupo === "investimento")
       )
       .map((l) => ({
         objetivoId: l.objetivo_id,
@@ -273,7 +289,8 @@ export function montarExtratoMensal({
   const saldos = totalizarPorGrupo(categoriasAgregadas)
   // Mescla os aportes no realizado do grupo escolhido — antes do saldo/faixas.
   for (const a of aportes) {
-    saldos.realizado[a.grupo === "fixa" ? "fixas" : "variaveis"] += a.valor
+    saldos.realizado[CAMPO_POR_GRUPO[a.grupo] as "fixas" | "variaveis" | "investimento"] +=
+      a.valor
   }
 
   // ── Saldo do mês (4 grupos) ──
@@ -299,8 +316,7 @@ export function montarExtratoMensal({
 
     // Aportes do grupo entram como linhas "Aporte: <nome>" (planejado 0).
     for (const a of aportes) {
-      const grupoAporte = a.grupo === "fixa" ? "fixa" : "variavel"
-      if (grupoAporte !== grupo) continue
+      if (a.grupo !== grupo) continue
       linhas.push({
         id: `aporte-${a.objetivoId}`,
         nome: `Aporte: ${a.nome}`,

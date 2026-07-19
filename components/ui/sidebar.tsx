@@ -204,22 +204,6 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          // ⚠️ DESVIO DO SHADCN (Spec 30 · RF-3) — não sobrescrever num `shadcn add`.
-          //
-          // Este Sheet é controlado por estado externo (`openMobile`), não por um
-          // `SheetTrigger` do Radix. Sem isso, o Radix não sabe que o botão do
-          // topo é o gatilho: o mesmo toque que abre o menu chega ao
-          // `DismissableLayer` como "interação fora" e o fecha no mesmo instante
-          // — o menu piscava e fechava, sem dar tempo de usar.
-          //
-          // Ignoramos a dispensa quando a interação nasceu no próprio trigger.
-          // Tocar em qualquer outro lugar continua fechando normalmente.
-          onInteractOutside={(evento) => {
-            const alvo = evento.target as HTMLElement | null
-            if (alvo?.closest?.('[data-sidebar="trigger"]')) {
-              evento.preventDefault()
-            }
-          }}
           className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
           style={
             {

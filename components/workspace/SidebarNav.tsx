@@ -124,9 +124,19 @@ export function SidebarNav({
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
 
-  // No mobile, fecha o drawer sempre que a rota muda (navegação por qualquer
+  // No mobile, fecha o drawer sempre que a rota **muda** (navegação por qualquer
   // link da sidebar, incluindo o seletor de subconta).
+  //
+  // ⚠️ Spec 30 · RF-3 — o `useEffect` também roda na MONTAGEM, e este componente
+  // vive dentro do `Sheet`: no celular ele só monta quando o menu abre. Sem a
+  // guarda abaixo, abrir o menu montava o `SidebarNav`, que mandava fechar na
+  // hora — o menu abria e sumia no mesmo instante, sem dar tempo de tocar em
+  // nada. No desktop a sidebar está sempre montada, por isso o defeito era
+  // exclusivo do mobile.
+  const pathnameAnterior = React.useRef(pathname)
   React.useEffect(() => {
+    if (pathnameAnterior.current === pathname) return
+    pathnameAnterior.current = pathname
     setOpenMobile(false)
   }, [pathname, setOpenMobile])
 

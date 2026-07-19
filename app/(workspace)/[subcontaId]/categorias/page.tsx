@@ -53,6 +53,9 @@ export default async function CategoriasPage({
     .from("categorias")
     .select("id, nome, grupo, ordem")
     .eq("subconta_id", subcontaId)
+    // Categorias-espelho de objetivo (Spec 36) nao sao gerenciaveis aqui: quem
+    // manda nelas e o objetivo. Sem isso virariam categoria fantasma (R12).
+    .is("objetivo_id", null)
     .order("ordem")
 
   const categorias = (categoriasData ?? []) as unknown as CategoriaRow[]

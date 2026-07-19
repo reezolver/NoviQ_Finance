@@ -121,6 +121,10 @@ export async function definirPlanejado(
       valor_planejado: valorPlanejado,
       ano: recorrente ? null : ano,
       mes: recorrente ? null : mes,
+      // Esta action é sempre o educador digitando. Marcar como `manual` é o que
+      // protege o valor de ser sobrescrito quando o objetivo repropagar
+      // (Spec 36 · R4).
+      origem: 'manual' as const,
     },
     { onConflict: 'subconta_id,categoria_id,ano,mes' }
   )

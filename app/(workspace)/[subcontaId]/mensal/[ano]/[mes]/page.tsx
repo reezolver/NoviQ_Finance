@@ -156,8 +156,11 @@ export default async function ControleMensalPage({
       .select("categoria_id, valor_planejado, ano, mes")
       .eq("subconta_id", subcontaId),
     supabase
+      // Inclui as categorias-espelho de objetivo: elas PRECISAM aparecer no
+      // bloco e no "editar planejado" (e ali que o educador ajusta o mes).
+      // Quem nao pode ve-las e o select de lancamento — filtrado abaixo.
       .from("categorias")
-      .select("id, nome, grupo, ordem")
+      .select("id, nome, grupo, ordem, objetivo_id")
       .eq("subconta_id", subcontaId)
       .order("ordem"),
     supabase
@@ -247,11 +250,15 @@ export default async function ControleMensalPage({
           />
           <NovoLancamentoButton
             subcontaId={subcontaId}
-            categorias={categorias.map((c) => ({
-              id: c.id,
-              nome: c.nome,
-              grupo: c.grupo,
-            }))}
+            categorias={categorias
+              // Espelho de objetivo nao e categoria lancavel: o aporte se faz
+              // pela aba Objetivo do modal (R12).
+              .filter((c) => !c.objetivo_id)
+              .map((c) => ({
+                id: c.id,
+                nome: c.nome,
+                grupo: c.grupo,
+              }))}
             objetivos={objetivos.map((o) => ({ id: o.id, nome: o.nome }))}
           />
         </div>

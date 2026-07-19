@@ -4,6 +4,10 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import {
+  calcularPropagacaoObjetivo,
+  nomeCategoriaEspelho,
+} from '@/lib/objetivo-planejado'
 import type { Database } from '@/types/database'
 
 // ─── Schemas (sem `any`) ──────────────────────────────────────────────────────
@@ -70,6 +74,144 @@ function revalidarTelasObjetivos(): void {
   revalidatePath('/[subcontaId]/mensal/[ano]/[mes]', 'page')
 }
 
+/**
+ * Garante a **categoria-espelho** do objetivo e devolve o id dela (Spec 36 · Q2
+ * opção A).
+ *
+ * Grupo `investimento`: é onde o aporte de objetivo passou a poder ser lançado
+ * (Spec 35 · §3.3), então planejado e realizado caem no **mesmo** grupo — sem
+ * isso o 50‑30‑20 compararia baldes diferentes.
+ *
+ * A categoria é marcada por `objetivo_id`, o que a esconde da aba Categorias e
+ * do select de lançamento (R12).
+ */
+async function garantirCategoriaEspelho(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  subcontaId: string,
+  objetivoId: string,
+  nomeObjetivo: string
+): Promise<string> {
+  const { data: existente } = await supabase
+    .from('categorias')
+    .select('id')
+    .eq('subconta_id', subcontaId)
+    .eq('objetivo_id', objetivoId)
+    .maybeSingle()
+
+  const nome = nomeCategoriaEspelho(nomeObjetivo)
+
+  if (existente) {
+    // Renomear o objetivo renomeia o espelho, senão o bloco mostra o nome velho.
+    await supabase.from('categorias').update({ nome }).eq('id', existente.id)
+    return existente.id
+  }
+
+  const { data: criada, error } = await supabase
+    .from('categorias')
+    .insert({
+      subconta_id: subcontaId,
+      nome,
+      grupo: 'investimento',
+      objetivo_id: objetivoId,
+      is_default: false,
+    })
+    .select('id')
+    .single()
+
+  if (error || !criada) {
+    throw new Error(
+      `Erro ao preparar o planejado do objetivo: ${error?.message ?? 'desconhecido'}`
+    )
+  }
+  return criada.id
+}
+
+/**
+ * Sincroniza o **Planejado** do objetivo (RF‑13).
+ *
+ * Roda ao criar e ao editar. O valor mensal vem de `calcularNecessarioMensal`
+ * sobre o que **falta** poupar (alvo − acumulado), distribuído nos meses até a
+ * data limite.
+ *
+ * ⚠️ **Nunca toca em linha `origem='manual'` (R4).** O educador que baixou um
+ * mês para R$ 700 mantém os R$ 700, mesmo que o objetivo mude de valor depois.
+ * As linhas geradas aqui (`origem='objetivo'`) são apagadas e reescritas, o que
+ * mantém a sugestão sempre coerente com o objetivo atual.
+ */
+async function sincronizarPlanejadoObjetivo(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  subcontaId: string,
+  objetivoId: string
+): Promise<void> {
+  const { data: objetivo } = await supabase
+    .from('objetivos')
+    .select('id, nome, valor_alvo, data_limite, valor_inicial')
+    .eq('id', objetivoId)
+    .eq('subconta_id', subcontaId)
+    .maybeSingle()
+  if (!objetivo) return
+
+  const categoriaId = await garantirCategoriaEspelho(
+    supabase,
+    subcontaId,
+    objetivoId,
+    objetivo.nome
+  )
+
+  // Acumulado = valor inicial + aportes já lançados para este objetivo.
+  const { data: aportes } = await supabase
+    .from('lancamentos')
+    .select('valor')
+    .eq('subconta_id', subcontaId)
+    .eq('objetivo_id', objetivoId)
+  const acumulado =
+    Number(objetivo.valor_inicial ?? 0) +
+    (aportes ?? []).reduce((s, a) => s + Number(a.valor), 0)
+
+  // Meses que o educador ajustou à mão — intocáveis.
+  const { data: manuais } = await supabase
+    .from('orcamentos')
+    .select('ano, mes')
+    .eq('subconta_id', subcontaId)
+    .eq('categoria_id', categoriaId)
+    .eq('origem', 'manual')
+    .not('ano', 'is', null)
+
+  const meses = calcularPropagacaoObjetivo({
+    valorAlvo: Number(objetivo.valor_alvo),
+    valorAcumulado: acumulado,
+    dataLimite: objetivo.data_limite,
+    overridesExistentes: (manuais ?? []).map((m) => ({
+      ano: Number(m.ano),
+      mes: Number(m.mes),
+    })),
+  })
+
+  // Limpa só o que a propagação escreveu antes (mantém os manuais).
+  await supabase
+    .from('orcamentos')
+    .delete()
+    .eq('subconta_id', subcontaId)
+    .eq('categoria_id', categoriaId)
+    .eq('origem', 'objetivo')
+
+  if (meses.length === 0) return
+
+  const { error } = await supabase.from('orcamentos').insert(
+    meses.map((m) => ({
+      subconta_id: subcontaId,
+      categoria_id: categoriaId,
+      valor_planejado: Number(m.valor.toFixed(2)),
+      ano: m.ano,
+      mes: m.mes,
+      origem: 'objetivo' as const,
+    }))
+  )
+  if (error) {
+    throw new Error(`Erro ao propagar o planejado do objetivo: ${error.message}`)
+  }
+}
+
 // ─── Actions ──────────────────────────────────────────────────────────────────
 
 /**
@@ -89,16 +231,23 @@ export async function criarObjetivo(
 
   await assertAcessoSubconta(supabase, id)
 
-  const { error } = await supabase.from('objetivos').insert({
-    subconta_id: id,
-    nome: dadosValidados.nome,
-    valor_alvo: dadosValidados.valorAlvo,
-    data_limite: dadosValidados.dataLimite,
-    valor_inicial: dadosValidados.valorInicial ?? 0,
-  })
-  if (error) {
-    throw new Error(`Erro ao criar objetivo: ${error.message}`)
+  const { data: criado, error } = await supabase
+    .from('objetivos')
+    .insert({
+      subconta_id: id,
+      nome: dadosValidados.nome,
+      valor_alvo: dadosValidados.valorAlvo,
+      data_limite: dadosValidados.dataLimite,
+      valor_inicial: dadosValidados.valorInicial ?? 0,
+    })
+    .select('id')
+    .single()
+  if (error || !criado) {
+    throw new Error(`Erro ao criar objetivo: ${error?.message ?? 'desconhecido'}`)
   }
+
+  // RF-13: o valor mensal necessario ja entra no Planejado dos meses ate o prazo.
+  await sincronizarPlanejadoObjetivo(supabase, id, criado.id)
 
   revalidarTelasObjetivos()
   return { ok: true }
@@ -134,6 +283,9 @@ export async function editarObjetivo(
   if (error) {
     throw new Error(`Erro ao editar objetivo: ${error.message}`)
   }
+
+  // Repropaga com os dados novos. Meses ajustados a mao ficam intactos (R4).
+  await sincronizarPlanejadoObjetivo(supabase, id, objId)
 
   revalidarTelasObjetivos()
   return { ok: true }

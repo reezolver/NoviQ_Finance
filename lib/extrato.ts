@@ -128,6 +128,11 @@ export interface CategoriaRow {
   id: string
   nome: string
   grupo: GrupoCategoria
+  /**
+   * Preenchido quando a categoria e o **espelho de um objetivo** (Spec 36).
+   * Opcional porque nem toda tela seleciona a coluna.
+   */
+  objetivo_id?: string | null
 }
 
 // ─── Estrutura de saída ────────────────────────────────────────────────────────

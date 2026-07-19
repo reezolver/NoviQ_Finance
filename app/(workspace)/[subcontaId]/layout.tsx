@@ -7,6 +7,7 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
+import { atingiuLimite } from "@/lib/limites-subconta"
 import { AppSidebar } from "@/components/workspace/AppSidebar"
 import { Topbar } from "@/components/workspace/Topbar"
 
@@ -59,8 +60,13 @@ export default async function WorkspaceLayout({
   // Dicas de UI para os atalhos de "criar conta" do switcher (Spec 19 · RF-2.5).
   // A barreira real do limite continua na action + trigger do banco.
   const temPessoal = acessiveis.some((s) => s.tipo === "pessoal")
-  const clientesNoLimite =
-    acessiveis.filter((s) => s.tipo === "cliente").length >= 3
+  // Teto vem da fonte única por perfil (Spec 32) — o `>= 3` solto que existia
+  // aqui era a terceira cópia do número e divergia do banco para o master.
+  const clientesNoLimite = atingiuLimite(
+    usuario?.tipo_perfil,
+    "cliente",
+    acessiveis.filter((s) => s.tipo === "cliente").length
+  )
 
   // Estado aberto/fechado persistido no cookie nativo do componente.
   const cookieStore = await cookies()

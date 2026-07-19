@@ -2,6 +2,7 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { getUsuarioAtual } from "@/lib/auth"
+import { atingiuLimite } from "@/lib/limites-subconta"
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/workspace/AppSidebar"
@@ -49,8 +50,11 @@ export default async function ContaLayout({
     acessiveis.find((s) => s.tipo === "pessoal") ?? acessiveis[0] ?? null
 
   const temPessoal = acessiveis.some((s) => s.tipo === "pessoal")
-  const clientesNoLimite =
-    acessiveis.filter((s) => s.tipo === "cliente").length >= 3
+  const clientesNoLimite = atingiuLimite(
+    usuario.tipo_perfil,
+    "cliente",
+    acessiveis.filter((s) => s.tipo === "cliente").length
+  )
 
   const cookieStore = await cookies()
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false"

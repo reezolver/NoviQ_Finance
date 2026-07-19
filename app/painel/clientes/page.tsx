@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { ArrowRight, Trash2, UserX, Users } from "lucide-react"
 
 import { getUsuarioAtual } from "@/lib/auth"
+import { atingiuLimite } from "@/lib/limites-subconta"
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -193,7 +194,13 @@ export default async function ClientesPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <ContaPessoalButton pessoalId={pessoal?.id ?? null} />
-            <CriarClienteModal limiteAtingido={meus.length >= 3} />
+            <CriarClienteModal
+              limiteAtingido={atingiuLimite(
+                usuario.tipo_perfil,
+                "cliente",
+                meus.length
+              )}
+            />
           </div>
         </div>
 

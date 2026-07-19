@@ -19,7 +19,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+import { InputMoeda } from "@/components/ui/input-moeda"
+import { numeroParaMascara, parseValorBR } from "@/lib/moeda"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
@@ -49,24 +50,10 @@ const ORDEM_GRUPOS: ReadonlyArray<GrupoCategoria> = [
   "investimento",
 ]
 
-/**
- * Converte um valor digitado no padrão BR (vírgula decimal, ponto de milhar)
- * para `number`. Retorna `NaN` se vazio/inválido. Mesma lógica do
- * `LancamentoModal` (parseValorBR).
- */
-function parseValorBR(input: string): number {
-  const limpo = input.trim().replace(/\s|R\$/g, "")
-  if (!limpo) return NaN
-  const normalizado = limpo.includes(",")
-    ? limpo.replace(/\./g, "").replace(",", ".")
-    : limpo
-  return Number(normalizado)
-}
-
-/** Valor inicial do input: vazio quando 0, senão o número com vírgula BR. */
+/** Valor inicial do input: vazio quando 0, senão já mascarado (Spec 34). */
 function valorInicial(valor: number): string {
   if (!valor) return ""
-  return valor.toString().replace(".", ",")
+  return numeroParaMascara(valor)
 }
 
 /**
@@ -211,16 +198,14 @@ export function EditarPlanejadoModal({
                             Atual: {formatarMoeda(c.planejadoVigente)}
                           </span>
                         </Label>
-                        <Input
+                        <InputMoeda
                           id={`planejado-${c.categoriaId}`}
-                          inputMode="decimal"
-                          placeholder="0,00"
                           className="w-32 text-right"
                           value={valores[c.categoriaId] ?? ""}
-                          onChange={(e) =>
+                          onChange={(valor) =>
                             setValores((v) => ({
                               ...v,
-                              [c.categoriaId]: e.target.value,
+                              [c.categoriaId]: valor,
                             }))
                           }
                         />

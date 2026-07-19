@@ -31,6 +31,8 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { InputMoeda } from "@/components/ui/input-moeda"
+import { parseValorBR } from "@/lib/moeda"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
@@ -73,20 +75,6 @@ const TABS: ReadonlyArray<{ value: TipoLancamento; label: string }> = [
 /** Grupos de categoria de uma despesa — também as opções do filtro Fixa/Variável/Investimento. */
 const GRUPOS_DESPESA: ReadonlyArray<Extract<GrupoCategoria, "fixa" | "variavel" | "investimento">> =
   ["fixa", "variavel", "investimento"]
-
-/**
- * Converte um valor digitado no padrão BR (vírgula decimal, ponto de milhar)
- * para `number`. Retorna `NaN` se vazio/ inválido. Aceita também ponto decimal.
- */
-function parseValorBR(input: string): number {
-  const limpo = input.trim().replace(/\s|R\$/g, "")
-  if (!limpo) return NaN
-  // Com vírgula presente, tratamos "." como separador de milhar.
-  const normalizado = limpo.includes(",")
-    ? limpo.replace(/\./g, "").replace(",", ".")
-    : limpo
-  return Number(normalizado)
-}
 
 /** Data de hoje no formato AAAA-MM-DD (fuso local). */
 function hojeISO(): string {
@@ -343,12 +331,7 @@ export function LancamentoModal({
                 <FormItem>
                   <FormLabel>Valor</FormLabel>
                   <FormControl>
-                    <Input
-                      inputMode="decimal"
-                      placeholder="0,00"
-                      autoFocus
-                      {...field}
-                    />
+                    <InputMoeda autoFocus {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -17,7 +17,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+import { InputMoeda } from "@/components/ui/input-moeda"
+import { numeroParaMascara, parseValorBR } from "@/lib/moeda"
 import { Label } from "@/components/ui/label"
 
 interface SaldoInicialDialogProps {
@@ -26,23 +27,10 @@ interface SaldoInicialDialogProps {
   saldoInicial: number
 }
 
-/**
- * Converte um valor BR (vírgula decimal, ponto de milhar) para `number`.
- * Aceita negativo. Retorna `NaN` se vazio/inválido.
- */
-function parseValorBR(input: string): number {
-  const limpo = input.trim().replace(/\s|R\$/g, "")
-  if (!limpo) return NaN
-  const normalizado = limpo.includes(",")
-    ? limpo.replace(/\./g, "").replace(",", ".")
-    : limpo
-  return Number(normalizado)
-}
-
-/** Valor inicial do input em formato BR (vírgula decimal). */
+/** Valor inicial do input já no formato da máscara (Spec 34). */
 function valorInicial(valor: number): string {
   if (!valor) return ""
-  return valor.toString().replace(".", ",")
+  return numeroParaMascara(valor)
 }
 
 /**
@@ -105,13 +93,12 @@ export function SaldoInicialDialog({ subcontaId, saldoInicial }: SaldoInicialDia
 
         <div className="space-y-2">
           <Label htmlFor="saldo-inicial">Valor</Label>
-          <Input
+          <InputMoeda
             id="saldo-inicial"
-            inputMode="text"
-            placeholder="0,00"
             autoFocus
+            permitirNegativo
             value={valor}
-            onChange={(e) => setValor(e.target.value)}
+            onChange={setValor}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault()

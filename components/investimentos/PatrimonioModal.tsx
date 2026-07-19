@@ -33,6 +33,8 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { InputMoeda } from "@/components/ui/input-moeda"
+import { parseValorBR } from "@/lib/moeda"
 import {
   Select,
   SelectContent,
@@ -70,19 +72,6 @@ interface PatrimonioModalProps {
   /** Abertura controlada (opcional). */
   open?: boolean
   onOpenChange?: (aberto: boolean) => void
-}
-
-/**
- * Converte um valor digitado no padrão BR (vírgula decimal, ponto de milhar)
- * para `number`. Retorna `NaN` se vazio/inválido. Aceita também ponto decimal.
- */
-function parseValorBR(input: string): number {
-  const limpo = input.trim().replace(/\s|R\$/g, "")
-  if (!limpo) return NaN
-  const normalizado = limpo.includes(",")
-    ? limpo.replace(/\./g, "").replace(",", ".")
-    : limpo
-  return Number(normalizado)
 }
 
 const TIPOS: TipoPatrimonio[] = ["investimento", "imovel", "veiculo"]
@@ -298,7 +287,7 @@ export function PatrimonioModal({
                   <FormItem>
                     <FormLabel>Valor</FormLabel>
                     <FormControl>
-                      <Input inputMode="decimal" placeholder="0,00" {...field} />
+                      <InputMoeda {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

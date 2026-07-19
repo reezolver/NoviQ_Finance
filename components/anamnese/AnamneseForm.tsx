@@ -36,6 +36,8 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { InputMoeda } from "@/components/ui/input-moeda"
+import { numeroParaMascara, parseValorBR } from "@/lib/moeda"
 import { Textarea } from "@/components/ui/textarea"
 
 const formSchema = respostasSchema.extend({
@@ -585,7 +587,14 @@ export function AnamneseForm({
   )
 }
 
-/** Campo monetário controlado (≥ 0). Vazio = 0. */
+/**
+ * Campo monetário controlado (≥ 0). Vazio = 0.
+ *
+ * Usa o `InputMoeda` (Spec 34), então a ficha pública ganha a mesma máscara BR
+ * do resto do app. Aqui o valor do formulário é `number` (o schema da anamnese
+ * guarda números), então convertemos nas duas pontas: `numeroParaMascara` para
+ * exibir e `parseValorBR` para voltar a número.
+ */
 function CampoMoeda({
   control,
   name,
@@ -603,19 +612,19 @@ function CampoMoeda({
         <FormItem>
           <FormLabel>{label}</FormLabel>
           <FormControl>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              inputMode="decimal"
-              placeholder="0,00"
+            <InputMoeda
               name={field.name}
               ref={field.ref}
               onBlur={field.onBlur}
-              value={field.value === 0 || field.value == null ? "" : String(field.value)}
-              onChange={(e) =>
-                field.onChange(e.target.value === "" ? 0 : Number(e.target.value))
+              value={
+                field.value === 0 || field.value == null
+                  ? ""
+                  : numeroParaMascara(Number(field.value))
               }
+              onChange={(texto) => {
+                const numero = parseValorBR(texto)
+                field.onChange(Number.isFinite(numero) ? numero : 0)
+              }}
             />
           </FormControl>
           <FormMessage />

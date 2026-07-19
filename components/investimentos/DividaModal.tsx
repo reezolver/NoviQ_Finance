@@ -33,6 +33,8 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { InputMoeda } from "@/components/ui/input-moeda"
+import { parseValorBR } from "@/lib/moeda"
 
 /** Valores de uma dívida existente, para o modo edição. */
 export interface DividaExistente {
@@ -47,16 +49,6 @@ interface DividaModalProps {
   trigger?: React.ReactNode
   open?: boolean
   onOpenChange?: (aberto: boolean) => void
-}
-
-/** Converte valor BR (vírgula decimal) para `number`; `NaN` se vazio/inválido. */
-function parseValorBR(input: string): number {
-  const limpo = input.trim().replace(/\s|R\$/g, "")
-  if (!limpo) return NaN
-  const normalizado = limpo.includes(",")
-    ? limpo.replace(/\./g, "").replace(",", ".")
-    : limpo
-  return Number(normalizado)
 }
 
 const formSchema = z
@@ -193,7 +185,7 @@ export function DividaModal({
                 <FormItem>
                   <FormLabel>Valor total</FormLabel>
                   <FormControl>
-                    <Input inputMode="decimal" placeholder="0,00" {...field} />
+                    <InputMoeda {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

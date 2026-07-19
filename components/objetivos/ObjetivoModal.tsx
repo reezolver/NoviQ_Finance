@@ -33,6 +33,8 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { InputMoeda } from "@/components/ui/input-moeda"
+import { parseValorBR } from "@/lib/moeda"
 
 /** Valores de um objetivo existente, para o modo edição. */
 export interface ObjetivoExistente {
@@ -53,19 +55,6 @@ interface ObjetivoModalProps {
   open?: boolean
   /** Callback de mudança de abertura no modo controlado. */
   onOpenChange?: (aberto: boolean) => void
-}
-
-/**
- * Converte um valor digitado no padrão BR (vírgula decimal, ponto de milhar)
- * para `number`. Retorna `NaN` se vazio/inválido. Aceita também ponto decimal.
- */
-function parseValorBR(input: string): number {
-  const limpo = input.trim().replace(/\s|R\$/g, "")
-  if (!limpo) return NaN
-  const normalizado = limpo.includes(",")
-    ? limpo.replace(/\./g, "").replace(",", ".")
-    : limpo
-  return Number(normalizado)
 }
 
 // ─── Schema do formulário (client) ────────────────────────────────────────────
@@ -235,7 +224,7 @@ export function ObjetivoModal({
                 <FormItem>
                   <FormLabel>Valor alvo</FormLabel>
                   <FormControl>
-                    <Input inputMode="decimal" placeholder="0,00" {...field} />
+                    <InputMoeda {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -266,7 +255,7 @@ export function ObjetivoModal({
                     <span className="font-normal text-muted-foreground">(opcional)</span>
                   </FormLabel>
                   <FormControl>
-                    <Input inputMode="decimal" placeholder="0,00" {...field} />
+                    <InputMoeda {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

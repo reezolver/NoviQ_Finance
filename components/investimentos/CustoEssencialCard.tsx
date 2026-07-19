@@ -17,7 +17,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+import { InputMoeda } from "@/components/ui/input-moeda"
+import { numeroParaMascara, parseValorBR } from "@/lib/moeda"
 import { Label } from "@/components/ui/label"
 
 interface CustoEssencialCardProps {
@@ -26,23 +27,10 @@ interface CustoEssencialCardProps {
   custoAtual: number | null
 }
 
-/**
- * Converte um valor BR (vírgula decimal, ponto de milhar) para `number`.
- * Retorna `NaN` se vazio/inválido.
- */
-function parseValorBR(input: string): number {
-  const limpo = input.trim().replace(/\s|R\$/g, "")
-  if (!limpo) return NaN
-  const normalizado = limpo.includes(",")
-    ? limpo.replace(/\./g, "").replace(",", ".")
-    : limpo
-  return Number(normalizado)
-}
-
-/** Valor inicial do input em formato BR (vírgula decimal). */
+/** Valor inicial do input já no formato da máscara (Spec 34). */
 function valorInicial(valor: number | null): string {
   if (!valor) return ""
-  return valor.toString().replace(".", ",")
+  return numeroParaMascara(valor)
 }
 
 /**
@@ -111,13 +99,11 @@ export function CustoEssencialCard({ subcontaId, custoAtual }: CustoEssencialCar
 
             <div className="space-y-2">
               <Label htmlFor="custo-essencial">Valor mensal</Label>
-              <Input
+              <InputMoeda
                 id="custo-essencial"
-                inputMode="decimal"
-                placeholder="0,00"
                 autoFocus
                 value={valor}
-                onChange={(e) => setValor(e.target.value)}
+                onChange={setValor}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault()

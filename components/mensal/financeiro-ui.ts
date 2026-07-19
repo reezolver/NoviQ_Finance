@@ -36,13 +36,43 @@ export function sinal(valor: number): string {
 }
 
 /** Tom da linha: define a cor **e** já traduz a favorabilidade. */
-export type TomDiferenca = "favoravel" | "desfavoravel" | "neutro"
+export type TomDiferenca = "favoravel" | "parcial" | "desfavoravel" | "neutro"
 
 /** Token de cor de um tom. Neutro = sem alarme. */
 export function corTom(tom: TomDiferenca): string {
   if (tom === "favoravel") return "text-success"
+  if (tom === "parcial") return "text-warning"
   if (tom === "desfavoravel") return "text-destructive"
   return "text-muted-foreground"
+}
+
+/**
+ * Semáforo por linha (Spec 36 · RF‑14) — verde / amarelo / vermelho / neutro.
+ *
+ * ⚠️ **Desvio consciente da RF‑14.** A spec pede *vermelho* quando não há nada
+ * lançado. Isso foi revertido pelo cliente em 2026‑07‑19: mês recém-começado
+ * ficava inteiro em alarme, sem informação nenhuma. Aqui "nada lançado" é
+ * **neutro** — cor só entra quando existe fato para avaliar.
+ *
+ * O tom vem de `descreverDiferenca`; este helper só refina o caso **parcial**
+ * (começou, mas não chegou ao planejado), que a RF‑14 quer em amarelo. O token
+ * `--warning` existe no `globals.css` nos dois temas — não há hex hardcoded
+ * (R11).
+ */
+export function semaforoLinha(
+  grupo: GrupoCategoria,
+  planejado: number,
+  realizado: number
+): TomDiferenca {
+  const { tom } = descreverDiferenca(grupo, planejado, realizado)
+  const entrada = grupo === "renda" || grupo === "investimento"
+
+  // Só entradas (renda/aporte) têm "parcial": recebeu/aportou algo, mas menos
+  // que o planejado. Em despesa, gastar menos já é bom — não é meio-termo.
+  if (entrada && planejado > 0 && realizado > 0 && realizado < planejado) {
+    return "parcial"
+  }
+  return tom
 }
 
 /**
@@ -88,7 +118,11 @@ export function descreverDiferenca(
     }
   }
 
-  if (realizado === planejado) return { texto: "na meta", tom: "neutro" }
+  // Bater o planejado é vitória, não empate — a RF‑14 pede verde aqui
+  // ("fez o aporte exatamente que foi planejado fica verdinho"). Isso refina a
+  // R5 da Spec 28, que tratava diferença zero como neutra quando ainda não
+  // existia o conceito de "cumpriu a meta".
+  if (realizado === planejado) return { texto: "na meta", tom: "favoravel" }
 
   const abaixo = realizado < planejado
   const delta = fmt(realizado - planejado)

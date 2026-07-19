@@ -449,13 +449,16 @@ export function calcularStatusObjetivo(
  * @returns Número de meses restantes (0 se já passou)
  */
 export function calcularMesesRestantes(dataConclusao: string): number {
+  // ⚠️ Lemos ano/mês direto da string em vez de `new Date(dataConclusao)`.
+  // `new Date("2027-07-01")` é interpretado como meia-noite **UTC**; em fuso
+  // negativo (Brasília, UTC−3) a data retrocede para 30/06 e o mês volta um.
+  // Quando o prazo caía no **dia 1º**, 12 meses viravam 11 — e um objetivo de
+  // R$ 15.000 sugeria R$ 1.363,64/mês em vez de R$ 1.250.
+  const [ano, mes] = dataConclusao.split('-').map(Number)
+  if (!Number.isFinite(ano) || !Number.isFinite(mes)) return 0
+
   const hoje = new Date()
-  const conclusao = new Date(dataConclusao)
-
-  const anos = conclusao.getFullYear() - hoje.getFullYear()
-  const meses = conclusao.getMonth() - hoje.getMonth()
-
-  const total = anos * 12 + meses
+  const total = (ano - hoje.getFullYear()) * 12 + (mes - 1 - hoje.getMonth())
 
   return Math.max(0, total)
 }

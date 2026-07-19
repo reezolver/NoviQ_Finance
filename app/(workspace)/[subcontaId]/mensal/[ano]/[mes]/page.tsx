@@ -25,6 +25,7 @@ import {
   corDiferenca,
   corTom,
   descreverDiferenca,
+  semaforoLinha,
   sinal,
 } from "@/components/mensal/financeiro-ui"
 import { NavegacaoMeses } from "@/components/mensal/NavegacaoMeses"
@@ -350,7 +351,7 @@ export default async function ControleMensalPage({
                         className={cn(
                           "text-right font-medium",
                           corTom(
-                            descreverDiferenca(item.grupo, item.planejado, item.realizado).tom
+                            semaforoLinha(item.grupo, item.planejado, item.realizado)
                           )
                         )}
                       >

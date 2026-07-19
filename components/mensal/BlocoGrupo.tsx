@@ -27,7 +27,7 @@ import {
 import { formatarMoeda, type GrupoCategoria } from "@/lib/calculations"
 import { cn } from "@/lib/utils"
 
-import { corTom, descreverDiferenca } from "./financeiro-ui"
+import { corTom, descreverDiferenca, semaforoLinha } from "./financeiro-ui"
 
 /** Uma linha (categoria) dentro de um bloco. */
 export interface LinhaBloco {
@@ -173,7 +173,7 @@ export function BlocoGrupo({
                   <CelulaValor
                     className={cn(
                       "font-medium",
-                      corTom(descreverDiferenca(grupo, linha.planejado, linha.realizado).tom)
+                      corTom(semaforoLinha(grupo, linha.planejado, linha.realizado))
                     )}
                   >
                     {descreverDiferenca(grupo, linha.planejado, linha.realizado).texto}

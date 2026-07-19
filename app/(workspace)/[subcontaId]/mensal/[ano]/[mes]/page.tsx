@@ -148,7 +148,9 @@ export default async function ControleMensalPage({
   ] = await Promise.all([
     supabase
       .from("lancamentos")
-      .select("valor, categoria_id, grupo, objetivo_id")
+      // id/data/descricao alimentam o drill-down por lancamento (Spec 37 R8:
+      // tudo no mesmo payload, sem query por linha expandida).
+      .select("id, data, descricao, valor, categoria_id, grupo, objetivo_id")
       // Spec 37: soft delete — lancamento excluido some de toda leitura.
       .is("deleted_at", null)
       .eq("subconta_id", subcontaId)
@@ -220,6 +222,11 @@ export default async function ControleMensalPage({
     planejadoVigente: planejadoPorCategoria.get(c.id) ?? 0,
   }))
 
+  // Categorias lancaveis: espelho de objetivo nao entra (Spec 36 R12).
+  const categoriasLancaveis = categorias
+    .filter((c) => !c.objetivo_id)
+    .map((c) => ({ id: c.id, nome: c.nome, grupo: c.grupo }))
+
   // "Saldo em conta" (Spec 25): único número que depende do HISTÓRICO, não só do
   // mês. = saldo inicial + Σ(renda − fixa − variavel − investimento) de todos os
   // lançamentos até o fim do mês. O grupo vem da categoria; para o aporte sem
@@ -255,15 +262,7 @@ export default async function ControleMensalPage({
           />
           <NovoLancamentoButton
             subcontaId={subcontaId}
-            categorias={categorias
-              // Espelho de objetivo nao e categoria lancavel: o aporte se faz
-              // pela aba Objetivo do modal (R12).
-              .filter((c) => !c.objetivo_id)
-              .map((c) => ({
-                id: c.id,
-                nome: c.nome,
-                grupo: c.grupo,
-              }))}
+            categorias={categoriasLancaveis}
             objetivos={objetivos.map((o) => ({ id: o.id, nome: o.nome }))}
           />
         </div>
@@ -306,6 +305,9 @@ export default async function ControleMensalPage({
             icone={renderIcone(bloco.grupo)}
             linhas={bloco.linhas}
             total={bloco.total}
+            subcontaId={subcontaId}
+            categorias={categoriasLancaveis}
+            objetivos={objetivos.map((o) => ({ id: o.id, nome: o.nome }))}
           />
         ))}
       </div>

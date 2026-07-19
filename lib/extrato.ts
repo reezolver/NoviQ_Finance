@@ -109,6 +109,11 @@ export interface LancamentoRow {
   grupo: GrupoCategoria | null
   /** Objetivo do aporte (só quando é um lançamento de objetivo). */
   objetivo_id: string | null
+  /** Identidade do lançamento — necessária para editar/excluir (Spec 37). */
+  id?: string
+  /** `YYYY-MM-DD`. */
+  data?: string
+  descricao?: string | null
 }
 
 /** Objetivo (id + nome) — para rotular o aporte "Aporte: <nome>". */
@@ -137,6 +142,24 @@ export interface CategoriaRow {
 
 // ─── Estrutura de saída ────────────────────────────────────────────────────────
 
+/**
+ * Um lançamento individual dentro de uma linha (Spec 37 · RF‑9).
+ *
+ * Genérico de propósito: a Spec 38 reusa o mesmo drill-down para as despesas do
+ * cartão, então nada aqui é acoplado a "categoria" (R7).
+ */
+export interface LancamentoDetalhe {
+  id: string
+  /** `YYYY-MM-DD`. */
+  data: string
+  descricao: string | null
+  valor: number
+  /** Aporte de objetivo não tem categoria (Spec 24) — importa para editar (R6). */
+  categoriaId: string | null
+  objetivoId: string | null
+  grupo: GrupoCategoria | null
+}
+
 /** Uma linha (categoria) de um bloco. Diferença já assinada pela favorabilidade. */
 export interface LinhaExtrato {
   id: string
@@ -144,6 +167,13 @@ export interface LinhaExtrato {
   planejado: number
   realizado: number
   diferenca: number
+  /**
+   * Lançamentos que compõem o `realizado` desta linha (Spec 37).
+   *
+   * Vêm no **mesmo payload** do mês: expandir a linha não dispara query nova
+   * (R8). Vazio quando a categoria só tem planejado.
+   */
+  lancamentos: LancamentoDetalhe[]
 }
 
 /** Total de um bloco. Diferença já assinada pela favorabilidade. */
@@ -291,6 +321,30 @@ export function montarExtratoMensal({
       }))
   )
 
+  // Spec 37: indexa os lancamentos individuais por linha, para o drill-down.
+  // Tudo sai do payload que ja veio — nenhuma query nova ao expandir (R8).
+  const detalhePorLinha = new Map<string, LancamentoDetalhe[]>()
+  for (const l of lancamentos) {
+    if (!l.id || !l.data) continue // tela que nao pediu os campos: sem drill-down
+    const chave = l.categoria_id ?? (l.objetivo_id ? `aporte-${l.objetivo_id}` : null)
+    if (!chave) continue
+    const lista = detalhePorLinha.get(chave) ?? []
+    lista.push({
+      id: l.id,
+      data: l.data,
+      descricao: l.descricao ?? null,
+      valor: Number(l.valor),
+      categoriaId: l.categoria_id,
+      objetivoId: l.objetivo_id,
+      grupo: l.grupo,
+    })
+    detalhePorLinha.set(chave, lista)
+  }
+  // Mais recente primeiro — e o que o usuario acabou de lancar.
+  for (const lista of detalhePorLinha.values()) {
+    lista.sort((a, b) => b.data.localeCompare(a.data))
+  }
+
   const saldos = totalizarPorGrupo(categoriasAgregadas)
   // Mescla os aportes no realizado do grupo escolhido — antes do saldo/faixas.
   for (const a of aportes) {
@@ -316,6 +370,7 @@ export function montarExtratoMensal({
         realizado: c.realizado,
         // Diferença assinada pela favorabilidade (convenção única — Spec 28).
         diferenca: diferencaFavoravel(grupo, c.planejado, c.realizado),
+        lancamentos: detalhePorLinha.get(c.categoriaId) ?? [],
       }))
       .filter((l) => l.planejado !== 0 || l.realizado !== 0)
 
@@ -329,6 +384,7 @@ export function montarExtratoMensal({
         realizado: a.valor,
         // Aporte não planejado num grupo de despesa → sempre desfavorável.
         diferenca: diferencaFavoravel(grupo, 0, a.valor),
+        lancamentos: detalhePorLinha.get(`aporte-${a.objetivoId}`) ?? [],
       })
     }
 

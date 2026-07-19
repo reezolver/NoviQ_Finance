@@ -8,7 +8,11 @@ import { z } from "zod"
 import { ChevronDown, Plus } from "lucide-react"
 import { toast } from "sonner"
 
-import { criarLancamento, type CriarLancamentoInput } from "@/app/actions/lancamentos"
+import {
+  criarLancamento,
+  editarLancamento,
+  type CriarLancamentoInput,
+} from "@/app/actions/lancamentos"
 import { criarCategoria } from "@/app/actions/categorias"
 import { GRUPO_LABEL } from "@/components/categorias/grupos"
 import type { Database } from "@/types/database"
@@ -32,7 +36,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { InputMoeda } from "@/components/ui/input-moeda"
-import { parseValorBR } from "@/lib/moeda"
+import { numeroParaMascara, parseValorBR } from "@/lib/moeda"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
@@ -64,6 +68,27 @@ interface LancamentoModalProps {
   objetivos: ObjetivoOption[]
   /** Gatilho customizado. Se ausente, usa o botão "Novo lançamento" padrão. */
   trigger?: React.ReactNode
+  /**
+   * Lançamento a editar (Spec 37 · R1 — reusamos ESTE modal, não criamos um
+   * segundo: schema, parse de valor, abas e layout já vivem aqui).
+   * Ausente = modo criação.
+   */
+  lancamento?: LancamentoEmEdicao | null
+  /** Abertura controlada (usada pelo drill-down). */
+  open?: boolean
+  onOpenChange?: (aberto: boolean) => void
+}
+
+/** Dados mínimos para abrir o modal em modo edição. */
+export interface LancamentoEmEdicao {
+  id: string
+  valor: number
+  data: string
+  descricao: string | null
+  /** Aporte de objetivo vem SEM categoria e COM grupo (Spec 24) — ver R6. */
+  categoriaId: string | null
+  objetivoId: string | null
+  grupo: GrupoCategoria | null
 }
 
 const TABS: ReadonlyArray<{ value: TipoLancamento; label: string }> = [
@@ -149,9 +174,22 @@ export function LancamentoModal({
   categorias,
   objetivos,
   trigger,
+  lancamento = null,
+  open: openProp,
+  onOpenChange,
 }: LancamentoModalProps) {
   const router = useRouter()
-  const [open, setOpen] = React.useState(false)
+  const [openInterno, setOpenInterno] = React.useState(false)
+  // Controlado quando vem do drill-down; auto-controlado no botao "Novo".
+  const open = openProp ?? openInterno
+  const setOpen = React.useCallback(
+    (v: boolean) => {
+      setOpenInterno(v)
+      onOpenChange?.(v)
+    },
+    [onOpenChange]
+  )
+  const editando = lancamento !== null
   const [mostrarOpcionais, setMostrarOpcionais] = React.useState(false)
   const [enviando, setEnviando] = React.useState(false)
   const [criandoCategoria, setCriandoCategoria] = React.useState(false)
@@ -172,6 +210,43 @@ export function LancamentoModal({
       observacao: "",
     },
   })
+
+  // Preenche o formulario ao abrir em modo edicao. Depende do id para nao
+  // reescrever o que o usuario ja digitou enquanto o modal esta aberto.
+  const idEmEdicao = lancamento?.id ?? null
+  React.useEffect(() => {
+    if (!open || !lancamento) return
+    const grupoCategoria = lancamento.categoriaId
+      ? categorias.find((c) => c.id === lancamento.categoriaId)?.grupo
+      : undefined
+    // R6: aporte de objetivo vem SEM categoria e COM grupo — nao pode assumir
+    // categoria_id nao-nulo, senao a edicao do aporte quebra.
+    const tipoDoLancamento: TipoLancamento = lancamento.objetivoId
+      ? "objetivo"
+      : grupoCategoria === "renda"
+        ? "receita"
+        : "despesa"
+
+    form.reset({
+      tipo: tipoDoLancamento,
+      valor: numeroParaMascara(lancamento.valor),
+      categoriaId: lancamento.categoriaId ?? "",
+      objetivoId: lancamento.objetivoId ?? "",
+      grupo:
+        lancamento.grupo === "fixa" ||
+        lancamento.grupo === "variavel" ||
+        lancamento.grupo === "investimento"
+          ? lancamento.grupo
+          : undefined,
+      classificacaoDespesa:
+        grupoCategoria && grupoCategoria !== "renda" ? grupoCategoria : "fixa",
+      data: lancamento.data,
+      descricao: lancamento.descricao ?? "",
+      observacao: "",
+    })
+    // `form` e `categorias` sao estaveis o bastante; reagir ao id evita loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, idEmEdicao])
 
   const tipo = form.watch("tipo")
   const classificacaoDespesa = form.watch("classificacaoDespesa") ?? "fixa"
@@ -272,8 +347,20 @@ export function LancamentoModal({
 
     setEnviando(true)
     try {
-      await criarLancamento(subcontaId, payload)
-      toast.success("Lançamento salvo.")
+      if (editando && lancamento) {
+        await editarLancamento(subcontaId, lancamento.id, {
+          valor,
+          data: values.data,
+          descricao: values.descricao?.trim() || undefined,
+          observacao: values.observacao?.trim() || undefined,
+          categoriaId: values.tipo === "objetivo" ? null : values.categoriaId!,
+          objetivoId: values.tipo === "objetivo" ? values.objetivoId! : null,
+          grupo: values.tipo === "objetivo" ? values.grupo! : null,
+        })
+      } else {
+        await criarLancamento(subcontaId, payload)
+      }
+      toast.success(editando ? "Lançamento atualizado." : "Lançamento salvo.")
       setOpen(false)
       resetar()
       router.refresh()
@@ -291,22 +378,29 @@ export function LancamentoModal({
       open={open}
       onOpenChange={(aberto) => {
         setOpen(aberto)
-        if (!aberto) resetar()
+        if (!aberto && !editando) resetar()
       }}
     >
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button>
-            <Plus />
-            Novo lançamento
-          </Button>
-        )}
-      </DialogTrigger>
+      {/* Em modo edicao a abertura vem do drill-down: nao existe gatilho. */}
+      {editando ? null : (
+        <DialogTrigger asChild>
+          {trigger ?? (
+            <Button>
+              <Plus />
+              Novo lançamento
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Novo lançamento</DialogTitle>
+          <DialogTitle>
+            {editando ? "Editar lançamento" : "Novo lançamento"}
+          </DialogTitle>
           <DialogDescription>
-            Registre uma despesa, receita ou aporte em um objetivo.
+            {editando
+              ? "Altere os dados e salve. Os totais do mês são recalculados."
+              : "Registre uma despesa, receita ou aporte em um objetivo."}
           </DialogDescription>
         </DialogHeader>
 

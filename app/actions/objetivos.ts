@@ -162,6 +162,8 @@ async function sincronizarPlanejadoObjetivo(
   const { data: aportes } = await supabase
     .from('lancamentos')
     .select('valor')
+    // Spec 37: soft delete — lancamento excluido some de toda leitura.
+    .is("deleted_at", null)
     .eq('subconta_id', subcontaId)
     .eq('objetivo_id', objetivoId)
   const acumulado =

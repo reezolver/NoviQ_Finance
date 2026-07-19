@@ -54,6 +54,8 @@ export default async function ObjetivosPage({
     supabase
       .from("lancamentos")
       .select("objetivo_id, valor")
+      // Spec 37: soft delete — lancamento excluido some de toda leitura.
+      .is("deleted_at", null)
       .eq("subconta_id", subcontaId)
       .eq("tipo", "objetivo"),
   ])

@@ -221,6 +221,11 @@ export async function editarLancamento(
 
 /**
  * Remove um lançamento da subconta. RLS protege; validamos o acesso também.
+ *
+ * **Soft delete** (Spec 37 · PRD Q5): grava `deleted_at` em vez de apagar a
+ * linha. Coerente com o pool/lixeira da Spec 21 — dado financeiro apagado por
+ * engano precisa ser recuperável, ainda mais com a lixeira a um toque no
+ * celular. Todas as leituras filtram `deleted_at is null`.
  */
 export async function removerLancamento(
   subcontaId: string,
@@ -234,9 +239,11 @@ export async function removerLancamento(
 
   const { error } = await supabase
     .from('lancamentos')
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', lancId)
     .eq('subconta_id', id)
+    // Não "re-excluir" algo já excluído (idempotente).
+    .is('deleted_at', null)
   if (error) {
     throw new Error(`Erro ao remover lançamento: ${error.message}`)
   }

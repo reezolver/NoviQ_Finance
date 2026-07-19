@@ -102,6 +102,8 @@ export default async function ControleAnualPage({
       // Join NÃO `!inner` para incluir aportes sem categoria (com grupo próprio).
       .from("lancamentos")
       .select("data, valor, categoria_id, grupo, categorias(grupo)")
+      // Spec 37: soft delete — lancamento excluido some de toda leitura.
+      .is("deleted_at", null)
       .eq("subconta_id", subcontaId)
       .gte("data", `${ano}-01-01`)
       .lte("data", `${ano}-12-31`),
@@ -113,6 +115,8 @@ export default async function ControleAnualPage({
     supabase
       .from("lancamentos")
       .select("valor, categoria_id, grupo, categorias(grupo)")
+      // Spec 37: soft delete — lancamento excluido some de toda leitura.
+      .is("deleted_at", null)
       .eq("subconta_id", subcontaId)
       .lt("data", `${ano}-01-01`),
     supabase

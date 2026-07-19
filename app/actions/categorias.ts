@@ -207,6 +207,8 @@ export async function removerCategoria(
   const { count } = await supabase
     .from('lancamentos')
     .select('id', { count: 'exact', head: true })
+    // Spec 37: soft delete — lancamento excluido some de toda leitura.
+    .is("deleted_at", null)
     .eq('subconta_id', id)
     .eq('categoria_id', catId)
   if (count && count > 0) {

@@ -149,6 +149,8 @@ export default async function ControleMensalPage({
     supabase
       .from("lancamentos")
       .select("valor, categoria_id, grupo, objetivo_id")
+      // Spec 37: soft delete — lancamento excluido some de toda leitura.
+      .is("deleted_at", null)
       .eq("subconta_id", subcontaId)
       .gte("data", inicio)
       .lt("data", fimExclusivo),
@@ -173,6 +175,8 @@ export default async function ControleMensalPage({
     supabase
       .from("lancamentos")
       .select("valor, categoria_id, grupo")
+      // Spec 37: soft delete — lancamento excluido some de toda leitura.
+      .is("deleted_at", null)
       .eq("subconta_id", subcontaId)
       .lt("data", fimExclusivo),
     supabase

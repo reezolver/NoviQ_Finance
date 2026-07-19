@@ -300,7 +300,9 @@ export default async function ControleMensalPage({
                   <TableRow>
                     <TableHead>Categoria</TableHead>
                     <TableHead>Grupo</TableHead>
+                    <TableHead className="text-right">Planejado</TableHead>
                     <TableHead className="text-right">Realizado</TableHead>
+                    <TableHead className="text-right">Diferença</TableHead>
                     <TableHead className="text-right">% da renda</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -311,8 +313,20 @@ export default async function ControleMensalPage({
                       <TableCell>
                         <Badge variant="secondary">{GRUPO_LABEL[item.grupo]}</Badge>
                       </TableCell>
+                      <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+                        {formatarMoeda(item.planejado)}
+                      </TableCell>
                       <TableCell className="text-right font-mono tabular-nums">
                         {formatarMoeda(item.realizado)}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          "text-right font-mono font-medium tabular-nums",
+                          corDiferenca(item.diferenca)
+                        )}
+                      >
+                        {sinal(item.diferenca)}
+                        {formatarMoeda(item.diferenca)}
                       </TableCell>
                       <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
                         {item.percentualRenda.toFixed(0)}%

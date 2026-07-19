@@ -221,22 +221,26 @@ export function ExtratoMensalPdf({
           <View style={styles.table}>
             <View style={[styles.tr, styles.th]}>
               <Text style={[styles.cell, styles.cellNome]}>Grupo</Text>
-              <Text style={[styles.cell, styles.cellNum]}>Meta</Text>
+              <Text style={[styles.cell, styles.cellNum]}>Planejado</Text>
               <Text style={[styles.cell, styles.cellNum]}>Ideal</Text>
               <Text style={[styles.cell, styles.cellNum]}>Realizado</Text>
+              <Text style={[styles.cell, styles.cellNum]}>% plan.</Text>
               <Text style={[styles.cell, styles.cellNum]}>% da renda</Text>
             </View>
             {extrato.faixas.map((faixa) => (
               <View key={faixa.grupo} style={styles.tr}>
                 <Text style={[styles.cell, styles.cellNome]}>{faixa.rotulo}</Text>
                 <Text style={[styles.cell, styles.cellNum, styles.num]}>
-                  {faixa.metaPct.toFixed(0)}%
+                  {formatarMoeda(faixa.planejado)}
                 </Text>
                 <Text style={[styles.cell, styles.cellNum, styles.num]}>
                   {formatarMoeda(faixa.ideal)}
                 </Text>
                 <Text style={[styles.cell, styles.cellNum, styles.num]}>
                   {formatarMoeda(faixa.realizado)}
+                </Text>
+                <Text style={[styles.cell, styles.cellNum, styles.num]}>
+                  {faixa.percentualPlanejado.toFixed(0)}%
                 </Text>
                 <Text style={[styles.cell, styles.cellNum, styles.num]}>
                   {faixa.percentualRenda.toFixed(0)}%

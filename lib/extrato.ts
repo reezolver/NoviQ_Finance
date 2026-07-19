@@ -148,22 +148,36 @@ export interface BlocoExtrato {
   total: TotalBloco
 }
 
-/** Uma faixa da regra 50‑30‑20 (Fixa / Variável / Investimento). */
+/**
+ * Uma faixa da regra 50‑30‑20 (Fixa / Variável / Investimento), comparando
+ * **Planejado × Ideal × Realizado** (Spec 33 · RF‑12).
+ *
+ * O "40/40/20 do cliente" não é cadastrado em lugar nenhum: `percentualPlanejado`
+ * é o próprio orçamento dele lido como percentual da renda planejada. O **Ideal**
+ * continua vindo de `REGRA_503020` e não é configurável (R2).
+ */
 export interface FaixaExtrato {
   rotulo: string
   grupo: Extract<GrupoCategoria, "fixa" | "variavel" | "investimento">
   metaPct: number
   ideal: number
+  /** Quanto o cliente planejou para o grupo no mês. */
+  planejado: number
   realizado: number
+  /** % da renda que o **planejado** representa (o "40/40/20" do cliente). */
+  percentualPlanejado: number
   percentualRenda: number
 }
 
-/** Linha do detalhamento por categoria (realizado + % sobre a renda). */
+/** Linha do detalhamento por categoria (Planejado × Realizado × Diferença). */
 export interface DetalheCategoria {
   id: string
   nome: string
   grupo: GrupoCategoria
+  planejado: number
   realizado: number
+  /** Já assinada pela favorabilidade (Spec 28). */
+  diferenca: number
   percentualRenda: number
 }
 
@@ -322,7 +336,9 @@ export function montarExtratoMensal({
       grupo: "fixa",
       metaPct: REGRA_503020.fixa * 100,
       ideal: ideais.fixo,
+      planejado: saldos.planejado.fixas,
       realizado: saldos.realizado.fixas,
+      percentualPlanejado: calcularPercentual(saldos.planejado.fixas, rendaBase),
       percentualRenda: calcularPercentual(saldos.realizado.fixas, rendaBase),
     },
     {
@@ -330,7 +346,9 @@ export function montarExtratoMensal({
       grupo: "variavel",
       metaPct: REGRA_503020.variavel * 100,
       ideal: ideais.variavel,
+      planejado: saldos.planejado.variaveis,
       realizado: saldos.realizado.variaveis,
+      percentualPlanejado: calcularPercentual(saldos.planejado.variaveis, rendaBase),
       percentualRenda: calcularPercentual(saldos.realizado.variaveis, rendaBase),
     },
     {
@@ -338,7 +356,9 @@ export function montarExtratoMensal({
       grupo: "investimento",
       metaPct: REGRA_503020.investimento * 100,
       ideal: ideais.investimento,
+      planejado: saldos.planejado.investimento,
       realizado: saldos.realizado.investimento,
+      percentualPlanejado: calcularPercentual(saldos.planejado.investimento, rendaBase),
       percentualRenda: calcularPercentual(saldos.realizado.investimento, rendaBase),
     },
   ]
@@ -358,20 +378,28 @@ export function montarExtratoMensal({
   // ── Detalhamento por categoria (realizado + % sobre a renda) ──
   const detalhamento: DetalheCategoria[] = [
     ...categoriasAgregadas
-      .filter((c) => c.realizado !== 0)
+      // Spec 33 R5: antes o filtro era só `realizado !== 0`, então a categoria
+      // planejada e **não** realizada sumia da tela — justamente o caso que o
+      // educador mais precisa ver ("planejou R$ 600 e não lançou nada").
+      .filter((c) => c.planejado !== 0 || c.realizado !== 0)
       .map((c) => ({
         id: c.categoriaId,
         nome: nomePorId.get(c.categoriaId) ?? "Sem nome",
         grupo: c.grupo,
+        planejado: c.planejado,
         realizado: c.realizado,
+        diferenca: diferencaFavoravel(c.grupo, c.planejado, c.realizado),
         percentualRenda: calcularPercentual(c.realizado, rendaBase),
       })),
     // Aportes de objetivo entram no detalhamento com seu grupo e % da renda.
+    // Planejado fica 0 até a Spec 36 dar planejado ao objetivo (R9).
     ...aportes.map((a) => ({
       id: `aporte-${a.objetivoId}`,
       nome: `Aporte: ${a.nome}`,
       grupo: a.grupo as GrupoCategoria,
+      planejado: 0,
       realizado: a.valor,
+      diferenca: diferencaFavoravel(a.grupo, 0, a.valor),
       percentualRenda: calcularPercentual(a.valor, rendaBase),
     })),
   ].sort((a, b) => b.realizado - a.realizado)

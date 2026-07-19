@@ -55,7 +55,9 @@ export function Topbar({
 
   return (
     <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background px-4">
-      <SidebarTrigger className="-ml-1" />
+      {/* No mobile o alvo de toque precisa de ≥44px (Spec 30 · R6); o botão
+          padrão tem 28px. No desktop volta ao tamanho do design system. */}
+      <SidebarTrigger className="-ml-1 size-11 md:size-7" />
       <Separator orientation="vertical" className="mr-1 h-4" />
       <nav aria-label="Trilha" className="flex min-w-0 items-center gap-1.5 text-sm">
         <Link href="/" className="font-medium text-primary hover:underline">

@@ -87,10 +87,28 @@ function SidebarProvider({
     [setOpenProp, open]
   )
 
-  // Helper to toggle the sidebar.
+  // ⚠️ DESVIO DO SHADCN (Spec 30 · RF-3) — não sobrescrever num `shadcn add`.
+  //
+  // O original é `isMobile ? setOpenMobile(...) : setOpen(...)` lendo `isMobile`
+  // direto do closure. No celular isso engolia o **primeiro** toque: o HTML do
+  // servidor sempre monta a árvore desktop (`getServerSnapshot` devolve `false`),
+  // e no primeiro clique o callback ainda carregava `isMobile === false` — então
+  // ele mexia no `open` do desktop em vez do `openMobile`, o `Sheet` montava
+  // fechado e o menu "não abria". Do segundo toque em diante funcionava, o que
+  // deixava a paridade invertida (1 fecha, 2 abre, 3 fecha).
+  //
+  // Lendo por `ref` o valor é sempre o atual no momento do clique, sem depender
+  // de o callback ter sido recriado.
+  const isMobileRef = React.useRef(isMobile)
+  React.useEffect(() => {
+    isMobileRef.current = isMobile
+  }, [isMobile])
+
   const toggleSidebar = React.useCallback(() => {
-    return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open)
-  }, [isMobile, setOpen, setOpenMobile])
+    return isMobileRef.current
+      ? setOpenMobile((open) => !open)
+      : setOpen((open) => !open)
+  }, [setOpen, setOpenMobile])
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {

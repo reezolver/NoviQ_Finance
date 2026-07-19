@@ -79,6 +79,19 @@ const ICONE_BLOCO: Record<GrupoCategoria, LucideIcon> = {
   investimento: PiggyBank,
 }
 
+/**
+ * Renderiza o ícone do bloco **aqui, no servidor**.
+ *
+ * `BlocoGrupo` virou Client Component na Spec 35 (colapsável), e o React não
+ * serializa uma função de componente na fronteira servidor→cliente. Passar
+ * `ICONE_BLOCO[grupo]` cru derrubava a tela inteira com "Functions cannot be
+ * passed directly to Client Components".
+ */
+function renderIcone(grupo: GrupoCategoria) {
+  const Icone = ICONE_BLOCO[grupo]
+  return <Icone className="size-4 text-muted-foreground" aria-hidden />
+}
+
 interface ObjetivoRow {
   id: string
   nome: string
@@ -272,7 +285,7 @@ export default async function ControleMensalPage({
           <BlocoGrupo
             key={bloco.grupo}
             titulo={bloco.titulo}
-            icone={ICONE_BLOCO[bloco.grupo]}
+            icone={renderIcone(bloco.grupo)}
             linhas={bloco.linhas}
             total={bloco.total}
           />

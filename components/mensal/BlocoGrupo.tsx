@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronDown, type LucideIcon } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 
 import {
   Collapsible,
@@ -46,8 +46,15 @@ export interface LinhaBloco {
 export interface BlocoGrupoProps {
   /** Título do bloco (ex.: "Renda", "Despesa Fixa"). */
   titulo: string
-  /** Ícone do bloco (lucide). */
-  icone: LucideIcon
+  /**
+   * Ícone do bloco, **já renderizado**.
+   *
+   * ⚠️ Precisa ser um elemento (`<Wallet />`), não o componente (`Wallet`).
+   * Desde a Spec 35 este é um Client Component, e o React não consegue
+   * serializar uma função de componente atravessando a fronteira
+   * servidor→cliente — passar o componente cru quebra a página inteira.
+   */
+  icone: React.ReactNode
   /** Linhas de categoria já calculadas. */
   linhas: ReadonlyArray<LinhaBloco>
   /** Totais do bloco. */
@@ -87,7 +94,7 @@ function CelulaValor({
  */
 export function BlocoGrupo({
   titulo,
-  icone: Icone,
+  icone,
   linhas,
   total,
 }: BlocoGrupoProps) {
@@ -122,7 +129,7 @@ export function BlocoGrupo({
               aria-hidden
             />
             <CardTitle className="flex items-center gap-2 text-base">
-              <Icone className="size-4 text-muted-foreground" aria-hidden />
+              {icone}
               {titulo}
             </CardTitle>
           </CollapsibleTrigger>

@@ -21,7 +21,12 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { BlocoGrupo } from "@/components/mensal/BlocoGrupo"
-import { corDiferenca, sinal } from "@/components/mensal/financeiro-ui"
+import {
+  corDiferenca,
+  corTom,
+  descreverDiferenca,
+  sinal,
+} from "@/components/mensal/financeiro-ui"
 import { NavegacaoMeses } from "@/components/mensal/NavegacaoMeses"
 import { NovoLancamentoButton } from "@/components/mensal/NovoLancamentoButton"
 import { EditarPlanejadoButton } from "@/components/mensal/EditarPlanejadoButton"
@@ -285,6 +290,7 @@ export default async function ControleMensalPage({
           <BlocoGrupo
             key={bloco.grupo}
             titulo={bloco.titulo}
+            grupo={bloco.grupo}
             icone={renderIcone(bloco.grupo)}
             linhas={bloco.linhas}
             total={bloco.total}
@@ -335,12 +341,16 @@ export default async function ControleMensalPage({
                       </TableCell>
                       <TableCell
                         className={cn(
-                          "text-right font-mono font-medium tabular-nums",
-                          corDiferenca(item.diferenca)
+                          "text-right font-medium",
+                          corTom(
+                            descreverDiferenca(item.grupo, item.planejado, item.realizado).tom
+                          )
                         )}
                       >
-                        {sinal(item.diferenca)}
-                        {formatarMoeda(item.diferenca)}
+                        {
+                          descreverDiferenca(item.grupo, item.planejado, item.realizado)
+                            .texto
+                        }
                       </TableCell>
                       <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
                         {item.percentualRenda.toFixed(0)}%

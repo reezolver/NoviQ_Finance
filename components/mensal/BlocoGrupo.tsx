@@ -24,10 +24,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatarMoeda } from "@/lib/calculations"
+import { formatarMoeda, type GrupoCategoria } from "@/lib/calculations"
 import { cn } from "@/lib/utils"
 
-import { corDiferenca, sinal } from "./financeiro-ui"
+import { corTom, descreverDiferenca } from "./financeiro-ui"
 
 /** Uma linha (categoria) dentro de um bloco. */
 export interface LinhaBloco {
@@ -46,6 +46,12 @@ export interface LinhaBloco {
 export interface BlocoGrupoProps {
   /** Título do bloco (ex.: "Renda", "Despesa Fixa"). */
   titulo: string
+  /**
+   * Grupo do bloco. Usado **só para escolher a palavra** da coluna Diferença
+   * ("faltam" numa renda, "sobra" numa despesa) — a cor continua saindo da
+   * comparação, não do grupo (Spec 28 · R2).
+   */
+  grupo: GrupoCategoria
   /**
    * Ícone do bloco, **já renderizado**.
    *
@@ -94,10 +100,12 @@ function CelulaValor({
  */
 export function BlocoGrupo({
   titulo,
+  grupo,
   icone,
   linhas,
   total,
 }: BlocoGrupoProps) {
+  const resumoTotal = descreverDiferenca(grupo, total.planejado, total.realizado)
   const isMobile = useIsMobile()
   // Estado **derivado**, sem efeito: enquanto o usuário não mexer, o padrão
   // acompanha o dispositivo (expandido no desktop, recolhido no mobile — PRD
@@ -134,14 +142,8 @@ export function BlocoGrupo({
             </CardTitle>
           </CollapsibleTrigger>
           {/* Fora do trigger: continua legível com o bloco recolhido (R4). */}
-          <span
-            className={cn(
-              "font-mono text-sm font-semibold tabular-nums",
-              corDiferenca(total.diferenca)
-            )}
-          >
-            {sinal(total.diferenca)}
-            {formatarMoeda(total.diferenca)}
+          <span className={cn("text-sm font-semibold", corTom(resumoTotal.tom))}>
+            {resumoTotal.texto}
           </span>
         </CardHeader>
         <CollapsibleContent asChild>
@@ -169,10 +171,12 @@ export function BlocoGrupo({
                   </CelulaValor>
                   <CelulaValor>{formatarMoeda(linha.realizado)}</CelulaValor>
                   <CelulaValor
-                    className={cn("font-medium", corDiferenca(linha.diferenca))}
+                    className={cn(
+                      "font-medium",
+                      corTom(descreverDiferenca(grupo, linha.planejado, linha.realizado).tom)
+                    )}
                   >
-                    {sinal(linha.diferenca)}
-                    {formatarMoeda(linha.diferenca)}
+                    {descreverDiferenca(grupo, linha.planejado, linha.realizado).texto}
                   </CelulaValor>
                 </TableRow>
               ))}
@@ -182,9 +186,8 @@ export function BlocoGrupo({
                 <TableCell>Total</TableCell>
                 <CelulaValor>{formatarMoeda(total.planejado)}</CelulaValor>
                 <CelulaValor>{formatarMoeda(total.realizado)}</CelulaValor>
-                <CelulaValor className={corDiferenca(total.diferenca)}>
-                  {sinal(total.diferenca)}
-                  {formatarMoeda(total.diferenca)}
+                <CelulaValor className={corTom(resumoTotal.tom)}>
+                  {resumoTotal.texto}
                 </CelulaValor>
               </TableRow>
             </TableFooter>

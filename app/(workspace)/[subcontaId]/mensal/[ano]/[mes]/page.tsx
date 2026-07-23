@@ -140,6 +140,7 @@ export default async function ControleMensalPage({
   // Seis queries agregadas (sem N+1). RLS já escopa pela subconta.
   const [
     { data: lancamentosData },
+    { data: faturaData },
     { data: orcamentosData },
     { data: categoriasData },
     { data: objetivosData },
@@ -150,12 +151,30 @@ export default async function ControleMensalPage({
       .from("lancamentos")
       // id/data/descricao alimentam o drill-down por lancamento (Spec 37 R8:
       // tudo no mesmo payload, sem query por linha expandida).
-      .select("id, data, descricao, valor, categoria_id, grupo, objetivo_id")
+      .select(
+        "id, data, descricao, valor, categoria_id, grupo, objetivo_id, cartao_id, ano_fatura, mes_fatura"
+      )
       // Spec 37: soft delete — lancamento excluido some de toda leitura.
       .is("deleted_at", null)
       .eq("subconta_id", subcontaId)
+      // Lancamentos comuns: entram pelo mes da DATA.
+      .is("cartao_id", null)
       .gte("data", inicio)
       .lt("data", fimExclusivo),
+    // Spec 38 R19: compra no cartao NAO entra pelo mes da compra, e sim pelo mes
+    // da FATURA — pode ter sido comprada meses atras. Query separada em vez de
+    // um `.or()` composto: mesma quantidade de ida ao banco (roda no mesmo
+    // Promise.all), e sem depender de sintaxe de filtro complexa.
+    supabase
+      .from("lancamentos")
+      .select(
+        "id, data, descricao, valor, categoria_id, grupo, objetivo_id, cartao_id, ano_fatura, mes_fatura"
+      )
+      .is("deleted_at", null)
+      .eq("subconta_id", subcontaId)
+      .not("cartao_id", "is", null)
+      .eq("ano_fatura", ano)
+      .eq("mes_fatura", mes),
     supabase
       .from("orcamentos")
       .select("categoria_id, valor_planejado, ano, mes")
@@ -188,7 +207,12 @@ export default async function ControleMensalPage({
       .maybeSingle(),
   ])
 
-  const lancamentos = (lancamentosData ?? []) as unknown as LancamentoRow[]
+  // Um mes = lancamentos comuns (pela data) + compras de cartao cuja fatura
+  // cai neste mes (Spec 38 R19). Dai pra frente tudo segue igual.
+  const lancamentos = [
+    ...((lancamentosData ?? []) as unknown as LancamentoRow[]),
+    ...((faturaData ?? []) as unknown as LancamentoRow[]),
+  ]
   const orcamentos = (orcamentosData ?? []) as unknown as OrcamentoRow[]
   const categorias = (categoriasData ?? []) as unknown as CategoriaRow[]
   const objetivos = (objetivosData ?? []) as unknown as ObjetivoRow[]

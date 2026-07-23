@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { resolverMesFatura } from '@/lib/cartao'
 import type { Database } from '@/types/database'
 
 type GrupoCategoria = Database['public']['Enums']['grupo_categoria']
@@ -24,6 +25,9 @@ const textoOpcional = z.string().trim().max(500).optional()
 const lancamentoSchema = z.discriminatedUnion('tipo', [
   z.object({
     tipo: z.literal('despesa'),
+    // Spec 38: o cartao e MEIO DE PAGAMENTO. A despesa continua indo para a
+    // categoria escolhida (R19.6) — o cartao so muda EM QUE MES ela aparece.
+    cartaoId: z.string().uuid('Cartão inválido.').nullable().optional(),
     valor: valorSchema,
     categoriaId: z.string().uuid('Categoria inválida.'),
     data: dataSchema,
@@ -162,6 +166,34 @@ export async function criarLancamento(
     categoriaId = dadosValidados.categoriaId
   }
 
+  // Spec 38 R19: compra no cartao NAO aparece no mes da compra, e sim no mes da
+  // fatura. Resolvemos aqui e PERSISTIMOS (R19.4/R19.5): `data` continua sendo a
+  // data da compra, e mudar o cartao depois nao remaneja o historico.
+  const cartaoId =
+    dadosValidados.tipo === 'despesa' ? dadosValidados.cartaoId ?? null : null
+  let anoFatura: number | null = null
+  let mesFatura: number | null = null
+
+  if (cartaoId) {
+    const { data: cartao } = await supabase
+      .from('cartoes')
+      .select('dia_fechamento, dia_vencimento')
+      .eq('id', cartaoId)
+      .eq('subconta_id', id)
+      .is('deleted_at', null)
+      .maybeSingle()
+    if (!cartao) {
+      throw new Error('Cartão não encontrado nesta conta.')
+    }
+    const fatura = resolverMesFatura(
+      dadosValidados.data,
+      cartao.dia_fechamento,
+      cartao.dia_vencimento
+    )
+    anoFatura = fatura.ano
+    mesFatura = fatura.mes
+  }
+
   const { error } = await supabase.from('lancamentos').insert({
     subconta_id: id,
     tipo: dadosValidados.tipo,
@@ -170,6 +202,9 @@ export async function criarLancamento(
     categoria_id: categoriaId,
     objetivo_id: objetivoId,
     grupo,
+    cartao_id: cartaoId,
+    ano_fatura: anoFatura,
+    mes_fatura: mesFatura,
     descricao: dadosValidados.descricao || null,
     observacao: dadosValidados.observacao || null,
   })
